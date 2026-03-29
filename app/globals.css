@@ -1,26 +1,66 @@
+/* Import Google Fonts: Syne and DM Sans */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F4F7FF;
+  --foreground: #0D1B2A;
 }
 
 @theme inline {
+  /* Custom Color Palette */
+  --color-midnight: #0D1B2A;
+  --color-navy: #1A2E45;
+  --color-primary: #1E6FFF;
+  --color-cyan: #00C2D1;
+  --color-surface: #F4F7FF;
+  --color-slate: #6B7A99;
+  --color-success: #00B37E;
+  --color-warning: #FF9500;
+  --color-danger: #E63946;
+
+  /* System Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Font Families */
+  --font-sans: var(--font-dm-sans), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-syne), system-ui, -apple-system, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0D1B2A;
+    --foreground: #F4F7FF;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4F7FF;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E6FFF;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1557CC;
 }
