@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -8,6 +9,8 @@ import FormInput from "@/components/ui/FormInput";
 import SocialLogin from "@/components/auth/SocialLogin";
 
 export default function LoginForm() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -48,12 +51,39 @@ export default function LoginForm() {
     // If no errors, proceed with login
     if (!newErrors.email && !newErrors.password) {
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        console.log("Login successful:", formData);
+
+      try {
+        // TODO: Replace with actual API call to your backend
+        // Example: const response = await fetch('/api/auth/login', { method: 'POST', body: JSON.stringify(formData) })
+        // const data = await response.json()
+
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Mock response - replace with actual API response
+        const mockUser = {
+          email: formData.email,
+          role: "candidate", // This should come from your API: "candidate" or "recruiter"
+        };
+
+        // Store user data (you might want to use a state management solution or cookies)
+        localStorage.setItem("user", JSON.stringify(mockUser));
+
+        // Navigate based on user role
+        if (mockUser.role === "candidate") {
+          router.push("/dashboard"); // Candidate dashboard
+        } else if (mockUser.role === "recruiter") {
+          router.push("/recruiter/dashboard"); // Recruiter dashboard
+        } else {
+          // Default fallback
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Login failed:", error);
+        setErrors({ ...errors, password: "Login failed. Please try again." });
+      } finally {
         setIsLoading(false);
-        // Redirect or handle success
-      }, 2000);
+      }
     }
   };
 
