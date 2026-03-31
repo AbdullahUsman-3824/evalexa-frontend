@@ -22,7 +22,7 @@ const INTERVIEW_DATA = {
   companyInitials: "DS",
   companyColor: "#00B37E",
   jobTitle: "UI/UX Designer",
-  status: "Confirmed" as const,
+  status: "Confirmed",
   interviewType: "Video Call" as const,
   scheduledDate: "April 2, 2026",
   scheduledTime: "2:00 PM",

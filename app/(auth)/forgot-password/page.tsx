@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import LeftPanel from "@/components/auth/LeftPanel";
@@ -11,7 +11,7 @@ import StepResetPassword from "@/components/auth/forgot-password/StepResetPasswo
 import StepSuccess from "@/components/auth/forgot-password/StepSuccess";
 import Toast from "@/components/ui/Toast";
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -107,5 +107,19 @@ export default function ForgotPasswordPage() {
         onClose={hideToast}
       />
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }

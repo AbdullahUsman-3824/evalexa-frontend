@@ -93,10 +93,9 @@ export default function ParsedData({
             <p className="font-display text-2xl text-midnight">
               Parsed Information
             </p>
-            <Info
-              className="h-5 w-5 text-slate"
-              title="This is what our AI extracted from your resume"
-            />
+            <span title="This is what our AI extracted from your resume">
+              <Info className="h-5 w-5 text-slate" />
+            </span>
           </div>
           <p className="text-sm text-slate">
             Review what Evalexa detected. Keep your profile and resume in sync.
@@ -238,10 +237,7 @@ export default function ParsedData({
           </div>
         </motion.div>
 
-        <motion.div
-          variants={cardVariants}
-          className="space-y-5 rounded-2xl"
-        >
+        <motion.div variants={cardVariants} className="space-y-5 rounded-2xl">
           <div className="rounded-2xl border border-slate/15 bg-white p-5 shadow-sm">
             <p className="font-semibold text-midnight">Education</p>
             <div className="mt-4 space-y-4 text-sm text-midnight">
