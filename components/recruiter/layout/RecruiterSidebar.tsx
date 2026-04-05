@@ -76,7 +76,7 @@ const navSections: NavSection[] = [
     label: "HIRING",
     items: [
       {
-        label: "Interview",
+        label: "Interviews",
         href: "/recruiter/interviews",
         icon: CalendarCheck,
       },
