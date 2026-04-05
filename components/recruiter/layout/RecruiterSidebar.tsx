@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import {
   LayoutDashboard,
   BarChart2,
@@ -18,8 +18,8 @@ import {
   Settings,
   LogOut,
   ChevronDown,
-} from 'lucide-react';
-import { useState } from 'react';
+} from "lucide-react";
+import { useState } from "react";
 
 interface NavItem {
   label: string;
@@ -36,56 +36,68 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    label: 'OVERVIEW',
+    label: "OVERVIEW",
     items: [
-      { label: 'Dashboard', href: '/recruiter/dashboard', icon: LayoutDashboard },
-      { label: 'Analytics', href: '/recruiter/analytics', icon: BarChart2 },
+      {
+        label: "Dashboard",
+        href: "/recruiter/dashboard",
+        icon: LayoutDashboard,
+      },
+      { label: "Analytics", href: "/recruiter/analytics", icon: BarChart2 },
     ],
   },
   {
-    label: 'JOBS',
+    label: "JOBS",
     items: [
       {
-        label: 'Post a Job',
-        href: '/recruiter/jobs/create',
+        label: "Post a Job",
+        href: "/recruiter/jobs/create",
         icon: PlusCircle,
         special: true,
       },
-      { label: 'My Job Posts', href: '/recruiter/jobs', icon: Briefcase },
-      { label: 'Applicants', href: '/recruiter/applicants', icon: Users },
+      { label: "My Job Posts", href: "/recruiter/jobs", icon: Briefcase },
+      { label: "Applicants", href: "/recruiter/applicants", icon: Users },
     ],
   },
   {
-    label: 'CANDIDATES',
+    label: "CANDIDATES",
     items: [
       {
-        label: 'AI Ranking',
-        href: '/recruiter/ranking',
+        label: "AI Ranking",
+        href: "/recruiter/ranking",
         icon: Sparkles,
-        badge: 'AI',
+        badge: "AI",
       },
-      { label: 'Shortlisted', href: '/recruiter/shortlisted', icon: Star },
-      { label: 'Rejected', href: '/recruiter/rejected', icon: XCircle },
+      { label: "Shortlisted", href: "/recruiter/shortlisted", icon: Star },
+      { label: "Rejected", href: "/recruiter/rejected", icon: XCircle },
     ],
   },
   {
-    label: 'HIRING',
+    label: "HIRING",
     items: [
-      { label: 'Interviews', href: '/recruiter/interviews', icon: CalendarCheck },
       {
-        label: 'Messages',
-        href: '/recruiter/messages',
-        icon: MessageSquare,
-        badge: '3',
+        label: "Interviews",
+        href: "/recruiter/interviews",
+        icon: CalendarCheck,
       },
-      { label: 'Hire Analytics', href: '/recruiter/hire-analytics', icon: PieChart },
+      {
+        label: "Messages",
+        href: "/recruiter/messages",
+        icon: MessageSquare,
+        badge: "3",
+      },
+      {
+        label: "Hire Analytics",
+        href: "/recruiter/hire-analytics",
+        icon: PieChart,
+      },
     ],
   },
   {
-    label: 'ACCOUNT',
+    label: "ACCOUNT",
     items: [
-      { label: 'Company Profile', href: '/recruiter/profile', icon: Building2 },
-      { label: 'Settings', href: '/recruiter/settings', icon: Settings },
+      { label: "Company Profile", href: "/recruiter/profile", icon: Building2 },
+      { label: "Settings", href: "/recruiter/settings", icon: Settings },
     ],
   },
 ];
@@ -95,15 +107,18 @@ interface RecruiterSidebarProps {
   onClose?: () => void;
 }
 
-export default function RecruiterSidebar({ isOpen = true, onClose }: RecruiterSidebarProps) {
+export default function RecruiterSidebar({
+  isOpen = true,
+  onClose,
+}: RecruiterSidebarProps) {
   const pathname = usePathname();
   const [showLogout, setShowLogout] = useState(false);
 
   // Mock company data - replace with actual data from auth context
   const company = {
-    name: 'TechCorp Inc.',
-    initials: 'TC',
-    role: 'Recruiter',
+    name: "TechCorp Inc.",
+    initials: "TC",
+    role: "Recruiter",
   };
 
   const isActive = (href: string) => pathname === href;
@@ -123,7 +138,7 @@ export default function RecruiterSidebar({ isOpen = true, onClose }: RecruiterSi
         className={`
           fixed left-0 top-0 h-screen w-[240px] bg-[#0D1B2A] z-50
           flex flex-col transition-transform duration-300
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
         {/* Logo Section */}
@@ -157,7 +172,7 @@ export default function RecruiterSidebar({ isOpen = true, onClose }: RecruiterSi
                 {section.items.map((item, itemIdx) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
-                  const isCyanItem = item.special || item.badge === 'AI';
+                  const isCyanItem = item.special || item.badge === "AI";
 
                   return (
                     <Link
@@ -168,10 +183,10 @@ export default function RecruiterSidebar({ isOpen = true, onClose }: RecruiterSi
                         transition-all duration-200
                         ${
                           active
-                            ? 'bg-[#1E6FFF]/15 text-white font-medium'
-                            : 'text-[#B0B8C8] hover:bg-white/5 hover:text-white'
+                            ? "bg-[#1E6FFF]/15 text-white font-medium"
+                            : "text-[#B0B8C8] hover:bg-white/5 hover:text-white"
                         }
-                        ${item.special && !active ? 'text-[#4A9EFF]' : ''}
+                        ${item.special && !active ? "text-[#4A9EFF]" : ""}
                       `}
                       onClick={() => {
                         if (onClose) onClose();
@@ -189,7 +204,7 @@ export default function RecruiterSidebar({ isOpen = true, onClose }: RecruiterSi
 
                       <Icon
                         className={`flex-shrink-0 w-5 h-5 ${
-                          isCyanItem && !active ? 'text-[#00C2D1]' : ''
+                          isCyanItem && !active ? "text-[#00C2D1]" : ""
                         }`}
                       />
                       <span className="text-[14px]">{item.label}</span>
@@ -200,9 +215,9 @@ export default function RecruiterSidebar({ isOpen = true, onClose }: RecruiterSi
                           className={`
                             ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded
                             ${
-                              item.badge === 'AI'
-                                ? 'bg-[#00C2D1] text-[#0D1B2A]'
-                                : 'bg-[#E63946] text-white'
+                              item.badge === "AI"
+                                ? "bg-[#00C2D1] text-[#0D1B2A]"
+                                : "bg-[#E63946] text-white"
                             }
                           `}
                         >
@@ -226,19 +241,23 @@ export default function RecruiterSidebar({ isOpen = true, onClose }: RecruiterSi
           >
             {/* Company Logo Circle */}
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1E6FFF] to-[#00C2D1] flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-sm">{company.initials}</span>
+              <span className="text-white font-bold text-sm">
+                {company.initials}
+              </span>
             </div>
 
             {/* Company Details */}
             <div className="flex-1 text-left min-w-0">
-              <p className="text-white text-sm font-medium truncate">{company.name}</p>
+              <p className="text-white text-sm font-medium truncate">
+                {company.name}
+              </p>
               <p className="text-[#6B7A99] text-xs">{company.role}</p>
             </div>
 
             {/* Dropdown Icon */}
             <ChevronDown
               className={`w-4 h-4 text-[#6B7A99] transition-transform ${
-                showLogout ? 'rotate-180' : ''
+                showLogout ? "rotate-180" : ""
               }`}
             />
           </button>
@@ -248,7 +267,7 @@ export default function RecruiterSidebar({ isOpen = true, onClose }: RecruiterSi
             <button
               onClick={() => {
                 // Handle logout
-                console.log('Logout clicked');
+                console.log("Logout clicked");
               }}
               className="w-full px-4 py-3 flex items-center gap-3 text-[#E63946] hover:bg-[#E63946]/10 transition-colors border-t border-white/5"
             >

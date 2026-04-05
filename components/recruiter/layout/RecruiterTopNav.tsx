@@ -1,9 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { Menu, Plus, Bell, ChevronDown, Building2, Settings, LogOut } from 'lucide-react';
+import { useState } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import {
+  Menu,
+  Plus,
+  Bell,
+  ChevronDown,
+  Building2,
+  Settings,
+  LogOut,
+} from "lucide-react";
 
 interface RecruiterTopNavProps {
   onMenuClick: () => void;
@@ -11,19 +19,19 @@ interface RecruiterTopNavProps {
 
 // Page title mapping
 const pageTitles: Record<string, string> = {
-  '/recruiter/dashboard': 'Dashboard',
-  '/recruiter/analytics': 'Analytics',
-  '/recruiter/jobs/create': 'Post a Job',
-  '/recruiter/jobs': 'My Job Posts',
-  '/recruiter/applicants': 'Applicants',
-  '/recruiter/ranking': 'AI Ranking',
-  '/recruiter/shortlisted': 'Shortlisted',
-  '/recruiter/rejected': 'Rejected',
-  '/recruiter/interviews': 'Interviews',
-  '/recruiter/messages': 'Messages',
-  '/recruiter/hire-analytics': 'Hire Analytics',
-  '/recruiter/profile': 'Company Profile',
-  '/recruiter/settings': 'Settings',
+  "/recruiter/dashboard": "Dashboard",
+  "/recruiter/analytics": "Analytics",
+  "/recruiter/jobs/create": "Post a Job",
+  "/recruiter/jobs": "My Job Posts",
+  "/recruiter/applicants": "Applicants",
+  "/recruiter/ranking": "AI Ranking",
+  "/recruiter/shortlisted": "Shortlisted",
+  "/recruiter/rejected": "Rejected",
+  "/recruiter/interviews": "Interviews",
+  "/recruiter/messages": "Messages",
+  "/recruiter/hire-analytics": "Hire Analytics",
+  "/recruiter/profile": "Company Profile",
+  "/recruiter/settings": "Settings",
 };
 
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
@@ -31,13 +39,13 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const pageTitle = pageTitles[pathname] || 'Recruiter Portal';
+  const pageTitle = pageTitles[pathname] || "Recruiter Portal";
   const hasUnreadNotifications = true; // Replace with actual logic
 
   // Mock company data - replace with actual data from auth context
   const company = {
-    name: 'TechCorp Inc.',
-    initials: 'TC',
+    name: "TechCorp Inc.",
+    initials: "TC",
   };
 
   return (
@@ -96,7 +104,9 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                 {/* Dropdown */}
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                   <div className="p-4 border-b border-gray-200">
-                    <h3 className="font-semibold text-[#0D1B2A]">Notifications</h3>
+                    <h3 className="font-semibold text-[#0D1B2A]">
+                      Notifications
+                    </h3>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
                     {/* Sample notifications */}
@@ -112,7 +122,9 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                           <p className="text-xs text-[#6B7A99] mt-1">
                             John Doe applied for Senior Developer position
                           </p>
-                          <p className="text-xs text-[#6B7A99] mt-1">2 hours ago</p>
+                          <p className="text-xs text-[#6B7A99] mt-1">
+                            2 hours ago
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -128,7 +140,9 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                           <p className="text-xs text-[#6B7A99] mt-1">
                             15 candidates ranked for Product Manager role
                           </p>
-                          <p className="text-xs text-[#6B7A99] mt-1">5 hours ago</p>
+                          <p className="text-xs text-[#6B7A99] mt-1">
+                            5 hours ago
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -144,7 +158,9 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                           <p className="text-xs text-[#6B7A99] mt-1">
                             Interview with Sarah Johnson tomorrow at 2 PM
                           </p>
-                          <p className="text-xs text-[#6B7A99] mt-1">1 day ago</p>
+                          <p className="text-xs text-[#6B7A99] mt-1">
+                            1 day ago
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -167,7 +183,9 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
             >
               {/* Avatar */}
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E6FFF] to-[#00C2D1] flex items-center justify-center">
-                <span className="text-white font-semibold text-xs">{company.initials}</span>
+                <span className="text-white font-semibold text-xs">
+                  {company.initials}
+                </span>
               </div>
 
               {/* Company Name (hidden on small screens) */}
@@ -178,7 +196,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
               {/* Dropdown Icon */}
               <ChevronDown
                 className={`hidden md:block w-4 h-4 text-gray-500 transition-transform ${
-                  showProfileDropdown ? 'rotate-180' : ''
+                  showProfileDropdown ? "rotate-180" : ""
                 }`}
               />
             </button>
@@ -200,7 +218,9 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                     onClick={() => setShowProfileDropdown(false)}
                   >
                     <Building2 className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-[#0D1B2A]">Company Profile</span>
+                    <span className="text-sm text-[#0D1B2A]">
+                      Company Profile
+                    </span>
                   </Link>
                   <Link
                     href="/recruiter/settings"
@@ -214,7 +234,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                   <button
                     onClick={() => {
                       // Handle logout
-                      console.log('Logout clicked');
+                      console.log("Logout clicked");
                       setShowProfileDropdown(false);
                     }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors text-left"

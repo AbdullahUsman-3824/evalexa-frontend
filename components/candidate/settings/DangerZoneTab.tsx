@@ -82,7 +82,8 @@ export default function DangerZoneTab() {
                 Confirm Deactivation
               </h3>
               <p className="mt-2 text-sm text-slate">
-                Enter your password to temporarily deactivate your Evalexa account.
+                Enter your password to temporarily deactivate your Evalexa
+                account.
               </p>
               <input
                 type="password"
@@ -119,9 +120,12 @@ export default function DangerZoneTab() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
             >
-              <h3 className="text-lg font-semibold text-danger">Final Warning</h3>
+              <h3 className="text-lg font-semibold text-danger">
+                Final Warning
+              </h3>
               <p className="mt-2 text-sm text-slate">
-                Deleting your account permanently removes your data. This cannot be undone.
+                Deleting your account permanently removes your data. This cannot
+                be undone.
               </p>
               <div className="mt-6 flex justify-end gap-3">
                 <button
@@ -141,4 +145,3 @@ export default function DangerZoneTab() {
     </div>
   );
 }
-

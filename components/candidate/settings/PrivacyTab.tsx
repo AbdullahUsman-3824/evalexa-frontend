@@ -29,7 +29,9 @@ export default function PrivacyTab() {
     <div className="space-y-6">
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5 space-y-4">
         <div>
-          <p className="text-lg font-semibold text-midnight">Profile Visibility</p>
+          <p className="text-lg font-semibold text-midnight">
+            Profile Visibility
+          </p>
           <p className="text-sm text-slate">
             Control who can discover and reach out to you.
           </p>
@@ -48,7 +50,9 @@ export default function PrivacyTab() {
                 <p className="font-semibold">{option.label}</p>
                 <span
                   className={`h-4 w-4 rounded-full border ${
-                    visibility === option.id ? "border-primary bg-primary" : "border-slate/40"
+                    visibility === option.id
+                      ? "border-primary bg-primary"
+                      : "border-slate/40"
                   }`}
                 />
               </div>
@@ -68,7 +72,9 @@ export default function PrivacyTab() {
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5 space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-lg font-semibold text-midnight">Resume Visibility</p>
+            <p className="text-lg font-semibold text-midnight">
+              Resume Visibility
+            </p>
             <p className="text-sm text-slate">
               Allow recruiters to download your resume when they discover you.
             </p>
@@ -88,4 +94,3 @@ export default function PrivacyTab() {
     </div>
   );
 }
-

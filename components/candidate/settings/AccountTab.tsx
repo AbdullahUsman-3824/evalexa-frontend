@@ -33,7 +33,9 @@ export default function AccountTab() {
               <div className="flex items-center gap-2 text-sm text-slate">
                 <Mail className="h-4 w-4" />
                 <span>aria.chen@evalexa.com</span>
-                <button className="font-semibold text-primary hover:text-primary/80 transition">Change email</button>
+                <button className="font-semibold text-primary hover:text-primary/80 transition">
+                  Change email
+                </button>
               </div>
             </div>
             <p className="text-sm text-slate">
@@ -110,4 +112,3 @@ export default function AccountTab() {
     </div>
   );
 }
-

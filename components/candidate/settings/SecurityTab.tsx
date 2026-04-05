@@ -38,11 +38,41 @@ const initialSessions: Session[] = [
 ];
 
 const loginHistory = [
-  { id: "1", date: "Mar 28, 10:42 AM", device: "MacBook Pro", ip: "192.168.1.20", location: "San Francisco, USA" },
-  { id: "2", date: "Mar 27, 7:15 PM", device: "iPhone 15", ip: "10.0.0.14", location: "New York, USA" },
-  { id: "3", date: "Mar 25, 5:54 PM", device: "iPad Air", ip: "172.16.4.9", location: "Seattle, USA" },
-  { id: "4", date: "Mar 23, 2:12 PM", device: "Surface Pro", ip: "192.168.1.11", location: "Berlin, Germany" },
-  { id: "5", date: "Mar 20, 9:45 AM", device: "Pixel 8", ip: "10.0.0.19", location: "Toronto, Canada" },
+  {
+    id: "1",
+    date: "Mar 28, 10:42 AM",
+    device: "MacBook Pro",
+    ip: "192.168.1.20",
+    location: "San Francisco, USA",
+  },
+  {
+    id: "2",
+    date: "Mar 27, 7:15 PM",
+    device: "iPhone 15",
+    ip: "10.0.0.14",
+    location: "New York, USA",
+  },
+  {
+    id: "3",
+    date: "Mar 25, 5:54 PM",
+    device: "iPad Air",
+    ip: "172.16.4.9",
+    location: "Seattle, USA",
+  },
+  {
+    id: "4",
+    date: "Mar 23, 2:12 PM",
+    device: "Surface Pro",
+    ip: "192.168.1.11",
+    location: "Berlin, Germany",
+  },
+  {
+    id: "5",
+    date: "Mar 20, 9:45 AM",
+    device: "Pixel 8",
+    ip: "10.0.0.19",
+    location: "Toronto, Canada",
+  },
 ];
 
 export default function SecurityTab() {
@@ -89,20 +119,39 @@ export default function SecurityTab() {
     <div className="space-y-6">
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-midnight">Change Password</h3>
+          <h3 className="text-lg font-semibold text-midnight">
+            Change Password
+          </h3>
           <div className="grid gap-4 md:grid-cols-2">
             {[
-              { label: "Current password", name: "current", placeholder: "••••••••" },
-              { label: "New password", name: "next", placeholder: "At least 8 characters" },
-              { label: "Confirm new password", name: "confirm", placeholder: "Re-enter password" },
+              {
+                label: "Current password",
+                name: "current",
+                placeholder: "••••••••",
+              },
+              {
+                label: "New password",
+                name: "next",
+                placeholder: "At least 8 characters",
+              },
+              {
+                label: "Confirm new password",
+                name: "confirm",
+                placeholder: "Re-enter password",
+              },
             ].map((field) => (
               <div key={field.name} className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-midnight">{field.label}</label>
+                <label className="text-sm font-medium text-midnight">
+                  {field.label}
+                </label>
                 <input
                   type="password"
                   value={passwords[field.name as keyof typeof passwords]}
                   onChange={(event) =>
-                    setPasswords((prev) => ({ ...prev, [field.name]: event.target.value }))
+                    setPasswords((prev) => ({
+                      ...prev,
+                      [field.name]: event.target.value,
+                    }))
                   }
                   placeholder={field.placeholder}
                   className="rounded-lg border border-slate/30 px-3 py-2 text-midnight placeholder:text-slate/50 focus:border-primary focus:outline-none"
@@ -113,7 +162,9 @@ export default function SecurityTab() {
           <div>
             <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em] text-slate">
               <span>Password Strength</span>
-              <span className={getStrengthLabel().color}>{getStrengthLabel().label}</span>
+              <span className={getStrengthLabel().color}>
+                {getStrengthLabel().label}
+              </span>
             </div>
             <div className="mt-2 flex gap-1">
               {[0, 1, 2, 3].map((index) => (
@@ -121,7 +172,9 @@ export default function SecurityTab() {
                   key={index}
                   className={`h-2 flex-1 rounded-full ${
                     strength > index
-                      ? ["bg-danger", "bg-warning", "bg-primary", "bg-success"][index]
+                      ? ["bg-danger", "bg-warning", "bg-primary", "bg-success"][
+                          index
+                        ]
                       : "bg-slate/20"
                   }`}
                 />
@@ -139,8 +192,12 @@ export default function SecurityTab() {
       <section className="space-y-5 rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-lg font-semibold text-midnight">Two-Factor Authentication</p>
-            <p className="text-sm text-slate">Add an extra layer of security with OTP codes.</p>
+            <p className="text-lg font-semibold text-midnight">
+              Two-Factor Authentication
+            </p>
+            <p className="text-sm text-slate">
+              Add an extra layer of security with OTP codes.
+            </p>
           </div>
           <ToggleSwitch checked={is2FAEnabled} onChange={setIs2FAEnabled} />
         </div>
@@ -155,7 +212,10 @@ export default function SecurityTab() {
             >
               <div className="space-y-2">
                 <p className="font-semibold text-midnight">Authenticator App</p>
-                <p className="text-sm text-slate">Scan the QR code using Google Authenticator, Authy, or 1Password.</p>
+                <p className="text-sm text-slate">
+                  Scan the QR code using Google Authenticator, Authy, or
+                  1Password.
+                </p>
                 <div className="rounded-lg bg-surface p-4 text-center">
                   <div className="mx-auto h-28 w-28 rounded-lg bg-white p-2 shadow-inner">
                     <div className="h-full w-full rounded bg-slate/10" />
@@ -164,11 +224,15 @@ export default function SecurityTab() {
               </div>
               <div className="space-y-3">
                 <p className="font-semibold text-midnight">Backup codes</p>
-                <p className="text-sm text-slate">Store these securely. Each code can be used once.</p>
+                <p className="text-sm text-slate">
+                  Store these securely. Each code can be used once.
+                </p>
                 <div className="rounded-lg border border-slate/20 bg-slate/5 p-4 text-center text-slate/70 backdrop-blur">
                   <p>•••• •••• ••••</p>
                 </div>
-                <button className="text-sm font-semibold text-primary">Reveal codes</button>
+                <button className="text-sm font-semibold text-primary">
+                  Reveal codes
+                </button>
               </div>
             </motion.div>
           )}
@@ -198,13 +262,17 @@ export default function SecurityTab() {
                 <div className="flex flex-1 items-center gap-3">
                   <MonitorSmartphone className="h-10 w-10 rounded-full bg-surface p-2 text-primary" />
                   <div>
-                    <p className="font-semibold text-midnight">{session.device}</p>
+                    <p className="font-semibold text-midnight">
+                      {session.device}
+                    </p>
                     <p className="text-sm text-slate">{session.browser}</p>
                     <p className="text-xs text-slate/70">{session.location}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-slate">{session.lastActive}</span>
+                  <span className="text-sm text-slate">
+                    {session.lastActive}
+                  </span>
                   <button
                     onClick={() => revokeSession(session.id)}
                     className="rounded-full border border-danger/40 px-4 py-1 text-sm font-semibold text-danger hover:bg-danger/10"
@@ -222,7 +290,9 @@ export default function SecurityTab() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-semibold text-midnight">Login History</p>
-            <p className="text-sm text-slate">Keep track of the last 5 sign-ins to this account.</p>
+            <p className="text-sm text-slate">
+              Keep track of the last 5 sign-ins to this account.
+            </p>
           </div>
           <button
             className="inline-flex items-center gap-2 rounded-full border border-slate/30 px-3 py-1 text-xs font-semibold"
@@ -266,4 +336,3 @@ export default function SecurityTab() {
     </div>
   );
 }
-
