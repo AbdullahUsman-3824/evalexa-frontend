@@ -105,7 +105,7 @@ export default function SecurityTab() {
                     setPasswords((prev) => ({ ...prev, [field.name]: event.target.value }))
                   }
                   placeholder={field.placeholder}
-                  className="rounded-lg border border-slate/30 px-3 py-2 focus:border-primary focus:outline-none"
+                  className="rounded-lg border border-slate/30 px-3 py-2 text-midnight placeholder:text-slate/50 focus:border-primary focus:outline-none"
                 />
               </div>
             ))}
@@ -136,7 +136,7 @@ export default function SecurityTab() {
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5 space-y-5">
+      <section className="space-y-5 rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-semibold text-midnight">Two-Factor Authentication</p>
@@ -175,7 +175,7 @@ export default function SecurityTab() {
         </AnimatePresence>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5 space-y-5">
+      <section className="space-y-5 rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <div className="flex items-center justify-between">
           <p className="text-lg font-semibold text-midnight">Active Sessions</p>
           {sessions.length > 1 && (
@@ -218,7 +218,7 @@ export default function SecurityTab() {
         </ul>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5 space-y-4">
+      <section className="space-y-4 rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-semibold text-midnight">Login History</p>

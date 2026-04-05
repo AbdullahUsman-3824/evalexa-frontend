@@ -28,7 +28,7 @@ export default function DangerZoneTab() {
         </p>
         <button
           onClick={() => setDeactivateOpen(true)}
-          className="rounded-lg border border-warning/60 px-4 py-2 text-sm font-semibold text-warning hover:bg-warning/10"
+          className="rounded-lg border border-warning/60 px-4 py-2 text-sm font-semibold text-warning transition hover:bg-warning/10"
         >
           Deactivate Account
         </button>
@@ -50,7 +50,7 @@ export default function DangerZoneTab() {
           <input
             value={deleteText}
             onChange={(event) => setDeleteText(event.target.value)}
-            className="rounded-lg border border-danger/40 bg-white px-3 py-2 text-sm focus:border-danger focus:outline-none"
+            className="rounded-lg border border-danger/40 bg-white px-3 py-2 text-sm text-midnight focus:border-danger focus:outline-none"
           />
         </div>
         <motion.button
@@ -87,16 +87,16 @@ export default function DangerZoneTab() {
               <input
                 type="password"
                 placeholder="Password"
-                className="mt-4 w-full rounded-lg border border-slate/30 px-3 py-2 focus:border-warning focus:outline-none"
+                className="mt-4 w-full rounded-lg border border-slate/30 px-3 py-2 text-midnight placeholder:text-slate/50 focus:border-warning focus:outline-none"
               />
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   onClick={() => setDeactivateOpen(false)}
-                  className="rounded-lg border border-slate/30 px-4 py-2 text-sm font-semibold text-midnight hover:border-midnight"
+                  className="rounded-lg border border-slate/30 px-4 py-2 text-sm font-semibold text-midnight transition hover:border-midnight"
                 >
                   Cancel
                 </button>
-                <button className="rounded-lg bg-warning px-4 py-2 text-sm font-semibold text-white hover:bg-warning/90">
+                <button className="rounded-lg bg-warning px-4 py-2 text-sm font-semibold text-white transition hover:bg-warning/90">
                   Confirm
                 </button>
               </div>
@@ -126,11 +126,11 @@ export default function DangerZoneTab() {
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="rounded-lg border border-slate/30 px-4 py-2 text-sm font-semibold text-midnight"
+                  className="rounded-lg border border-slate/30 px-4 py-2 text-sm font-semibold text-midnight transition hover:border-midnight"
                 >
                   Cancel
                 </button>
-                <button className="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-danger/90">
+                <button className="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:bg-danger/90">
                   I understand, delete
                 </button>
               </div>

@@ -33,7 +33,7 @@ export default function AccountTab() {
               <div className="flex items-center gap-2 text-sm text-slate">
                 <Mail className="h-4 w-4" />
                 <span>aria.chen@evalexa.com</span>
-                <button className="font-semibold text-primary">Change email</button>
+                <button className="font-semibold text-primary hover:text-primary/80 transition">Change email</button>
               </div>
             </div>
             <p className="text-sm text-slate">
@@ -55,7 +55,7 @@ export default function AccountTab() {
                 <input
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
-                  className="rounded-lg border border-slate/30 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                  className="rounded-lg border border-slate/30 px-3 py-2 text-sm text-midnight placeholder:text-slate/50 focus:border-primary focus:outline-none"
                 />
                 <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
                   Verified
@@ -73,7 +73,7 @@ export default function AccountTab() {
               <select
                 value={language}
                 onChange={(event) => setLanguage(event.target.value)}
-                className="rounded-lg border border-slate/30 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                className="rounded-lg border border-slate/30 px-3 py-2 text-sm text-midnight focus:border-primary focus:outline-none"
               >
                 <option value="en">English</option>
                 <option value="es">Spanish</option>
@@ -91,7 +91,7 @@ export default function AccountTab() {
               <select
                 value={timezone}
                 onChange={(event) => setTimezone(event.target.value)}
-                className="rounded-lg border border-slate/30 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                className="rounded-lg border border-slate/30 px-3 py-2 text-sm text-midnight focus:border-primary focus:outline-none"
               >
                 <option value="EST">(GMT-05:00) Eastern Time</option>
                 <option value="PST">(GMT-08:00) Pacific Time</option>

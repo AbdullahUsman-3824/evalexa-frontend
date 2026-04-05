@@ -77,10 +77,10 @@ export default function PrivacyTab() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <button className="rounded-lg border border-slate/30 px-4 py-2 text-sm font-semibold text-midnight hover:border-primary hover:text-primary">
+          <button className="rounded-lg border border-slate/30 px-4 py-2 text-sm font-semibold text-midnight transition hover:border-primary hover:text-primary">
             Download My Data
           </button>
-          <button className="text-sm font-semibold text-danger hover:text-danger/80">
+          <button className="text-sm font-semibold text-danger transition hover:text-danger/80">
             Request Data Deletion
           </button>
         </div>
