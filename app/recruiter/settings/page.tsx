@@ -1,103 +1,119 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Settings,
+  Shield,
+  BellRing,
+  Building2,
+  AlertTriangle,
+} from "lucide-react";
+import AccountTab from "@/components/recruiter/settings/AccountTab";
+import SecurityTab from "@/components/recruiter/settings/SecurityTab";
+import NotificationsTab from "@/components/recruiter/settings/NotificationsTab";
+import CompanyPrefsTab from "@/components/recruiter/settings/CompanyPrefsTab";
+import DangerZoneTab from "@/components/recruiter/settings/DangerZoneTab";
+
+type TabID = "account" | "security" | "notifications" | "company" | "danger";
+
+const tabs: { id: TabID; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "account", label: "Account", icon: Settings },
+  { id: "security", label: "Security", icon: Shield },
+  { id: "notifications", label: "Notifications", icon: BellRing },
+  { id: "company", label: "Company Preferences", icon: Building2 },
+  { id: "danger", label: "Danger Zone", icon: AlertTriangle },
+];
+
 export default function RecruiterSettingsPage() {
+  const [activeTab, setActiveTab] = useState<TabID>("account");
+
+  const ActiveComponent = useMemo(() => {
+    switch (activeTab) {
+      case "security":
+        return <SecurityTab />;
+      case "notifications":
+        return <NotificationsTab />;
+      case "company":
+        return <CompanyPrefsTab />;
+      case "danger":
+        return <DangerZoneTab />;
+      case "account":
+      default:
+        return <AccountTab />;
+    }
+  }, [activeTab]);
+
   return (
-    <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-syne text-2xl font-bold text-[#0D1B2A] mb-2">
-            Settings
-          </h1>
-          <p className="text-[#6B7A99]">
-            Manage your account preferences and notifications
-          </p>
-        </div>
+    <section className="space-y-6 bg-surface p-4 md:p-6">
+      <header className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
+        <p className="font-syne text-2xl font-semibold text-midnight">Recruiter Settings</p>
+       <p className="mt-1 text-sm text-slate">
+          Manage account, security, notifications, company defaults, and sensitive actions.
+        </p>
+      </header>
 
-        {/* Settings Sections */}
-        <div className="space-y-6">
-          {/* Notifications */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-syne text-lg font-semibold text-[#0D1B2A] mb-4">
-              Notifications
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <p className="text-sm font-medium text-[#0D1B2A]">New Applications</p>
-                  <p className="text-xs text-[#6B7A99] mt-1">
-                    Get notified when someone applies to your job posts
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" defaultChecked className="sr-only peer" />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1E6FFF]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1E6FFF]"></div>
-                </label>
-              </div>
+      <div className="rounded-2xl bg-white p-4 shadow-sm shadow-midnight/5 lg:hidden">
+        <label
+          htmlFor="settings-section-select"
+          className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate"
+        >
+          Settings section
+        </label>
+        <select
+          id="settings-section-select"
+          value={activeTab}
+          onChange={(event) => setActiveTab(event.target.value as TabID)}
+          className="w-full rounded-xl border border-light bg-surface px-4 py-3 text-sm font-semibold text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        >
+          {tabs.map((tab) => (
+            <option key={tab.id} value={tab.id}>
+              {tab.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <p className="text-sm font-medium text-[#0D1B2A]">AI Ranking Complete</p>
-                  <p className="text-xs text-[#6B7A99] mt-1">
-                    Get notified when AI finishes ranking candidates
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" defaultChecked className="sr-only peer" />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1E6FFF]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1E6FFF]"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium text-[#0D1B2A]">Interview Reminders</p>
-                  <p className="text-xs text-[#6B7A99] mt-1">
-                    Get reminders for upcoming interviews
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" defaultChecked className="sr-only peer" />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1E6FFF]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1E6FFF]"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* Account */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-syne text-lg font-semibold text-[#0D1B2A] mb-4">
-              Account
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#0D1B2A] mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  defaultValue="recruiter@techcorp.com"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6FFF] focus:border-transparent outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#0D1B2A] mb-2">
-                  Change Password
-                </label>
-                <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
-                  Update Password
+      <div className="space-y-4">
+        <aside className="hidden rounded-2xl bg-white p-4 shadow-sm shadow-midnight/5 lg:block">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate">Settings</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    isActive
+                      ? "border-primary bg-primary text-white shadow-sm"
+                      : "border-light bg-surface text-slate hover:border-primary/30 hover:text-midnight"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
                 </button>
-              </div>
-            </div>
+              );
+            })}
           </div>
+        </aside>
 
-          {/* Actions */}
-          <div className="flex gap-4">
-            <button className="px-6 py-2.5 bg-[#1E6FFF] text-white rounded-lg hover:bg-[#1557D8] transition-colors font-medium">
-              Save Changes
-            </button>
-            <button className="px-6 py-2.5 border border-gray-300 text-[#0D1B2A] rounded-lg hover:bg-gray-50 transition-colors font-medium">
-              Cancel
-            </button>
-          </div>
+        <div className="rounded-2xl">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {ActiveComponent}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

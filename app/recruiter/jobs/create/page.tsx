@@ -1,130 +1,117 @@
-export default function PostJobPage() {
+"use client";
+
+import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import StepIndicator from "@/components/recruiter/jobs/create/StepIndicator";
+import Step1BasicInfo from "@/components/recruiter/jobs/create/Step1BasicInfo";
+import Step2Requirements from "@/components/recruiter/jobs/create/Step2Requirements";
+import Step3AISettings from "@/components/recruiter/jobs/create/Step3AISettings";
+import Step4Review from "@/components/recruiter/jobs/create/Step4Review";
+import type { JobPostFormData } from "@/components/recruiter/jobs/create/types";
+
+const INITIAL_FORM_DATA: JobPostFormData = {
+  jobTitle: "",
+  department: "Engineering",
+  jobType: "Full-time",
+  workMode: "On-site",
+  location: "",
+  applicationDeadline: "",
+  urgentHiring: false,
+  salaryMin: "",
+  salaryMax: "",
+  currency: "PKR",
+  showSalaryOnPost: true,
+  salaryPer: "Year",
+  experienceLevel: "Mid",
+  educationRequirement: "Any",
+  requiredSkills: [],
+  niceToHaveSkills: [],
+  openings: 1,
+  jobDescription: "",
+  responsibilities: [],
+  benefits: [],
+  aiScreeningEnabled: true,
+  minMatchScore: 60,
+  skillWeights: {},
+  autoShortlistEnabled: false,
+  autoShortlistThreshold: 85,
+  screeningQuestions: [],
+  aiInterviewEnabled: false,
+  aiInterviewThreshold: 80,
+  aiInterviewType: "Text-based Q&A",
+};
+
+export default function CreateJobPage() {
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [formData, setFormData] = useState<JobPostFormData>(INITIAL_FORM_DATA);
+
+  const updateField = <K extends keyof JobPostFormData>(
+    field: K,
+    value: JobPostFormData[K],
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const stepContent = useMemo(() => {
+    if (currentStep === 1) {
+      return <Step1BasicInfo data={formData} onChange={updateField} />;
+    }
+    if (currentStep === 2) {
+      return <Step2Requirements data={formData} onChange={updateField} />;
+    }
+    if (currentStep === 3) {
+      return <Step3AISettings data={formData} onChange={updateField} />;
+    }
+    return <Step4Review data={formData} onEditStep={(step) => setCurrentStep(step)} />;
+  }, [currentStep, formData]);
+
   return (
     <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-syne text-2xl font-bold text-[#0D1B2A] mb-2">
-            Post a New Job
-          </h1>
-          <p className="text-[#6B7A99]">
-            Create a job posting to attract the best candidates
-          </p>
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div>
+          <h1 className="font-syne text-2xl font-bold text-midnight">Create Job Post</h1>
+          <p className="text-slate">Build, review, and publish your job posting in 4 steps</p>
         </div>
 
-        {/* Form */}
-        <div className="bg-white rounded-xl border border-gray-200 p-8">
-          <form className="space-y-6">
-            {/* Job Title */}
-            <div>
-              <label className="block text-sm font-medium text-[#0D1B2A] mb-2">
-                Job Title *
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Senior Full Stack Developer"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6FFF] focus:border-transparent outline-none transition-all"
-              />
-            </div>
+        <StepIndicator currentStep={currentStep} />
 
-            {/* Location & Type */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-[#0D1B2A] mb-2">
-                  Location *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. San Francisco, CA"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6FFF] focus:border-transparent outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#0D1B2A] mb-2">
-                  Job Type *
-                </label>
-                <select className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6FFF] focus:border-transparent outline-none transition-all">
-                  <option>Full-time</option>
-                  <option>Part-time</option>
-                  <option>Contract</option>
-                  <option>Internship</option>
-                </select>
-              </div>
-            </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={{ duration: 0.2 }}
+          >
+            {stepContent}
+          </motion.div>
+        </AnimatePresence>
 
-            {/* Salary Range */}
-            <div>
-              <label className="block text-sm font-medium text-[#0D1B2A] mb-2">
-                Salary Range
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="Min"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6FFF] focus:border-transparent outline-none transition-all"
-                />
-                <input
-                  type="text"
-                  placeholder="Max"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6FFF] focus:border-transparent outline-none transition-all"
-                />
-              </div>
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm">
+          <button
+            type="button"
+            disabled={currentStep === 1}
+            onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 4)}
+            className="rounded-lg border border-slate/25 px-4 py-2 text-sm font-semibold text-midnight disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-[#0D1B2A] mb-2">
-                Job Description *
-              </label>
-              <textarea
-                rows={8}
-                placeholder="Describe the role, responsibilities, and requirements..."
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6FFF] focus:border-transparent outline-none transition-all resize-none"
-              />
-            </div>
+          <div className="text-sm text-slate">
+            Step <span className="font-semibold text-midnight">{currentStep}</span> of 4
+          </div>
 
-            {/* AI Features Callout */}
-            <div className="bg-[#00C2D1]/5 border border-[#00C2D1]/20 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#00C2D1]/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-[#00C2D1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="font-medium text-[#0D1B2A] mb-1">
-                    AI-Powered Candidate Ranking
-                  </h4>
-                  <p className="text-sm text-[#6B7A99]">
-                    Once published, our AI will automatically rank incoming applications based on relevance, skills match, and experience.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-4 pt-4">
-              <button
-                type="submit"
-                className="px-6 py-2.5 bg-[#1E6FFF] text-white rounded-lg hover:bg-[#1557D8] transition-colors font-medium"
-              >
-                Publish Job
-              </button>
-              <button
-                type="button"
-                className="px-6 py-2.5 border border-gray-300 text-[#0D1B2A] rounded-lg hover:bg-gray-50 transition-colors font-medium"
-              >
-                Save as Draft
-              </button>
-              <button
-                type="button"
-                className="px-6 py-2.5 text-[#6B7A99] hover:text-[#0D1B2A] transition-colors font-medium"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+          <button
+            type="button"
+            disabled={currentStep === 4}
+            onClick={() => setCurrentStep((prev) => Math.min(4, prev + 1) as 1 | 2 | 3 | 4)}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Continue
+          </button>
         </div>
       </div>
     </div>
   );
 }
+

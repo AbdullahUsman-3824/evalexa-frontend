@@ -24,66 +24,26 @@ export default function LoginForm() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const newErrors = { email: "", password: "" };
+    setErrors({ email: "", password: "" });
+    setIsLoading(true);
 
-    // Validation
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
+      const mockUser = {
+        email: formData.email,
+        role: "recruiter",
+      };
 
-    setErrors(newErrors);
-
-    // If no errors, proceed with login
-    if (!newErrors.email && !newErrors.password) {
-      setIsLoading(true);
-
-      try {
-        // TODO: Replace with actual API call to your backend
-        // Example: const response = await fetch('/api/auth/login', { method: 'POST', body: JSON.stringify(formData) })
-        // const data = await response.json()
-
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Mock response - replace with actual API response
-        const mockUser = {
-          email: formData.email,
-          role: "candidate", // This should come from your API: "candidate" or "recruiter"
-        };
-
-        // Store user data (you might want to use a state management solution or cookies)
-        localStorage.setItem("user", JSON.stringify(mockUser));
-
-        // Navigate based on user role
-        if (mockUser.role === "candidate") {
-          router.push("/dashboard"); // Candidate dashboard
-        } else if (mockUser.role === "recruiter") {
-          router.push("/recruiter/dashboard"); // Recruiter dashboard
-        } else {
-          // Default fallback
-          router.push("/dashboard");
-        }
-      } catch (error) {
-        console.error("Login failed:", error);
-        setErrors({ ...errors, password: "Login failed. Please try again." });
-      } finally {
-        setIsLoading(false);
-      }
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      router.push("/recruiter/dashboard");
+    } catch (error) {
+      console.error("Login failed:", error);
+      setErrors({ ...errors, password: "Login failed. Please try again." });
+    } finally {
+      setIsLoading(false);
     }
   };
 

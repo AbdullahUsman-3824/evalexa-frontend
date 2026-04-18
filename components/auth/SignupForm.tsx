@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, ShieldCheck, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -11,6 +12,8 @@ import SocialLogin from "@/components/auth/SocialLogin";
 type PasswordStrength = "weak" | "fair" | "strong" | null;
 
 export default function SignupForm() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -33,11 +36,6 @@ export default function SignupForm() {
     useState<PasswordStrength>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
   const calculatePasswordStrength = (password: string): PasswordStrength => {
     if (!password) return null;
     if (password.length < 6) return "weak";
@@ -52,58 +50,25 @@ export default function SignupForm() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const newErrors = {
+    setErrors({
       fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
       role: "",
       agreeToTerms: "",
-    };
+    });
+    setIsLoading(true);
 
-    // Validation
-    if (!formData.fullName || formData.fullName.length < 2) {
-      newErrors.fullName = "Full name must be at least 2 characters";
-    }
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    if (!formData.role) {
-      newErrors.role = "Please select your role";
-    }
-
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = "You must agree to the terms and conditions";
-    }
-
-    setErrors(newErrors);
-
-    // If no errors, proceed with signup
-    if (Object.values(newErrors).every((error) => !error)) {
-      setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        console.log("Signup successful:", formData);
-        setIsLoading(false);
-        // Redirect or handle success
-      }, 2000);
-    }
+    setTimeout(() => {
+      console.log("Signup successful:", formData);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ email: formData.email, role: "recruiter" }),
+      );
+      setIsLoading(false);
+      router.push("/recruiter/dashboard");
+    }, 2000);
   };
 
   const strengthConfig = {
