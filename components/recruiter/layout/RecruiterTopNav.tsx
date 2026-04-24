@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Menu,
-  Plus,
   Bell,
   ChevronDown,
   Building2,
@@ -36,6 +35,7 @@ const pageTitles: Record<string, string> = {
 
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -46,6 +46,11 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const company = {
     name: "TechCorp Inc.",
     initials: "TC",
+  };
+  const handleSignOut = () => {
+    localStorage.removeItem("user");
+    setShowProfileDropdown(false);
+    router.push("/login");
   };
 
   return (
@@ -70,15 +75,6 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
-          {/* Quick Post Job Button */}
-          <Link
-            href="/recruiter/jobs/create"
-            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-[#1E6FFF] text-white rounded-lg hover:bg-[#1557D8] transition-colors text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Post a Job</span>
-          </Link>
-
           {/* Notification Bell */}
           <div className="relative">
             <button
@@ -232,11 +228,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                   </Link>
                   <div className="border-t border-gray-200 my-1" />
                   <button
-                    onClick={() => {
-                      // Handle logout
-                      console.log("Logout clicked");
-                      setShowProfileDropdown(false);
-                    }}
+                    onClick={handleSignOut}
                     className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors text-left"
                   >
                     <LogOut className="w-4 h-4 text-[#E63946]" />

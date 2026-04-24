@@ -8,21 +8,17 @@ import TopNavbar from "@/components/candidate/layout/TopNavbar";
 
 // Map routes to page titles
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/profile": "My Profile",
-  "/resume": "Resume",
-  "/resume/analysis": "AI Resume Analysis",
-  "/ai-analysis": "AI Analysis",
-  "/jobs/explore": "Explore Jobs",
-  "/jobs/recommended": "Recommended Jobs",
-  "/recommendations": "Job Recommendations",
-  "/explore": "Explore Jobs",
-  "/applied": "Applied Jobs",
-  "/saved": "Saved Jobs",
-  "/saved-jobs": "Saved Jobs",
-  "/interviews": "Interviews",
-  "/notifications": "Notifications",
-  "/settings": "Settings",
+  "/candidate/dashboard": "Dashboard",
+  "/candidate/profile": "My Profile",
+  "/candidate/resume": "Resume",
+  "/candidate/resume/analysis": "AI Resume Analysis",
+  "/candidate/jobs/explore": "Explore Jobs",
+  "/candidate/jobs/recommended": "Recommended Jobs",
+  "/candidate/applied": "Applied Jobs",
+  "/candidate/saved-jobs": "Saved Jobs",
+  "/candidate/interviews": "Interviews",
+  "/candidate/notifications": "Notifications",
+  "/candidate/settings": "Settings",
 };
 
 export default function CandidateLayout({

@@ -18,9 +18,13 @@ export default function ProfileCompletion() {
   const checklist: ChecklistItem[] = [
     { label: "Basic Info", completed: true },
     { label: "Education", completed: true },
-    { label: "Upload Resume", completed: false, link: "/resume" },
-    { label: "Add Skills", completed: false, link: "/profile/edit" },
-    { label: "Portfolio Link", completed: false, link: "/profile/edit" },
+    { label: "Upload Resume", completed: false, link: "/candidate/resume" },
+    { label: "Add Skills", completed: false, link: "/candidate/profile/edit" },
+    {
+      label: "Portfolio Link",
+      completed: false,
+      link: "/candidate/profile/edit",
+    },
   ];
 
   useEffect(() => {
@@ -141,7 +145,7 @@ export default function ProfileCompletion() {
             className="mt-6"
           >
             <Link
-              href="/profile/edit"
+              href="/candidate/profile/edit"
               className="inline-block px-6 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
             >
               Complete Profile

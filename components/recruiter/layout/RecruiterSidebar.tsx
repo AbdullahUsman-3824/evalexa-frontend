@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -17,9 +17,7 @@ import {
   Building2,
   Settings,
   LogOut,
-  ChevronDown,
 } from "lucide-react";
-import { useState } from "react";
 
 interface NavItem {
   label: string;
@@ -112,16 +110,14 @@ export default function RecruiterSidebar({
   onClose,
 }: RecruiterSidebarProps) {
   const pathname = usePathname();
-  const [showLogout, setShowLogout] = useState(false);
-
-  // Mock company data - replace with actual data from auth context
-  const company = {
-    name: "TechCorp Inc.",
-    initials: "TC",
-    role: "Recruiter",
-  };
+  const router = useRouter();
 
   const isActive = (href: string) => pathname === href;
+  const handleSignOut = () => {
+    localStorage.removeItem("user");
+    if (onClose) onClose();
+    router.push("/login");
+  };
 
   return (
     <>
@@ -230,51 +226,24 @@ export default function RecruiterSidebar({
               </div>
             </div>
           ))}
-        </nav>
 
-        {/* Bottom User Section - Fixed */}
-        <div className="flex-shrink-0 border-t border-white/10">
-          {/* Company Info */}
-          <button
-            onClick={() => setShowLogout(!showLogout)}
-            className="w-full px-4 py-4 flex items-center gap-3 hover:bg-white/5 transition-colors"
-          >
-            {/* Company Logo Circle */}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1E6FFF] to-[#00C2D1] flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-sm">
-                {company.initials}
-              </span>
-            </div>
-
-            {/* Company Details */}
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-white text-sm font-medium truncate">
-                {company.name}
-              </p>
-              <p className="text-[#6B7A99] text-xs">{company.role}</p>
-            </div>
-
-            {/* Dropdown Icon */}
-            <ChevronDown
-              className={`w-4 h-4 text-[#6B7A99] transition-transform ${
-                showLogout ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-
-          {/* Logout Option */}
-          {showLogout && (
+          <div className="mt-4 pt-3 border-t border-white/10">
             <button
-              onClick={() => {
-                // Handle logout
-                console.log("Logout clicked");
-              }}
-              className="w-full px-4 py-3 flex items-center gap-3 text-[#E63946] hover:bg-[#E63946]/10 transition-colors border-t border-white/5"
+              onClick={handleSignOut}
+              className="w-full px-3 py-2.5 flex items-center gap-3 text-[#E63946] hover:bg-[#E63946]/10 transition-colors rounded-r-lg"
             >
               <LogOut className="w-5 h-5" />
               <span className="text-sm font-medium">Sign Out</span>
             </button>
-          )}
+          </div>
+        </nav>
+
+        {/* Bottom spacing */}
+        <div className="h-2 flex-shrink-0">
+          <button
+            className="hidden"
+            aria-hidden="true"
+          />
         </div>
       </aside>
     </>

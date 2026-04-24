@@ -210,7 +210,7 @@ export default function SavedJobsPage() {
               : `No jobs match the "${activeTab}" filter`}
           </p>
           <Link
-            href="/jobs/explore"
+            href="/candidate/jobs/explore"
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-white shadow-lg shadow-primary/30 transition hover:bg-primary/90"
           >
             Explore Jobs

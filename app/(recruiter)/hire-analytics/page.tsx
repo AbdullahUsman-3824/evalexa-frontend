@@ -3,7 +3,6 @@
 import { useState } from "react";
 import KPICards from "@/components/recruiter/analytics/KPICards";
 import ApplicationVolumeChart from "@/components/recruiter/analytics/ApplicationVolumeChart";
-import HiringFunnelDetailed from "@/components/recruiter/analytics/HiringFunnelDetailed";
 import PerJobChart from "@/components/recruiter/analytics/PerJobChart";
 import SkillsPool from "@/components/recruiter/analytics/SkillsPool";
 import JobPerformanceTable from "@/components/recruiter/analytics/JobPerformanceTable";
@@ -109,20 +108,6 @@ export default function HiringAnalyticsPage() {
         <KPICards />
 
         <ApplicationVolumeChart />
-
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <HiringFunnelDetailed />
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="font-syne text-xl font-semibold text-midnight">
-              Funnel Notes
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-slate">
-              AI screening keeps the early funnel efficient with high throughput, while
-              shortlist and interview stages remain the key narrowing points. Improve
-              conversion by tightening role calibration and candidate scheduling speed.
-            </p>
-          </div>
-        </div>
 
         <PerJobChart />
 

@@ -140,7 +140,7 @@ export default function ParsedData({
           <div className="flex items-center justify-between gap-4">
             <p className="font-semibold text-midnight">Contact Info</p>
             <Link
-              href="/profile"
+              href="/candidate/profile"
               className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
             >
               <Edit3 className="h-4 w-4" />

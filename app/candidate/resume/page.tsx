@@ -357,7 +357,7 @@ export default function ResumePage() {
           </p>
         </div>
         <Link
-          href="/resume/analysis"
+          href="/candidate/resume/analysis"
           className="inline-flex items-center gap-2 rounded-full bg-cyan px-5 py-3 font-semibold text-white shadow-lg shadow-cyan/30 transition hover:scale-[1.01]"
         >
           <Sparkles className="h-5 w-5" />

@@ -105,7 +105,7 @@ export default function ResumeCard({
               />
             </div>
             <Link
-              href="/resume/analysis"
+              href="/candidate/resume/analysis"
               className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan"
             >
               View Full AI Analysis

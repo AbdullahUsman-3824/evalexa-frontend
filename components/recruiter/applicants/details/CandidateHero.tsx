@@ -43,32 +43,34 @@ function ScoreRing({
   const targetOffset = circumference - (Math.max(0, Math.min(100, value)) / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-1">
-      <svg width={size} height={size} className="-rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          strokeWidth={stroke}
-          className="stroke-white/20"
-          fill="none"
-        />
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          strokeWidth={stroke}
-          className={colorClass}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: targetOffset }}
-          transition={{ duration: 0.9 }}
-        />
-      </svg>
-      <div className="-mt-[58%] text-center">
-        <p className="text-lg font-bold text-white">{value}%</p>
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative grid place-items-center" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            strokeWidth={stroke}
+            className="stroke-white/20"
+            fill="none"
+          />
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            strokeWidth={stroke}
+            className={colorClass}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: targetOffset }}
+            transition={{ duration: 0.9 }}
+          />
+        </svg>
+        <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
+          <p className="text-lg font-bold text-white">{value}%</p>
+        </div>
       </div>
       <p className="text-xs text-slate-300">{label}</p>
     </div>
@@ -100,15 +102,15 @@ export default function CandidateHero({
               <p className="text-sm text-cyan">
                 {role} at {company}
               </p>
-              <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-300">
-                <MapPin className="h-3.5 w-3.5" />
-                {location}
-              </p>
-              {openToWork && (
-                <span className="mt-2 inline-flex rounded-full bg-success px-2.5 py-1 text-xs font-semibold text-white">
-                  Open to Work
-                </span>
-              )}
+               <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-300">
+                 <MapPin className="h-3.5 w-3.5" />
+                 {location}
+               </p>
+               {openToWork && (
+                 <span className="mt-2 inline-flex items-center whitespace-nowrap rounded-full bg-success px-2.5 py-1 text-xs font-semibold leading-none text-white">
+                   Open to Work
+                 </span>
+               )}
             </div>
           </div>
 
@@ -134,7 +136,7 @@ export default function CandidateHero({
               <ScoreRing value={matchScore} size={108} stroke={9} colorClass="stroke-cyan" label="AI Match" />
             </div>
             <div className="rounded-xl bg-white/5 p-3">
-              <ScoreRing value={resumeScore} size={92} stroke={8} colorClass="stroke-primary" label="Resume" />
+              <ScoreRing value={resumeScore} size={108} stroke={9} colorClass="stroke-primary" label="Resume" />
             </div>
           </div>
 

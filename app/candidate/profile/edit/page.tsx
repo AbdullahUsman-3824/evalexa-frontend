@@ -40,7 +40,7 @@ export default function EditProfilePage() {
       confirm("Are you sure you want to discard all changes?")
     ) {
       setHasChanges(false);
-      window.location.href = "/profile";
+      window.location.href = "/candidate/profile";
     }
   };
 
@@ -49,7 +49,7 @@ export default function EditProfilePage() {
       {/* Header */}
       <div className="mb-6">
         <Link
-          href="/profile"
+          href="/candidate/profile"
           className="inline-flex items-center gap-2 text-slate hover:text-primary transition-colors mb-3"
         >
           <ArrowLeft size={18} />

@@ -120,7 +120,7 @@ export default function PortfolioSection() {
           Portfolio & Links
         </h2>
         <Link
-          href="/profile/edit"
+          href="/candidate/profile/edit"
           className="text-primary text-sm font-medium hover:underline flex items-center gap-1"
         >
           <Plus size={16} />
@@ -136,7 +136,7 @@ export default function PortfolioSection() {
         </div>
       ) : (
         <Link
-          href="/profile/edit"
+          href="/candidate/profile/edit"
           className="flex items-center justify-center gap-3 p-8 border-2 border-dashed border-slate/30 rounded-lg text-slate hover:border-primary hover:text-primary transition-colors"
         >
           <LinkIcon size={20} />

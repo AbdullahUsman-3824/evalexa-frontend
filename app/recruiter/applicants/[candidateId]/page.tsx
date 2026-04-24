@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CalendarPlus, MapPin, Star, X } from "lucide-react";
+import { MapPin } from "lucide-react";
 import CandidateHero from "@/components/recruiter/applicants/details/CandidateHero";
 import AIFitAnalysis from "@/components/recruiter/applicants/details/AIFitAnalysis";
 import ResumeSection from "@/components/recruiter/applicants/details/ResumeSection";
@@ -27,35 +27,10 @@ export default function CandidateDetailsPage() {
             <Link href="/recruiter/jobs/1/applicants" className="text-sm font-medium text-primary">
               ← Applicants
             </Link>
-            <h1 className="font-syne text-lg font-bold text-midnight">Ayesha Khan</h1>
+            <h1 className="font-syne text-[17px] font-bold text-midnight">Ayesha Khan</h1>
             <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(status)}`}>{status}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setStatus("Shortlisted")}
-              className="inline-flex items-center gap-1 rounded-lg bg-warning px-3 py-2 text-sm font-semibold text-white"
-            >
-              <Star className="h-4 w-4" />
-              Shortlist
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatus("Interview")}
-              className="inline-flex items-center gap-1 rounded-lg bg-success px-3 py-2 text-sm font-semibold text-white"
-            >
-              <CalendarPlus className="h-4 w-4" />
-              Schedule Interview
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatus("Rejected")}
-              className="inline-flex items-center gap-1 rounded-lg border border-danger/25 px-3 py-2 text-sm font-medium text-danger"
-            >
-              <X className="h-4 w-4" />
-              Reject
-            </button>
-          </div>
+          <p className="text-sm font-medium text-slate">Candidate 4 of 42</p>
         </div>
       </div>
 

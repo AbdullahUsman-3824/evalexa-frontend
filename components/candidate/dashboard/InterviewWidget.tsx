@@ -101,7 +101,7 @@ export default function InterviewWidget() {
 
       {/* View all link */}
       <Link
-        href="/interviews"
+        href="/candidate/interviews"
         className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:gap-3 transition-all duration-200"
       >
         View All Interviews

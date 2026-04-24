@@ -71,7 +71,7 @@ export default function AIInsightsTeaser() {
 
       {/* CTA Link */}
       <Link
-        href="/ai-analysis"
+        href="/candidate/resume/analysis"
         className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:gap-3 transition-all duration-200"
       >
         View Full Analysis

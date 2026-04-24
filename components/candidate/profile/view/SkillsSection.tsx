@@ -28,7 +28,7 @@ export default function SkillsSection() {
           Skills
         </h2>
         <Link
-          href="/profile/edit"
+          href="/candidate/profile/edit"
           className="p-2 text-slate hover:text-primary hover:bg-surface rounded-lg transition-colors"
         >
           <Edit2 size={16} />
@@ -86,7 +86,7 @@ export default function SkillsSection() {
 
           {/* Add More Button */}
           <Link
-            href="/profile/edit"
+            href="/candidate/profile/edit"
             className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:underline"
           >
             <Plus size={16} />
@@ -95,7 +95,7 @@ export default function SkillsSection() {
         </div>
       ) : (
         <Link
-          href="/profile/edit"
+          href="/candidate/profile/edit"
           className="block p-6 border-2 border-dashed border-slate/30 rounded-lg text-center text-slate hover:border-primary hover:text-primary transition-colors"
         >
           <p className="text-sm">Add skills to showcase your expertise →</p>

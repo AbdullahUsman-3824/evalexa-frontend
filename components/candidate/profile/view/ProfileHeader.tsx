@@ -18,7 +18,7 @@ export default function ProfileHeader() {
         {/* Action buttons - top right */}
         <div className="absolute top-0 right-0 flex gap-2">
           <Link
-            href="/profile/edit"
+            href="/candidate/profile/edit"
             className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
           >
             <Edit size={16} />

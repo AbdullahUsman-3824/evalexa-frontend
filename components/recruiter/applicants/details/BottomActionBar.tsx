@@ -23,15 +23,14 @@ export default function BottomActionBar({
             className="inline-flex items-center gap-1 rounded-lg border border-slate/20 px-3 py-2 text-sm font-medium text-midnight hover:bg-surface"
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous Candidate
+            ← Previous
           </button>
           <button
             type="button"
             onClick={onNext}
             className="inline-flex items-center gap-1 rounded-lg border border-slate/20 px-3 py-2 text-sm font-medium text-midnight hover:bg-surface"
           >
-            Next Candidate
-            <ChevronRight className="h-4 w-4" />
+            Next →
           </button>
         </div>
         <div className="flex items-center gap-2">
@@ -45,7 +44,7 @@ export default function BottomActionBar({
           </button>
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-success px-3 py-2 text-sm font-semibold text-white hover:bg-success/90"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary/90"
           >
             <CalendarPlus className="h-4 w-4" />
             Schedule Interview

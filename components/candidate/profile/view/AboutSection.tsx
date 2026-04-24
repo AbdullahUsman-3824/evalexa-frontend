@@ -21,7 +21,7 @@ export default function AboutSection() {
           About Me
         </h2>
         <Link
-          href="/profile/edit"
+          href="/candidate/profile/edit"
           className="p-2 text-slate hover:text-primary hover:bg-surface rounded-lg transition-colors"
         >
           <Edit2 size={16} />
@@ -32,7 +32,7 @@ export default function AboutSection() {
         <p className="text-midnight text-[15px] leading-relaxed">{bio}</p>
       ) : (
         <Link
-          href="/profile/edit"
+          href="/candidate/profile/edit"
           className="block p-6 border-2 border-dashed border-slate/30 rounded-lg text-center text-slate hover:border-primary hover:text-primary transition-colors"
         >
           <p className="text-sm">

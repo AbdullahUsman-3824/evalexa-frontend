@@ -71,13 +71,14 @@ export default function CompanyInfoTab() {
           <label className="block text-sm font-medium text-midnight mb-2">
             Company Size <span className="text-danger">*</span>
           </label>
-          <select className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+          <select
+            defaultValue="51-200"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          >
             <option value="">Select size</option>
             <option value="1-10">1–10 employees</option>
             <option value="11-50">11–50 employees</option>
-            <option value="51-200" selected>
-              51–200 employees
-            </option>
+            <option value="51-200">51–200 employees</option>
             <option value="201-500">201–500 employees</option>
             <option value="500+">500+ employees</option>
           </select>

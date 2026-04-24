@@ -116,7 +116,7 @@ export default function TopNavbar({ onMenuClick, pageTitle }: TopNavbarProps) {
                       </div>
                     </div>
                     <Link
-                      href="/notifications"
+                      href="/candidate/notifications"
                       className="block p-3 text-center text-sm text-primary font-medium hover:bg-surface transition-colors"
                       onClick={() => setShowNotifications(false)}
                     >
@@ -167,7 +167,7 @@ export default function TopNavbar({ onMenuClick, pageTitle }: TopNavbarProps) {
                     </div>
                     <div className="py-2">
                       <Link
-                        href="/profile"
+                        href="/candidate/profile"
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-midnight hover:bg-surface transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
@@ -175,7 +175,7 @@ export default function TopNavbar({ onMenuClick, pageTitle }: TopNavbarProps) {
                         <span>My Profile</span>
                       </Link>
                       <Link
-                        href="/settings"
+                        href="/candidate/settings"
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-midnight hover:bg-surface transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
