@@ -3,15 +3,21 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { X, Plus, Upload } from "lucide-react";
+import { Company } from "@/lib/services/companyService";
 
-export default function CompanyInfoTab() {
+interface CompanyInfoTabProps {
+  data: Partial<Company>;
+  onChange: (newData: Partial<Company>) => void;
+}
+
+export default function CompanyInfoTab({ data, onChange }: CompanyInfoTabProps) {
   const [cultureTags, setCultureTags] = useState([
     "Remote Friendly",
     "Fast Growth",
     "Work-Life Balance",
   ]);
   const [newTag, setNewTag] = useState("");
-  const [description, setDescription] = useState("");
+
 
   const handleAddTag = () => {
     if (newTag.trim() && cultureTags.length < 10) {
@@ -38,8 +44,9 @@ export default function CompanyInfoTab() {
         </label>
         <input
           type="text"
-          defaultValue="TechCorp Solutions"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          value={data.name || ""}
+          onChange={(e) => onChange({ name: e.target.value })}
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           placeholder="Enter company name"
         />
       </div>
@@ -50,18 +57,19 @@ export default function CompanyInfoTab() {
           Industry <span className="text-danger">*</span>
         </label>
         <select
-          defaultValue="technology"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          value={data.industry || ""}
+          onChange={(e) => onChange({ industry: e.target.value })}
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
         >
           <option value="">Select industry</option>
-          <option value="technology">Technology</option>
-          <option value="finance">Finance</option>
-          <option value="healthcare">Healthcare</option>
-          <option value="education">Education</option>
-          <option value="retail">Retail</option>
-          <option value="manufacturing">Manufacturing</option>
-          <option value="consulting">Consulting</option>
-          <option value="other">Other</option>
+          <option value="Technology">Technology</option>
+          <option value="Finance">Finance</option>
+          <option value="Healthcare">Healthcare</option>
+          <option value="Education">Education</option>
+          <option value="Retail">Retail</option>
+          <option value="Manufacturing">Manufacturing</option>
+          <option value="Consulting">Consulting</option>
+          <option value="Other">Other</option>
         </select>
       </div>
 
@@ -72,8 +80,9 @@ export default function CompanyInfoTab() {
             Company Size <span className="text-danger">*</span>
           </label>
           <select
-            defaultValue="51-200"
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+            value={data.companySize || ""}
+            onChange={(e) => onChange({ companySize: e.target.value })}
+            className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           >
             <option value="">Select size</option>
             <option value="1-10">1–10 employees</option>
@@ -93,7 +102,7 @@ export default function CompanyInfoTab() {
             defaultValue="2019"
             min="1900"
             max={new Date().getFullYear()}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+            className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
             placeholder="YYYY"
           />
         </div>
@@ -133,8 +142,9 @@ export default function CompanyInfoTab() {
         </label>
         <input
           type="text"
-          defaultValue="San Francisco, CA"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          value={data.location || ""}
+          onChange={(e) => onChange({ location: e.target.value })}
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           placeholder="City, Country"
         />
       </div>
@@ -146,8 +156,9 @@ export default function CompanyInfoTab() {
         </label>
         <input
           type="url"
-          defaultValue="https://techcorp.com"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          value={data.website || ""}
+          onChange={(e) => onChange({ website: e.target.value })}
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           placeholder="https://www.example.com"
         />
       </div>
@@ -158,18 +169,18 @@ export default function CompanyInfoTab() {
           Company Description
         </label>
         <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          value={data.description || ""}
+          onChange={(e) => onChange({ description: e.target.value })}
           rows={5}
           maxLength={500}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
           placeholder="Tell candidates about your company culture, mission, and values..."
         />
         <div className="flex justify-between items-center mt-2">
           <p className="text-xs text-slate">
             Help candidates understand what makes your company unique
           </p>
-          <p className="text-xs text-slate">{description.length}/500</p>
+          <p className="text-xs text-slate">{(data.description || "").length}/500</p>
         </div>
       </div>
 
@@ -203,7 +214,7 @@ export default function CompanyInfoTab() {
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+            className="flex-1 px-4 py-2 bg-white text-midnight border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
             placeholder="Add custom tag (e.g., Flexible Hours)"
             maxLength={30}
           />

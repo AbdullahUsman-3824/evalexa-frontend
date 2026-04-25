@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { MonitorSmartphone } from "lucide-react";
 import ToggleSwitch from "@/components/candidate/settings/ToggleSwitch";
+import { getStoredUser } from "@/lib/services/authService";
+import { updateUser } from "@/lib/services/userService";
+import Toast from "@/components/ui/Toast";
 
 type Session = {
   id: string;
@@ -37,6 +40,8 @@ const loginHistory = [
   { id: "l5", date: "Apr 11, 11:27 AM", device: "iPad Pro", ip: "10.0.1.44", location: "Ibadan, NG" },
 ];
 
+type ToastState = { message: string; type: "success" | "error" | "info" } | null;
+
 export default function SecurityTab() {
   const [passwords, setPasswords] = useState({
     current: "",
@@ -45,6 +50,37 @@ export default function SecurityTab() {
   });
   const [is2FAEnabled, setIs2FAEnabled] = useState(true);
   const [sessions, setSessions] = useState(initialSessions);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<ToastState>(null);
+
+  const closeToast = useCallback(() => setToast(null), []);
+
+  const handleChangePassword = async () => {
+    if (passwords.next.length < 8) {
+      setToast({ message: "New password must be at least 8 characters.", type: "error" });
+      return;
+    }
+    if (passwords.next !== passwords.confirm) {
+      setToast({ message: "Passwords do not match.", type: "error" });
+      return;
+    }
+    const user = getStoredUser();
+    if (!user?.id) {
+      setToast({ message: "Session expired. Please log in again.", type: "error" });
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateUser(user.id, { password: passwords.next });
+      setToast({ message: "Password updated successfully!", type: "success" });
+      setPasswords({ current: "", next: "", confirm: "" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update password.";
+      setToast({ message, type: "error" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const passwordStrength = useMemo(() => {
     const value = passwords.next;
@@ -60,6 +96,15 @@ export default function SecurityTab() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={closeToast}
+        />
+      )}
+
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <h3 className="text-lg font-semibold text-midnight">Change Password</h3>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -101,6 +146,16 @@ export default function SecurityTab() {
               />
             ))}
           </div>
+        </div>
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            onClick={() => void handleChangePassword()}
+            disabled={saving || !passwords.current || !passwords.next || !passwords.confirm}
+            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "Updating…" : "Update Password"}
+          </button>
         </div>
       </section>
 

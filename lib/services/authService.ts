@@ -1,4 +1,5 @@
-const API_BASE_URL = "https://evalexa-backend.vercel.app";
+// const API_BASE_URL = "https://evalexa-backend.vercel.app";
+const API_BASE_URL = "http://localhost:3000";
 
 const AUTH_TOKEN_KEY = "access_token";
 const AUTH_USER_KEY = "user";
@@ -14,6 +15,7 @@ export type AuthUser = {
   name?: string;
   fullName: string;
   email: string;
+  phone?: string;
   role: string;
   companyId: number | null;
   isVerified: boolean;
@@ -42,23 +44,16 @@ function normalizeAuthUser(user: AuthUser): AuthUser {
   const normalizedName = user.name?.trim();
   const normalizedFullName = user.fullName?.trim();
 
-  if (normalizedFullName && normalizedName) {
+  if (normalizedFullName) {
     return {
       ...user,
-      name: normalizedName,
-      fullName: normalizedFullName,
-    };
-  }
-
-  if (normalizedFullName && !normalizedName) {
-    return {
-      ...user,
+      // Keep UI display consistent by treating fullName as source of truth.
       name: normalizedFullName,
       fullName: normalizedFullName,
     };
   }
 
-  if (!normalizedFullName && normalizedName) {
+  if (normalizedName) {
     return {
       ...user,
       name: normalizedName,
@@ -73,7 +68,7 @@ async function parseApiResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") ?? "";
   const body = contentType.includes("application/json")
     ? ((await response.json()) as T | ApiErrorShape)
-    : (await response.text());
+    : await response.text();
 
   if (!response.ok) {
     if (typeof body === "string") {
@@ -84,7 +79,9 @@ async function parseApiResponse<T>(response: Response): Promise<T> {
     const parsedMessage = Array.isArray(apiError.message)
       ? apiError.message.join(", ")
       : apiError.message;
-    throw new Error(parsedMessage || apiError.error || `Request failed (${response.status})`);
+    throw new Error(
+      parsedMessage || apiError.error || `Request failed (${response.status})`,
+    );
   }
 
   return body as T;
@@ -158,7 +155,9 @@ export function getAuthToken(): string | null {
   return localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
-export async function registerUser(payload: RegisterPayload): Promise<AuthUser> {
+export async function registerUser(
+  payload: RegisterPayload,
+): Promise<AuthUser> {
   return apiRequest<AuthUser>("/auth/register", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -181,7 +180,11 @@ export async function logoutUser(): Promise<void> {
 }
 
 export async function getProfile(): Promise<AuthUser> {
-  const profile = await apiRequest<AuthUser>("/auth/session", { method: "GET" }, true);
+  const profile = await apiRequest<AuthUser>(
+    "/auth/session",
+    { method: "GET" },
+    true,
+  );
   const normalizedProfile = normalizeAuthUser(profile);
   const token = getAuthToken();
   if (token) {

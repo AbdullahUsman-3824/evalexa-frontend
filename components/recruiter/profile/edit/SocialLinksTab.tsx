@@ -153,7 +153,7 @@ export default function SocialLinksTab() {
                     ),
                   )
                 }
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 placeholder={`https://${link.platform.toLowerCase().replace(" / ", "")}.com/yourcompany`}
               />
             </div>
@@ -242,7 +242,7 @@ export default function SocialLinksTab() {
                   type="text"
                   value={newCustomLabel}
                   onChange={(e) => setNewCustomLabel(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="e.g., Company Blog, Careers Page"
                 />
               </div>
@@ -255,7 +255,7 @@ export default function SocialLinksTab() {
                   type="url"
                   value={newCustomUrl}
                   onChange={(e) => setNewCustomUrl(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="https://www.example.com"
                 />
               </div>

@@ -1,24 +1,45 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Camera, Clock3, Globe2, Mail, Phone } from "lucide-react";
 import SettingRow from "@/components/candidate/settings/SettingRow";
-import { getProfile, getStoredUser, type AuthUser } from "@/lib/services/authService";
+import {
+  getProfile,
+  getStoredUser,
+  type AuthUser,
+} from "@/lib/services/authService";
+import { updateUser } from "@/lib/services/userService";
+import Toast from "@/components/ui/Toast";
+
+type ToastState = {
+  message: string;
+  type: "success" | "error" | "info";
+} | null;
 
 export default function AccountTab() {
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(() => getStoredUser());
-  const [phone, setPhone] = useState("+1 (415) 555-9012");
-  const [designation, setDesignation] = useState("Senior Talent Acquisition Manager");
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
+    getStoredUser(),
+  );
+  const [phone, setPhone] = useState("");
+  const [designation, setDesignation] = useState(
+    "Senior Talent Acquisition Manager",
+  );
   const [language, setLanguage] = useState("en");
   const [timezone, setTimezone] = useState("WAT");
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<ToastState>(null);
+
+  const closeToast = useCallback(() => setToast(null), []);
 
   useEffect(() => {
     const storedUser = getStoredUser();
+    if (storedUser?.phone) setPhone(storedUser.phone);
     setAccountUser(storedUser);
 
     void getProfile()
       .then((profile) => {
         setAccountUser(profile);
+        if (profile.phone) setPhone(profile.phone);
       })
       .catch(() => {
         // Keep stored session user as fallback if profile request fails.
@@ -27,8 +48,8 @@ export default function AccountTab() {
 
   const displayName = useMemo(
     () =>
-      accountUser?.name ??
       accountUser?.fullName ??
+      accountUser?.name ??
       accountUser?.email?.split("@")[0] ??
       "User",
     [accountUser],
@@ -39,8 +60,38 @@ export default function AccountTab() {
     [accountUser],
   );
 
+  const handleSave = async () => {
+    if (!accountUser?.id) return;
+    setSaving(true);
+    try {
+      await updateUser(accountUser.id, {
+        fullName: accountUser.fullName,
+        phone: phone.trim() || undefined,
+      });
+      setToast({
+        message: "Account settings saved successfully!",
+        type: "success",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to save changes.";
+      setToast({ message, type: "error" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={closeToast}
+        />
+      )}
+
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <div className="flex flex-col gap-5 md:flex-row md:items-center">
           <div className="relative">
@@ -59,7 +110,10 @@ export default function AccountTab() {
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate">
               <Mail className="h-4 w-4" />
               <span>{displayEmail}</span>
-              <button type="button" className="font-semibold text-primary hover:text-primary/80">
+              <button
+                type="button"
+                className="font-semibold text-primary hover:text-primary/80"
+              >
                 Change Email
               </button>
             </div>
@@ -68,18 +122,25 @@ export default function AccountTab() {
       </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
-        <SettingRow label="Phone" description="Used for interview and candidate communication alerts.">
+        <SettingRow
+          label="Phone"
+          description="Used for interview and candidate communication alerts."
+        >
           <div className="flex items-center gap-2">
             <Phone className="h-4 w-4 text-slate" />
             <input
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
+              placeholder="+923001234567"
               className="rounded-lg border border-slate/30 px-3 py-2 text-sm text-midnight focus:border-primary focus:outline-none"
             />
           </div>
         </SettingRow>
 
-        <SettingRow label="Designation" description="Your role shown in candidate communication context.">
+        <SettingRow
+          label="Designation"
+          description="Your role shown in candidate communication context."
+        >
           <input
             value={designation}
             onChange={(event) => setDesignation(event.target.value)}
@@ -87,7 +148,10 @@ export default function AccountTab() {
           />
         </SettingRow>
 
-        <SettingRow label="Language" description="Preferred recruiter portal language.">
+        <SettingRow
+          label="Language"
+          description="Preferred recruiter portal language."
+        >
           <div className="flex items-center gap-2">
             <Globe2 className="h-4 w-4 text-slate" />
             <select
@@ -102,7 +166,10 @@ export default function AccountTab() {
           </div>
         </SettingRow>
 
-        <SettingRow label="Timezone" description="Used for scheduling interviews and reminders.">
+        <SettingRow
+          label="Timezone"
+          description="Used for scheduling interviews and reminders."
+        >
           <div className="flex items-center gap-2">
             <Clock3 className="h-4 w-4 text-slate" />
             <select
@@ -111,7 +178,9 @@ export default function AccountTab() {
               className="rounded-lg border border-slate/30 px-3 py-2 text-sm text-midnight focus:border-primary focus:outline-none"
             >
               <option value="WAT">(GMT+01:00) West Africa Time</option>
-              <option value="UTC">(GMT+00:00) Coordinated Universal Time</option>
+              <option value="UTC">
+                (GMT+00:00) Coordinated Universal Time
+              </option>
               <option value="EST">(GMT-05:00) Eastern Time</option>
             </select>
           </div>
@@ -120,13 +189,14 @@ export default function AccountTab() {
         <div className="mt-6 flex justify-end">
           <button
             type="button"
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white transition hover:bg-primary/90"
+            onClick={() => void handleSave()}
+            disabled={saving}
+            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Save Changes
+            {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
       </section>
     </div>
   );
 }
-

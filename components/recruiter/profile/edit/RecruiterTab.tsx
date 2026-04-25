@@ -2,31 +2,29 @@
 
 import { motion } from "framer-motion";
 import { Camera, ExternalLink } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { getProfile, getStoredUser, type AuthUser } from "@/lib/services/authService";
+import { useMemo, useState } from "react";
 
-export default function RecruiterTab() {
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(() => getStoredUser());
+type RecruiterFormData = {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+};
+
+interface RecruiterTabProps {
+  data: RecruiterFormData;
+  onChange: (newData: Partial<RecruiterFormData>) => void;
+}
+
+export default function RecruiterTab({ data, onChange }: RecruiterTabProps) {
   const [bio, setBio] = useState("");
   const [isHoveringPhoto, setIsHoveringPhoto] = useState(false);
 
-  useEffect(() => {
-    void getProfile()
-      .then((profile) => {
-        setAccountUser(profile);
-      })
-      .catch(() => {
-        // Keep stored session user as fallback if profile request fails.
-      });
-  }, []);
-
   const recruiterName = useMemo(() => {
-    const nameFromEmail = accountUser?.email?.split("@")[0];
-    return accountUser?.name ?? accountUser?.fullName ?? nameFromEmail ?? "";
-  }, [accountUser]);
-
-  const [firstName, ...otherNames] = recruiterName.split(" ").filter(Boolean);
-  const lastName = otherNames.join(" ");
+    const fullName = `${data.firstName} ${data.lastName}`.trim();
+    const nameFromEmail = data.email?.split("@")[0] ?? "";
+    return fullName || nameFromEmail;
+  }, [data.firstName, data.lastName, data.email]);
 
   const recruiterInitials = useMemo(() => {
     const words = recruiterName
@@ -63,7 +61,7 @@ export default function RecruiterTab() {
             onMouseEnter={() => setIsHoveringPhoto(true)}
             onMouseLeave={() => setIsHoveringPhoto(false)}
           >
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-linear-to-br from-primary to-cyan flex items-center justify-center">
               <span className="text-white font-syne font-bold text-2xl">
                 {recruiterInitials}
               </span>
@@ -98,8 +96,9 @@ export default function RecruiterTab() {
           </label>
           <input
             type="text"
-            defaultValue={firstName ?? ""}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+            value={data.firstName}
+            onChange={(event) => onChange({ firstName: event.target.value })}
+            className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
             placeholder="Enter first name"
           />
         </div>
@@ -110,8 +109,9 @@ export default function RecruiterTab() {
           </label>
           <input
             type="text"
-            defaultValue={lastName}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+            value={data.lastName}
+            onChange={(event) => onChange({ lastName: event.target.value })}
+            className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
             placeholder="Enter last name"
           />
         </div>
@@ -125,7 +125,7 @@ export default function RecruiterTab() {
         <input
           type="text"
           defaultValue="Senior Talent Acquisition Manager"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           placeholder="e.g., HR Manager, Talent Acquisition Specialist"
         />
       </div>
@@ -138,7 +138,7 @@ export default function RecruiterTab() {
         <div className="flex gap-3">
           <input
             type="email"
-            defaultValue={accountUser?.email ?? ""}
+            value={data.email}
             disabled
             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-slate cursor-not-allowed"
           />
@@ -159,9 +159,10 @@ export default function RecruiterTab() {
         </label>
         <input
           type="tel"
-          defaultValue="+1 (555) 123-4567"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-          placeholder="+1 (555) 000-0000"
+          value={data.phone}
+          onChange={(event) => onChange({ phone: event.target.value })}
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          placeholder="+923001234567"
         />
       </div>
 
@@ -173,7 +174,7 @@ export default function RecruiterTab() {
         <input
           type="url"
           defaultValue="https://linkedin.com/in/ahmedhassan"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           placeholder="https://linkedin.com/in/yourprofile"
         />
       </div>
@@ -188,7 +189,7 @@ export default function RecruiterTab() {
           defaultValue="7"
           min="0"
           max="50"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           placeholder="Enter years"
         />
       </div>
@@ -203,7 +204,7 @@ export default function RecruiterTab() {
           onChange={(e) => setBio(e.target.value)}
           rows={4}
           maxLength={200}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
+          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
           placeholder="Brief description about your role and experience..."
         />
         <div className="flex justify-between items-center mt-2">

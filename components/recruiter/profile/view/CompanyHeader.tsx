@@ -14,28 +14,58 @@ import {
   Star,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getCompanies, Company } from "@/lib/services/companyService";
 
 export default function CompanyHeader() {
   const router = useRouter();
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const companyData = {
-    name: "TechCorp Solutions",
-    industry: "Technology",
-    founded: 2019,
-    size: "50–200 employees",
-    website: "https://techcorp.com",
-    location: "San Francisco, CA",
-    isVerified: true,
-    logo: "TC",
-    stats: {
-      activeJobs: 8,
-      totalHires: 24,
-      avgResponseTime: "2 days",
-      rating: 4.2,
-    },
+  useEffect(() => {
+    const fetchCompany = async () => {
+      try {
+        const companies = await getCompanies();
+        setCompany(companies[0] ?? null);
+      } catch (error) {
+        console.error("Failed to fetch company", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCompany();
+  }, []);
+
+  const fallbackStats = {
+    activeJobs: 0,
+    totalHires: 0,
+    avgResponseTime: "N/A",
+    rating: 0,
   };
+
+  if (isLoading) {
+    return <div className="h-64 rounded-2xl bg-midnight/5 animate-pulse"></div>;
+  }
+
+  if (!company) {
+    return (
+      <div className="rounded-2xl bg-white p-8 shadow-sm text-center">
+        <h2 className="text-xl font-bold text-midnight mb-4">
+          No Company Profile
+        </h2>
+        <p className="text-slate mb-6">
+          You haven't set up a company profile yet.
+        </p>
+        <button
+          onClick={() => router.push("/company-setup")}
+          className="px-5 py-2.5 bg-primary text-white rounded-lg font-medium"
+        >
+          Set Up Company Profile
+        </button>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -56,8 +86,8 @@ export default function CompanyHeader() {
               onMouseLeave={() => setIsHoveringLogo(false)}
             >
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
-                <span className="text-white font-syne font-bold text-2xl">
-                  {companyData.logo}
+                <span className="text-white font-syne font-bold text-2xl uppercase">
+                  {company.name.substring(0, 2)}
                 </span>
               </div>
 
@@ -76,46 +106,47 @@ export default function CompanyHeader() {
             {/* Company Details */}
             <div>
               <h1 className="font-syne text-white text-3xl font-semibold mb-2">
-                {companyData.name}
+                {company.name}
               </h1>
 
               <div className="flex flex-wrap items-center gap-3 mb-3">
                 <span className="px-3 py-1 bg-cyan/20 border border-cyan/40 text-cyan text-xs font-medium rounded-full">
-                  {companyData.industry}
+                  {company.industry}
                 </span>
 
-                {companyData.isVerified ? (
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-success/20 border border-success/40 text-success text-xs font-medium rounded-full">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Verified Company
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-warning/20 border border-warning/40 text-warning text-xs font-medium rounded-full">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    Unverified
-                  </div>
-                )}
+                {/* Assume verified for now or add to company model */}
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-success/20 border border-success/40 text-success text-xs font-medium rounded-full">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Verified Company
+                </div>
               </div>
 
               <div className="space-y-2 text-sm">
                 <p className="text-slate">
-                  Founded {companyData.founded} · {companyData.size}
+                  Established {new Date(company.createdAt).getFullYear()} ·{" "}
+                  {company.companySize} employees
                 </p>
 
                 <div className="flex items-center gap-4">
-                  <a
-                    href={companyData.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-cyan hover:text-cyan/80 transition-colors"
-                  >
-                    <Globe className="w-4 h-4" />
-                    {companyData.website.replace("https://", "")}
-                  </a>
+                  {company.website && (
+                    <a
+                      href={
+                        company.website.startsWith("http")
+                          ? company.website
+                          : `https://${company.website}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-cyan hover:text-cyan/80 transition-colors"
+                    >
+                      <Globe className="w-4 h-4" />
+                      {company.website.replace(/^https?:\/\//, "")}
+                    </a>
+                  )}
 
                   <span className="flex items-center gap-1.5 text-slate">
                     <MapPin className="w-4 h-4" />
-                    {companyData.location}
+                    {company.location}
                   </span>
                 </div>
               </div>
@@ -148,7 +179,7 @@ export default function CompanyHeader() {
               <Briefcase className="w-5 h-5 text-primary" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {companyData.stats.activeJobs}
+              {fallbackStats.activeJobs}
             </p>
             <p className="text-slate text-xs">Active Jobs</p>
           </div>
@@ -158,7 +189,7 @@ export default function CompanyHeader() {
               <Users className="w-5 h-5 text-success" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {companyData.stats.totalHires}
+              {fallbackStats.totalHires}
             </p>
             <p className="text-slate text-xs">Total Hires</p>
           </div>
@@ -168,7 +199,7 @@ export default function CompanyHeader() {
               <Clock className="w-5 h-5 text-cyan" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {companyData.stats.avgResponseTime}
+              {fallbackStats.avgResponseTime}
             </p>
             <p className="text-slate text-xs">Avg Response Time</p>
           </div>
@@ -178,7 +209,7 @@ export default function CompanyHeader() {
               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {companyData.stats.rating}
+              {fallbackStats.rating}
             </p>
             <p className="text-slate text-xs">Candidate Rating</p>
           </div>

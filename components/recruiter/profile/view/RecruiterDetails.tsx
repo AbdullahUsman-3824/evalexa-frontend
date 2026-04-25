@@ -3,10 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, Link, Award } from "lucide-react";
-import { getProfile, getStoredUser, type AuthUser } from "@/lib/services/authService";
+import {
+  getProfile,
+  getStoredUser,
+  type AuthUser,
+} from "@/lib/services/authService";
 
 export default function RecruiterDetails() {
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(() => getStoredUser());
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
+    getStoredUser(),
+  );
 
   useEffect(() => {
     void getProfile()
@@ -20,7 +26,9 @@ export default function RecruiterDetails() {
 
   const recruiterName = useMemo(() => {
     const nameFromEmail = accountUser?.email?.split("@")[0];
-    return accountUser?.name ?? accountUser?.fullName ?? nameFromEmail ?? "User";
+    return (
+      accountUser?.fullName ?? accountUser?.name ?? nameFromEmail ?? "User"
+    );
   }, [accountUser]);
 
   const recruiterInitials = useMemo(() => {
@@ -44,7 +52,7 @@ export default function RecruiterDetails() {
     name: recruiterName,
     designation: "Senior Talent Acquisition Manager",
     email: accountUser?.email ?? "No email available",
-    phone: "+1 (555) 123-4567",
+    phone: accountUser?.phone?.trim() || "No phone number",
     linkedin: "",
     yearsExperience: 0,
     avatar: recruiterInitials,
@@ -66,7 +74,7 @@ export default function RecruiterDetails() {
         {/* Recruiter Profile */}
         <div className="flex items-start gap-4">
           <div
-            className={`flex-shrink-0 w-11 h-11 ${recruiterData.avatarColor} rounded-full flex items-center justify-center text-white font-semibold text-base`}
+            className={`shrink-0 w-11 h-11 ${recruiterData.avatarColor} rounded-full flex items-center justify-center text-white font-semibold text-base`}
           >
             {recruiterData.avatar}
           </div>
@@ -107,12 +115,16 @@ export default function RecruiterDetails() {
             </div>
             <div>
               <p className="text-xs text-slate mb-0.5">Phone</p>
-              <a
-                href={`tel:${recruiterData.phone}`}
-                className="text-sm text-midnight hover:text-success font-medium transition-colors"
-              >
-                {recruiterData.phone}
-              </a>
+              {recruiterData.phone === "No phone number" ? (
+                <p className="text-sm text-slate">{recruiterData.phone}</p>
+              ) : (
+                <a
+                  href={`tel:${recruiterData.phone}`}
+                  className="text-sm text-midnight hover:text-success font-medium transition-colors"
+                >
+                  {recruiterData.phone}
+                </a>
+              )}
             </div>
           </div>
 

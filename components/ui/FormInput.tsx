@@ -7,12 +7,14 @@ interface FormInputProps {
   label: string;
   type: string;
   placeholder: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   error?: string;
   showToggle?: boolean;
   value: string;
   onChange: (value: string) => void;
   name?: string;
+  id?: string;
+  required?: boolean;
 }
 
 export default function FormInput({
@@ -25,6 +27,8 @@ export default function FormInput({
   value,
   onChange,
   name,
+  id,
+  required,
 }: FormInputProps) {
   const [showPassword, setShowPassword] = useState(false);
   const inputType = showToggle && showPassword ? "text" : type;
@@ -36,18 +40,22 @@ export default function FormInput({
       </label>
       <div className="relative">
         {/* Left Icon */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2">
-          <Icon className="w-5 h-5 text-slate" />
-        </div>
+        {Icon && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2">
+            <Icon className="w-5 h-5 text-slate" />
+          </div>
+        )}
 
         {/* Input Field */}
         <input
           type={inputType}
           name={name}
+          id={id}
+          required={required}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full h-11 pl-11 pr-${showToggle ? "11" : "4"} py-2
+          className={`w-full h-11 ${Icon ? "pl-11" : "pl-4"} pr-${showToggle ? "11" : "4"} py-2
             border rounded-lg font-sans text-base
             bg-white text-midnight placeholder-slate/50
             transition-all duration-200

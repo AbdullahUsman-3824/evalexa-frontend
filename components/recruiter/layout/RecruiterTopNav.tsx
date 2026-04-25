@@ -42,7 +42,9 @@ const pageTitles: Record<string, string> = {
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(() => getStoredUser());
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
+    getStoredUser(),
+  );
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -61,7 +63,9 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
 
   const accountName = useMemo(() => {
     const nameFromEmail = accountUser?.email?.split("@")[0];
-    return accountUser?.name ?? accountUser?.fullName ?? nameFromEmail ?? "User";
+    return (
+      accountUser?.fullName ?? accountUser?.name ?? nameFromEmail ?? "User"
+    );
   }, [accountUser]);
 
   const accountInitials = useMemo(() => {

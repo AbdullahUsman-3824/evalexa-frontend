@@ -3,15 +3,66 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import DangerCard from "@/components/candidate/settings/DangerCard";
+import { updateUser, deleteUser } from "@/lib/services/userService";
+import { getStoredUser, clearAuthSession } from "@/lib/services/authService";
+import { useRouter } from "next/navigation";
+import Toast from "@/components/ui/Toast";
+
+type ToastState = { message: string; type: "success" | "error" | "info" } | null;
 
 export default function DangerZoneTab() {
   const [deleteText, setDeleteText] = useState("");
   const [confirmAccountDelete, setConfirmAccountDelete] = useState(false);
+  const [toast, setToast] = useState<ToastState>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const canDeleteJobs = deleteText.trim().toUpperCase() === "DELETE";
 
+  const closeToast = () => setToast(null);
+
+  const handleDeactivate = async () => {
+    const user = getStoredUser();
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      await updateUser(user.id, { isActive: false });
+      setToast({ message: "Account deactivated successfully.", type: "success" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to deactivate account.";
+      setToast({ message, type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const user = getStoredUser();
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      await deleteUser(user.id);
+      clearAuthSession();
+      router.push("/");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete account.";
+      setToast({ message, type: "error" });
+      setConfirmAccountDelete(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={closeToast}
+        />
+      )}
       <DangerCard
         title="Deactivate Account"
         description="Temporarily pause your recruiter access and notifications."
@@ -24,9 +75,11 @@ export default function DangerZoneTab() {
       >
         <button
           type="button"
-          className="rounded-lg border border-warning/70 px-4 py-2 text-sm font-semibold text-warning hover:bg-warning/10"
+          onClick={() => void handleDeactivate()}
+          disabled={loading}
+          className="rounded-lg border border-warning/70 px-4 py-2 text-sm font-semibold text-warning hover:bg-warning/10 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Deactivate Account
+          {loading ? "Processing..." : "Deactivate Account"}
         </button>
       </DangerCard>
 
@@ -104,9 +157,11 @@ export default function DangerZoneTab() {
                 </button>
                 <button
                   type="button"
-                  className="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-danger/90"
+                  onClick={() => void handleDeleteAccount()}
+                  disabled={loading}
+                  className="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-danger/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  I understand, delete everything
+                  {loading ? "Deleting..." : "I understand, delete everything"}
                 </button>
               </div>
             </motion.div>

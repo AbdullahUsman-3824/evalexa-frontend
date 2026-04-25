@@ -4,23 +4,43 @@ import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { useEffect, useState } from "react";
+import { getCompanies, Company } from "@/lib/services/companyService";
+
 export default function AboutSection() {
   const router = useRouter();
+  const [company, setCompany] = useState<Company | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const aboutData = {
-    description:
-      "TechCorp Solutions is a leading technology company specializing in innovative software solutions for businesses worldwide. We pride ourselves on fostering a culture of innovation, collaboration, and continuous learning. Our mission is to empower organizations through cutting-edge technology and exceptional service. With a diverse team of talented professionals, we deliver transformative digital experiences that drive real business value.",
-    cultureTags: [
-      "Remote Friendly",
-      "Fast Growth",
-      "Work-Life Balance",
-      "Innovative Culture",
-      "Diverse Team",
-      "Competitive Benefits",
-    ],
-  };
+  useEffect(() => {
+    const fetchCompany = async () => {
+      try {
+        const companies = await getCompanies();
+        setCompany(companies[0] ?? null);
+      } catch (error) {
+        console.error("Failed to fetch company", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCompany();
+  }, []);
+  const cultureTags = [
+    "Remote Friendly",
+    "Fast Growth",
+    "Work-Life Balance",
+    "Innovative Culture",
+    "Diverse Team",
+    "Competitive Benefits",
+  ];
 
-  const isEmpty = !aboutData.description;
+  if (isLoading) {
+    return (
+      <div className="h-48 rounded-xl bg-white border border-gray-200 animate-pulse"></div>
+    );
+  }
+
+  const isEmpty = !company?.description;
 
   return (
     <motion.div
@@ -67,17 +87,17 @@ export default function AboutSection() {
             className="text-midnight leading-relaxed"
             style={{ lineHeight: 1.8 }}
           >
-            {aboutData.description}
+            {company?.description}
           </p>
 
           {/* Culture Tags */}
-          {aboutData.cultureTags && aboutData.cultureTags.length > 0 && (
+          {cultureTags.length > 0 && (
             <div>
               <h3 className="font-semibold text-midnight text-sm mb-3">
                 Company Culture
               </h3>
               <div className="flex flex-wrap gap-2">
-                {aboutData.cultureTags.map((tag, index) => (
+                {cultureTags.map((tag, index) => (
                   <motion.span
                     key={index}
                     initial={{ opacity: 0, scale: 0.9 }}

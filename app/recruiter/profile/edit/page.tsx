@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle } from "lucide-react";
@@ -8,6 +8,14 @@ import CompanyInfoTab from "@/components/recruiter/profile/edit/CompanyInfoTab";
 import RecruiterTab from "@/components/recruiter/profile/edit/RecruiterTab";
 import BrandingTab from "@/components/recruiter/profile/edit/BrandingTab";
 import SocialLinksTab from "@/components/recruiter/profile/edit/SocialLinksTab";
+import {
+  updateCompany,
+  Company,
+  getCompanies,
+} from "@/lib/services/companyService";
+import { getProfile } from "@/lib/services/authService";
+import { updateUser } from "@/lib/services/userService";
+import Toast from "@/components/ui/Toast";
 
 type TabId = "company" | "recruiter" | "branding" | "social";
 
@@ -21,7 +29,69 @@ export default function EditProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("company");
   const [isSaving, setIsSaving] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
+  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
+
+  const [companyData, setCompanyData] = useState<Partial<Company>>({
+    name: "",
+    industry: "",
+    companySize: "",
+    location: "",
+    website: "",
+    description: "",
+  });
+
+  const [recruiterData, setRecruiterData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    email: "",
+  });
+
+  useEffect(() => {
+    const fetchCompany = async () => {
+      try {
+        const [companies, profile] = await Promise.all([
+          getCompanies(),
+          getProfile(),
+        ]);
+
+        const nameParts = (profile.fullName ?? "")
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean);
+        const [firstName = "", ...otherNames] = nameParts;
+
+        setUserId(profile.id);
+        setRecruiterData({
+          firstName,
+          lastName: otherNames.join(" "),
+          phone: profile.phone ?? "",
+          email: profile.email ?? "",
+        });
+
+        if (companies.length === 0) {
+          router.push("/company-setup");
+          return;
+        }
+
+        const [primaryCompany] = companies;
+        setCompanyId(primaryCompany.id);
+        setCompanyData(primaryCompany);
+      } catch (error) {
+        console.error("Failed to fetch company", error);
+        setToast({ message: "Failed to load company data.", type: "error" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCompany();
+  }, [router]);
 
   const tabs: Tab[] = [
     { id: "company", label: "Company Info", hasChanges: false },
@@ -31,12 +101,81 @@ export default function EditProfilePage() {
   ];
 
   const handleSave = async () => {
+    if (!companyId) {
+      setToast({
+        message: "Company not found. Please set up your company profile first.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!userId) {
+      setToast({
+        message: "User session not found. Please log in again.",
+        type: "error",
+      });
+      return;
+    }
+
     setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsSaving(false);
-    setShowSuccessToast(true);
-    setTimeout(() => setShowSuccessToast(false), 3000);
+    try {
+      const firstName = recruiterData.firstName.trim();
+      const lastName = recruiterData.lastName.trim();
+      const phoneRaw = recruiterData.phone.trim();
+      const phone = phoneRaw.replace(/[\s()-]/g, "");
+      const fullName = `${firstName} ${lastName}`.trim();
+
+      if (!firstName || !lastName) {
+        setToast({
+          message: "First name and last name are required.",
+          type: "error",
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      if (phone && !/^(\+92|0)[0-9]{10}$/.test(phone)) {
+        setToast({
+          message: "Phone must be in +92XXXXXXXXXX or 0XXXXXXXXXX format.",
+          type: "error",
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      const [updatedCompany] = await Promise.all([
+        updateCompany(companyId, {
+          name: companyData.name,
+          industry: companyData.industry,
+          companySize: companyData.companySize,
+          location: companyData.location,
+          website: companyData.website || undefined,
+          description: companyData.description || undefined,
+        }),
+        updateUser(userId, {
+          fullName,
+          phone: phone || undefined,
+        }),
+      ]);
+
+      setRecruiterData((prev) => ({ ...prev, phone }));
+
+      setCompanyData(updatedCompany);
+      // Refresh persisted auth session so top nav/dashboard pick up updated fullName.
+      await getProfile();
+      setToast({ message: "Profile updated successfully!", type: "success" });
+      setTimeout(() => {
+        router.push("/recruiter/profile");
+        router.refresh();
+      }, 1200);
+    } catch (error) {
+      console.error("Failed to update company", error);
+      const message =
+        error instanceof Error ? error.message : "Failed to update profile.";
+      setToast({ message, type: "error" });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDiscard = () => {
@@ -48,9 +187,23 @@ export default function EditProfilePage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case "company":
-        return <CompanyInfoTab />;
+        return (
+          <CompanyInfoTab
+            data={companyData}
+            onChange={(newData) =>
+              setCompanyData({ ...companyData, ...newData })
+            }
+          />
+        );
       case "recruiter":
-        return <RecruiterTab />;
+        return (
+          <RecruiterTab
+            data={recruiterData}
+            onChange={(newData) =>
+              setRecruiterData((prev) => ({ ...prev, ...newData }))
+            }
+          />
+        );
       case "branding":
         return <BrandingTab />;
       case "social":
@@ -62,7 +215,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="max-w-[1200px] mx-auto p-6">
+      <div className="max-w-300 mx-auto p-6">
         {/* Header */}
         <div className="mb-6">
           <button
@@ -136,7 +289,7 @@ export default function EditProfilePage() {
       </div>
 
       {/* End-of-page Action Bar */}
-      <div className="mx-auto mt-6 mb-6 max-w-[1200px] px-6">
+      <div className="mx-auto mt-6 mb-6 max-w-300 px-6">
         <div className="rounded-2xl border border-gray-200 bg-white px-6 py-4 shadow-lg">
           <div className="flex items-center justify-between">
             {/* Left - Discard */}
@@ -151,7 +304,7 @@ export default function EditProfilePage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-colors min-w-[140px] justify-center"
+              className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-colors min-w-35 justify-center"
             >
               {isSaving ? (
                 <>
@@ -185,34 +338,15 @@ export default function EditProfilePage() {
         </div>
       </div>
 
-      {/* Success Toast */}
-      <AnimatePresence>
-        {showSuccessToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 right-6 z-50"
-          >
-            <div className="bg-success text-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-3">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              <span className="font-medium">Profile updated successfully!</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Toast */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

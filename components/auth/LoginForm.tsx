@@ -36,10 +36,10 @@ export default function LoginForm() {
         password: formData.password,
       });
 
-      const dashboardPath =
-        data.user.role === "candidate"
-          ? "/candidate/dashboard"
-          : "/recruiter/dashboard";
+      let dashboardPath = "/candidate/dashboard";
+      if (data.user.role === "recruiter") {
+        dashboardPath = data.user.companyId === null ? "/company-setup" : "/recruiter/dashboard";
+      }
 
       router.push(dashboardPath);
     } catch (error) {

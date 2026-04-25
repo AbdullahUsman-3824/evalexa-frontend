@@ -98,10 +98,10 @@ export default function SignupForm() {
         password: formData.password,
       });
 
-      const dashboardPath =
-        loginData.user.role === "candidate"
-          ? "/candidate/dashboard"
-          : "/recruiter/dashboard";
+      let dashboardPath = "/candidate/dashboard";
+      if (loginData.user.role === "recruiter") {
+        dashboardPath = loginData.user.companyId === null ? "/company-setup" : "/recruiter/dashboard";
+      }
 
       router.push(dashboardPath);
     } catch (error) {
