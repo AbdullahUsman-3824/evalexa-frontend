@@ -17,6 +17,7 @@ import {
   type AuthUser,
   logoutUser,
 } from "@/lib/services/authService";
+import { getCompanies } from "@/lib/services/companyService";
 
 interface RecruiterTopNavProps {
   onMenuClick: () => void;
@@ -43,6 +44,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [accountUser, setAccountUser] = useState<AuthUser | null>(null);
+  const [companyName, setCompanyName] = useState<string>("Company");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -63,6 +65,17 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
       })
       .catch(() => {
         // Keep stored session user as fallback if profile request fails.
+      });
+
+    // Fetch company name
+    void getCompanies()
+      .then((companies) => {
+        if (companies.length > 0) {
+          setCompanyName(companies[0].name);
+        }
+      })
+      .catch(() => {
+        // Keep default company name if fetch fails
       });
   }, []);
 
@@ -228,7 +241,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
 
               {/* Company Name (hidden on small screens) */}
               <span className="hidden md:block text-sm font-medium text-[#0D1B2A]">
-                {accountName}
+                {companyName}
               </span>
 
               {/* Dropdown Icon */}
