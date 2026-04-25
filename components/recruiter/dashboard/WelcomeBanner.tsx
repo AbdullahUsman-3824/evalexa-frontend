@@ -1,11 +1,34 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getProfile, getStoredUser, type AuthUser } from "@/lib/services/authService";
 
 export default function WelcomeBanner() {
   const router = useRouter();
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(() => getStoredUser());
+
+  useEffect(() => {
+    const storedUser = getStoredUser();
+    setAccountUser(storedUser);
+
+    void getProfile()
+      .then((profile) => {
+        setAccountUser(profile);
+      })
+      .catch(() => {
+        // Keep stored session user as fallback if profile request fails.
+      });
+  }, []);
+
+  const displayName = useMemo(() => {
+    const derivedNameFromEmail = accountUser?.email?.split("@")[0];
+    const sourceName =
+      accountUser?.name ?? accountUser?.fullName ?? derivedNameFromEmail ?? "User";
+    return sourceName.split(" ")[0] ?? sourceName;
+  }, [accountUser]);
 
   return (
     <motion.div
@@ -15,11 +38,11 @@ export default function WelcomeBanner() {
       className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-midnight to-[#1A2E45] p-8"
     >
       <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-        {/* Left Content */}
-        <div className="flex-1">
-          <h1 className="font-syne text-white text-2xl font-semibold mb-2">
-            Good morning, Ahmed 👋
-          </h1>
+          {/* Left Content */}
+          <div className="flex-1">
+            <h1 className="font-syne text-white text-2xl font-semibold mb-2">
+              Good morning, {displayName} 👋
+            </h1>
           <p className="text-slate text-sm mb-6">
             Here's what's happening with your hiring today.
           </p>

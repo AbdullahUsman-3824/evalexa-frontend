@@ -1,17 +1,53 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, Link, Award } from "lucide-react";
+import { getProfile, getStoredUser, type AuthUser } from "@/lib/services/authService";
 
 export default function RecruiterDetails() {
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(() => getStoredUser());
+
+  useEffect(() => {
+    void getProfile()
+      .then((profile) => {
+        setAccountUser(profile);
+      })
+      .catch(() => {
+        // Keep stored session user as fallback if profile request fails.
+      });
+  }, []);
+
+  const recruiterName = useMemo(() => {
+    const nameFromEmail = accountUser?.email?.split("@")[0];
+    return accountUser?.name ?? accountUser?.fullName ?? nameFromEmail ?? "User";
+  }, [accountUser]);
+
+  const recruiterInitials = useMemo(() => {
+    const words = recruiterName
+      .split(" ")
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    if (words.length === 0) {
+      return "U";
+    }
+
+    if (words.length === 1) {
+      return (words[0]?.slice(0, 2) ?? "U").toUpperCase();
+    }
+
+    return `${words[0]?.charAt(0) ?? ""}${words[1]?.charAt(0) ?? ""}`.toUpperCase();
+  }, [recruiterName]);
+
   const recruiterData = {
-    name: "Ahmed Hassan",
+    name: recruiterName,
     designation: "Senior Talent Acquisition Manager",
-    email: "ahmed.hassan@techcorp.com",
+    email: accountUser?.email ?? "No email available",
     phone: "+1 (555) 123-4567",
-    linkedin: "https://linkedin.com/in/ahmedhassan",
-    yearsExperience: 7,
-    avatar: "AH",
+    linkedin: "",
+    yearsExperience: 0,
+    avatar: recruiterInitials,
     avatarColor: "bg-gradient-to-br from-primary to-cyan",
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,6 +11,12 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import {
+  getProfile,
+  getStoredUser,
+  type AuthUser,
+  logoutUser,
+} from "@/lib/services/authService";
 
 interface RecruiterTopNavProps {
   onMenuClick: () => void;
@@ -36,19 +42,46 @@ const pageTitles: Record<string, string> = {
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(() => getStoredUser());
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
   const pageTitle = pageTitles[pathname] || "Recruiter Portal";
   const hasUnreadNotifications = true; // Replace with actual logic
 
-  // Mock company data - replace with actual data from auth context
-  const company = {
-    name: "TechCorp Inc.",
-    initials: "TC",
-  };
-  const handleSignOut = () => {
-    localStorage.removeItem("user");
+  useEffect(() => {
+    void getProfile()
+      .then((profile) => {
+        setAccountUser(profile);
+      })
+      .catch(() => {
+        // Keep stored session user as fallback if profile request fails.
+      });
+  }, []);
+
+  const accountName = useMemo(() => {
+    const nameFromEmail = accountUser?.email?.split("@")[0];
+    return accountUser?.name ?? accountUser?.fullName ?? nameFromEmail ?? "User";
+  }, [accountUser]);
+
+  const accountInitials = useMemo(() => {
+    const words = accountName
+      .split(" ")
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    if (words.length === 0) {
+      return "U";
+    }
+
+    if (words.length === 1) {
+      return (words[0]?.slice(0, 2) ?? "U").toUpperCase();
+    }
+
+    return `${words[0]?.charAt(0) ?? ""}${words[1]?.charAt(0) ?? ""}`.toUpperCase();
+  }, [accountName]);
+  const handleSignOut = async () => {
+    await logoutUser();
     setShowProfileDropdown(false);
     router.push("/login");
   };
@@ -180,13 +213,13 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
               {/* Avatar */}
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E6FFF] to-[#00C2D1] flex items-center justify-center">
                 <span className="text-white font-semibold text-xs">
-                  {company.initials}
+                  {accountInitials}
                 </span>
               </div>
 
               {/* Company Name (hidden on small screens) */}
               <span className="hidden md:block text-sm font-medium text-[#0D1B2A]">
-                {company.name}
+                {accountName}
               </span>
 
               {/* Dropdown Icon */}

@@ -18,6 +18,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import { logoutUser } from "@/lib/services/authService";
 
 interface NavItem {
   label: string;
@@ -113,8 +114,8 @@ export default function RecruiterSidebar({
   const router = useRouter();
 
   const isActive = (href: string) => pathname === href;
-  const handleSignOut = () => {
-    localStorage.removeItem("user");
+  const handleSignOut = async () => {
+    await logoutUser();
     if (onClose) onClose();
     router.push("/login");
   };

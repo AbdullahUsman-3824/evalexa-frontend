@@ -7,6 +7,7 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import FormInput from "@/components/ui/FormInput";
 import SocialLogin from "@/components/auth/SocialLogin";
+import { loginUser } from "@/lib/services/authService";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -30,18 +31,21 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const mockUser = {
+      const data = await loginUser({
         email: formData.email,
-        role: "recruiter",
-      };
+        password: formData.password,
+      });
 
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      router.push("/recruiter/dashboard");
+      const dashboardPath =
+        data.user.role === "candidate"
+          ? "/candidate/dashboard"
+          : "/recruiter/dashboard";
+
+      router.push(dashboardPath);
     } catch (error) {
-      console.error("Login failed:", error);
-      setErrors({ ...errors, password: "Login failed. Please try again." });
+      const message =
+        error instanceof Error ? error.message : "Login failed. Please try again.";
+      setErrors({ email: "", password: message });
     } finally {
       setIsLoading(false);
     }

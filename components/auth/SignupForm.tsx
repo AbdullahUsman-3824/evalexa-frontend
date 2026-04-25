@@ -8,6 +8,7 @@ import Link from "next/link";
 import FormInput from "@/components/ui/FormInput";
 import RoleSelector from "@/components/auth/RoleSelector";
 import SocialLogin from "@/components/auth/SocialLogin";
+import { loginUser, registerUser } from "@/lib/services/authService";
 
 type PasswordStrength = "weak" | "fair" | "strong" | null;
 
@@ -50,25 +51,66 @@ export default function SignupForm() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setErrors({
+    const nextErrors = {
       fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
       role: "",
       agreeToTerms: "",
-    });
+    };
+
+    if (!formData.role) {
+      nextErrors.role = "Please select your account type.";
+    }
+
+    if (!formData.agreeToTerms) {
+      nextErrors.agreeToTerms = "You must agree to continue.";
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      nextErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (
+      nextErrors.role ||
+      nextErrors.agreeToTerms ||
+      nextErrors.confirmPassword
+    ) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors(nextErrors);
     setIsLoading(true);
 
-    setTimeout(() => {
-      console.log("Signup successful:", formData);
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ email: formData.email, role: "recruiter" }),
-      );
+    try {
+      await registerUser({
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        phone: "03000000000",
+        role: formData.role ?? "recruiter",
+      });
+
+      const loginData = await loginUser({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      const dashboardPath =
+        loginData.user.role === "candidate"
+          ? "/candidate/dashboard"
+          : "/recruiter/dashboard";
+
+      router.push(dashboardPath);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Signup failed. Please try again.";
+      setErrors((prev) => ({ ...prev, email: message }));
+    } finally {
       setIsLoading(false);
-      router.push("/recruiter/dashboard");
-    }, 2000);
+    }
   };
 
   const strengthConfig = {

@@ -1,14 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Camera, Clock3, Globe2, Mail, Phone } from "lucide-react";
 import SettingRow from "@/components/candidate/settings/SettingRow";
+import { getProfile, getStoredUser, type AuthUser } from "@/lib/services/authService";
 
 export default function AccountTab() {
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(() => getStoredUser());
   const [phone, setPhone] = useState("+1 (415) 555-9012");
   const [designation, setDesignation] = useState("Senior Talent Acquisition Manager");
   const [language, setLanguage] = useState("en");
   const [timezone, setTimezone] = useState("WAT");
+
+  useEffect(() => {
+    const storedUser = getStoredUser();
+    setAccountUser(storedUser);
+
+    void getProfile()
+      .then((profile) => {
+        setAccountUser(profile);
+      })
+      .catch(() => {
+        // Keep stored session user as fallback if profile request fails.
+      });
+  }, []);
+
+  const displayName = useMemo(
+    () =>
+      accountUser?.name ??
+      accountUser?.fullName ??
+      accountUser?.email?.split("@")[0] ??
+      "User",
+    [accountUser],
+  );
+
+  const displayEmail = useMemo(
+    () => accountUser?.email ?? "No email available",
+    [accountUser],
+  );
 
   return (
     <div className="space-y-6">
@@ -26,10 +55,10 @@ export default function AccountTab() {
           </div>
 
           <div className="space-y-1">
-            <p className="text-lg font-semibold text-midnight">Alex Morgan</p>
+            <p className="text-lg font-semibold text-midnight">{displayName}</p>
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate">
               <Mail className="h-4 w-4" />
-              <span>alex.morgan@evalexa.com</span>
+              <span>{displayEmail}</span>
               <button type="button" className="font-semibold text-primary hover:text-primary/80">
                 Change Email
               </button>

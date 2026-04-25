@@ -2,11 +2,48 @@
 
 import { motion } from "framer-motion";
 import { Camera, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getProfile, getStoredUser, type AuthUser } from "@/lib/services/authService";
 
 export default function RecruiterTab() {
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(() => getStoredUser());
   const [bio, setBio] = useState("");
   const [isHoveringPhoto, setIsHoveringPhoto] = useState(false);
+
+  useEffect(() => {
+    void getProfile()
+      .then((profile) => {
+        setAccountUser(profile);
+      })
+      .catch(() => {
+        // Keep stored session user as fallback if profile request fails.
+      });
+  }, []);
+
+  const recruiterName = useMemo(() => {
+    const nameFromEmail = accountUser?.email?.split("@")[0];
+    return accountUser?.name ?? accountUser?.fullName ?? nameFromEmail ?? "";
+  }, [accountUser]);
+
+  const [firstName, ...otherNames] = recruiterName.split(" ").filter(Boolean);
+  const lastName = otherNames.join(" ");
+
+  const recruiterInitials = useMemo(() => {
+    const words = recruiterName
+      .split(" ")
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    if (words.length === 0) {
+      return "U";
+    }
+
+    if (words.length === 1) {
+      return (words[0]?.slice(0, 2) ?? "U").toUpperCase();
+    }
+
+    return `${words[0]?.charAt(0) ?? ""}${words[1]?.charAt(0) ?? ""}`.toUpperCase();
+  }, [recruiterName]);
 
   return (
     <motion.div
@@ -28,7 +65,7 @@ export default function RecruiterTab() {
           >
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
               <span className="text-white font-syne font-bold text-2xl">
-                AH
+                {recruiterInitials}
               </span>
             </div>
 
@@ -61,7 +98,7 @@ export default function RecruiterTab() {
           </label>
           <input
             type="text"
-            defaultValue="Ahmed"
+            defaultValue={firstName ?? ""}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
             placeholder="Enter first name"
           />
@@ -73,7 +110,7 @@ export default function RecruiterTab() {
           </label>
           <input
             type="text"
-            defaultValue="Hassan"
+            defaultValue={lastName}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
             placeholder="Enter last name"
           />
@@ -101,7 +138,7 @@ export default function RecruiterTab() {
         <div className="flex gap-3">
           <input
             type="email"
-            defaultValue="ahmed.hassan@techcorp.com"
+            defaultValue={accountUser?.email ?? ""}
             disabled
             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-slate cursor-not-allowed"
           />
