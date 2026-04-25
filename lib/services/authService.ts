@@ -1,5 +1,7 @@
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://evalexa-backend.vercel.app";
 
 const AUTH_TOKEN_KEY = "access_token";
 const AUTH_USER_KEY = "user";
