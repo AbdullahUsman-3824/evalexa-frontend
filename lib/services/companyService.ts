@@ -1,6 +1,6 @@
 // const API_BASE_URL =
-//   process.env.NEXT_PUBLIC_API_URL ?? "https://evalexa-backend.vercel.app";
-const API_BASE_URL = "http://localhost:3000";
+  const API_BASE_URL = "https://evalexa-backend.vercel.app";
+// const API_BASE_URL = "http://localhost:3000";
 
 const AUTH_TOKEN_KEY = "access_token";
 

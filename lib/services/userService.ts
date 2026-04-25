@@ -1,6 +1,6 @@
 // const API_BASE_URL =
-//   process.env.NEXT_PUBLIC_API_URL ?? "https://evalexa-backend.vercel.app";
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "https://evalexa-backend.vercel.app";
+// const API_BASE_URL = "http://localhost:3000";
 
 const AUTH_TOKEN_KEY = "access_token";
 
@@ -30,6 +30,7 @@ export type UpdateUserPayload = {
   password?: string;
   phone?: string;
   role?: string;
+  isActive?: boolean;
 };
 
 function getAuthToken(): string | null {
@@ -41,7 +42,7 @@ async function parseApiResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") ?? "";
   const body = contentType.includes("application/json")
     ? ((await response.json()) as T | ApiErrorShape)
-    : (await response.text());
+    : await response.text();
 
   if (!response.ok) {
     if (typeof body === "string") {
