@@ -13,7 +13,7 @@ import {
   Company,
   getCompanies,
 } from "@/lib/services/companyService";
-import { getProfile } from "@/lib/services/authService";
+import { getProfile, getStoredUser } from "@/lib/services/authService";
 import { updateUser } from "@/lib/services/userService";
 import Toast from "@/components/ui/Toast";
 
@@ -54,6 +54,13 @@ export default function EditProfilePage() {
   });
 
   useEffect(() => {
+    const storedUser = getStoredUser();
+    if (storedUser?.id) {
+      setUserId(storedUser.id);
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchCompany = async () => {
       try {
         const [companies, profile] = await Promise.all([
@@ -92,7 +99,6 @@ export default function EditProfilePage() {
     };
     fetchCompany();
   }, [router]);
-
   const tabs: Tab[] = [
     { id: "company", label: "Company Info", hasChanges: false },
     { id: "recruiter", label: "Recruiter Details", hasChanges: false },
@@ -109,7 +115,8 @@ export default function EditProfilePage() {
       return;
     }
 
-    if (!userId) {
+    const effectiveUserId = userId ?? getStoredUser()?.id ?? null;
+    if (!effectiveUserId) {
       setToast({
         message: "User session not found. Please log in again.",
         type: "error",
@@ -152,7 +159,7 @@ export default function EditProfilePage() {
           website: companyData.website || undefined,
           description: companyData.description || undefined,
         }),
-        updateUser(userId, {
+        updateUser(effectiveUserId, {
           fullName,
           phone: phone || undefined,
         }),
