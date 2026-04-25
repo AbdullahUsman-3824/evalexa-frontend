@@ -10,15 +10,25 @@ import PasswordRequirements, {
 } from "./PasswordRequirements";
 
 interface StepResetPasswordProps {
+  email: string;
+  onResetPassword: (payload: {
+    email: string;
+    otp: string;
+    newPassword: string;
+  }) => Promise<void>;
   onSuccess: () => void;
 }
 
 export default function StepResetPassword({
+  email,
+  onResetPassword,
   onSuccess,
 }: StepResetPasswordProps) {
+  const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({
+    otp: "",
     newPassword: "",
     confirmPassword: "",
   });
@@ -26,12 +36,19 @@ export default function StepResetPassword({
 
   const passwordsMatch =
     newPassword && confirmPassword && newPassword === confirmPassword;
+  const otpValid = /^\d{6}$/.test(otp.trim());
   const allRequirementsMet = validatePasswordRequirements(newPassword);
-  const isFormValid = passwordsMatch && allRequirementsMet;
+  const isFormValid = otpValid && passwordsMatch && allRequirementsMet;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const newErrors = { newPassword: "", confirmPassword: "" };
+    const newErrors = { otp: "", newPassword: "", confirmPassword: "" };
+
+    if (!otp.trim()) {
+      newErrors.otp = "OTP is required";
+    } else if (!otpValid) {
+      newErrors.otp = "OTP must be a valid 6-digit code";
+    }
 
     // Validation
     if (!newPassword) {
@@ -48,14 +65,33 @@ export default function StepResetPassword({
 
     setErrors(newErrors);
 
-    if (!newErrors.newPassword && !newErrors.confirmPassword) {
+    if (!email) {
+      newErrors.otp = "Email is missing. Start forgot password again.";
+    }
+
+    if (
+      !newErrors.otp &&
+      !newErrors.newPassword &&
+      !newErrors.confirmPassword
+    ) {
       setIsLoading(true);
 
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
+      try {
+        await onResetPassword({
+          email,
+          otp: otp.trim(),
+          newPassword,
+        });
         onSuccess();
-      }, 1500);
+      } catch (requestError) {
+        const message =
+          requestError instanceof Error
+            ? requestError.message
+            : "Reset password failed. Please try again.";
+        setErrors((prev) => ({ ...prev, otp: message }));
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -92,6 +128,24 @@ export default function StepResetPassword({
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* OTP Field */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <FormInput
+            label="6-digit OTP"
+            type="text"
+            name="otp"
+            placeholder="Enter OTP"
+            icon={KeyRound}
+            value={otp}
+            onChange={(value) => setOtp(value.replace(/\D/g, "").slice(0, 6))}
+            error={errors.otp}
+          />
+        </motion.div>
+
         {/* New Password Field */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}

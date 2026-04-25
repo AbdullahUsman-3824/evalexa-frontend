@@ -8,14 +8,16 @@ import Link from "next/link";
 interface StepCheckEmailProps {
   email: string;
   onResend: () => void;
+  onContinue: () => void;
 }
 
 export default function StepCheckEmail({
   email,
   onResend,
+  onContinue,
 }: StepCheckEmailProps) {
   const [countdown, setCountdown] = useState(60);
-  const [canResend, setCanResend] = useState(false);
+  const canResend = countdown === 0;
 
   useEffect(() => {
     if (countdown > 0) {
@@ -23,15 +25,12 @@ export default function StepCheckEmail({
         setCountdown(countdown - 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else {
-      setCanResend(true);
     }
   }, [countdown]);
 
   const handleResend = () => {
     if (canResend) {
       setCountdown(60);
-      setCanResend(false);
       onResend();
     }
   };
@@ -70,7 +69,7 @@ export default function StepCheckEmail({
           Check your inbox
         </h1>
         <p className="text-sm text-slate leading-relaxed mb-2">
-          We've sent a password reset link to:
+          We&apos;ve sent a password reset link to:
         </p>
         <p className="text-base font-semibold text-primary">{email}</p>
       </div>
@@ -83,13 +82,24 @@ export default function StepCheckEmail({
         className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6"
       >
         <p className="text-sm text-midnight leading-relaxed">
-          Didn't receive the email? Check your spam folder or request a new
+          Didn&apos;t receive the email? Check your spam folder or request a new
           link.
         </p>
       </motion.div>
 
       {/* Action Buttons */}
       <div className="space-y-3 mb-6">
+        {/* Continue Button */}
+        <motion.button
+          onClick={onContinue}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full h-11 bg-primary text-white font-semibold rounded-lg
+            hover:bg-primary/90 transition-colors duration-200"
+        >
+          I have the OTP
+        </motion.button>
+
         {/* Open Email Button */}
         <motion.button
           onClick={handleOpenEmail}

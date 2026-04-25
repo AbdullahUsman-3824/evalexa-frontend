@@ -8,9 +8,35 @@ import Link from "next/link";
 import FormInput from "@/components/ui/FormInput";
 import RoleSelector from "@/components/auth/RoleSelector";
 import SocialLogin from "@/components/auth/SocialLogin";
-import { loginUser, registerUser } from "@/lib/services/authService";
+import Toast from "@/components/ui/Toast";
+import { registerUser } from "@/lib/services/authService";
 
 type PasswordStrength = "weak" | "fair" | "strong" | null;
+
+type SignupErrors = {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: string;
+  agreeToTerms: string;
+  submit: string;
+};
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PENDING_SIGNUP_KEY = "pending_signup";
+
+function getInitialErrors(): SignupErrors {
+  return {
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "",
+    agreeToTerms: "",
+    submit: "",
+  };
+}
 
 export default function SignupForm() {
   const router = useRouter();
@@ -25,17 +51,35 @@ export default function SignupForm() {
   });
 
   const [errors, setErrors] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "",
-    agreeToTerms: "",
+    ...getInitialErrors(),
   });
 
   const [passwordStrength, setPasswordStrength] =
     useState<PasswordStrength>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+    isVisible: boolean;
+  }>({
+    message: "",
+    type: "success",
+    isVisible: false,
+  });
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "success",
+  ) => {
+    setToast({ message, type, isVisible: true });
+  };
+
+  const hideToast = () => {
+    setToast((prev) => ({ ...prev, isVisible: false }));
+  };
+
+  const wait = (duration: number) =>
+    new Promise((resolve) => setTimeout(resolve, duration));
 
   const calculatePasswordStrength = (password: string): PasswordStrength => {
     if (!password) return null;
@@ -51,14 +95,30 @@ export default function SignupForm() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const nextErrors = {
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      role: "",
-      agreeToTerms: "",
-    };
+    const nextErrors = getInitialErrors();
+
+    const trimmedFullName = formData.fullName.trim();
+    const trimmedEmail = formData.email.trim().toLowerCase();
+
+    if (!trimmedFullName) {
+      nextErrors.fullName = "Full name is required.";
+    }
+
+    if (!trimmedEmail) {
+      nextErrors.email = "Email is required.";
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+      nextErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!formData.password) {
+      nextErrors.password = "Password is required.";
+    } else if (formData.password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
+
+    if (!formData.confirmPassword) {
+      nextErrors.confirmPassword = "Please confirm your password.";
+    }
 
     if (!formData.role) {
       nextErrors.role = "Please select your account type.";
@@ -72,11 +132,7 @@ export default function SignupForm() {
       nextErrors.confirmPassword = "Passwords do not match.";
     }
 
-    if (
-      nextErrors.role ||
-      nextErrors.agreeToTerms ||
-      nextErrors.confirmPassword
-    ) {
+    if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       return;
     }
@@ -85,29 +141,41 @@ export default function SignupForm() {
     setIsLoading(true);
 
     try {
-      await registerUser({
-        fullName: formData.fullName,
-        email: formData.email,
+      const response = await registerUser({
+        fullName: trimmedFullName,
+        email: trimmedEmail,
         password: formData.password,
         phone: "03000000000",
         role: formData.role ?? "recruiter",
       });
 
-      const loginData = await loginUser({
-        email: formData.email,
-        password: formData.password,
-      });
+      console.log(response);
 
-      let dashboardPath = "/candidate/dashboard";
-      if (loginData.user.role === "recruiter") {
-        dashboardPath = loginData.user.companyId === null ? "/company-setup" : "/recruiter/dashboard";
+      showToast(
+        "Registration successful. Check your email for the OTP code.",
+        "success",
+      );
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          PENDING_SIGNUP_KEY,
+          JSON.stringify({
+            email: trimmedEmail,
+            password: formData.password,
+          }),
+        );
       }
 
-      router.push(dashboardPath);
+      await wait(1500);
+      router.push(`/verify-email?email=${encodeURIComponent(trimmedEmail)}`);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Signup failed. Please try again.";
-      setErrors((prev) => ({ ...prev, email: message }));
+      const rawMessage =
+        error instanceof Error
+          ? error.message
+          : "Signup failed. Please try again.";
+
+      setErrors(getInitialErrors());
+      showToast(rawMessage, "error");
     } finally {
       setIsLoading(false);
     }
@@ -165,6 +233,7 @@ export default function SignupForm() {
             value={formData.fullName}
             onChange={(value) => setFormData({ ...formData, fullName: value })}
             error={errors.fullName}
+            required
           />
         </motion.div>
 
@@ -183,6 +252,7 @@ export default function SignupForm() {
             value={formData.email}
             onChange={(value) => setFormData({ ...formData, email: value })}
             error={errors.email}
+            required
           />
         </motion.div>
 
@@ -202,6 +272,7 @@ export default function SignupForm() {
             onChange={handlePasswordChange}
             error={errors.password}
             showToggle
+            required
           />
 
           {/* Password Strength Indicator */}
@@ -261,8 +332,15 @@ export default function SignupForm() {
             }
             error={errors.confirmPassword}
             showToggle
+            required
           />
         </motion.div>
+
+        {errors.submit && (
+          <p className="text-sm text-red-500" role="alert">
+            {errors.submit}
+          </p>
+        )}
 
         {/* Terms & Conditions Checkbox */}
         <motion.div
@@ -350,6 +428,13 @@ export default function SignupForm() {
           </Link>
         </div>
       </form>
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
     </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import LeftPanel from "@/components/auth/LeftPanel";
@@ -10,14 +10,16 @@ import StepCheckEmail from "@/components/auth/forgot-password/StepCheckEmail";
 import StepResetPassword from "@/components/auth/forgot-password/StepResetPassword";
 import StepSuccess from "@/components/auth/forgot-password/StepSuccess";
 import Toast from "@/components/ui/Toast";
+import { forgotPassword, resetPassword } from "@/lib/services/authService";
 
 function ForgotPasswordContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const emailFromQuery = (searchParams.get("email") ?? "").trim().toLowerCase();
 
-  // Start at step 3 if token exists, otherwise step 1
-  const [currentStep, setCurrentStep] = useState(token ? 3 : 1);
-  const [email, setEmail] = useState("");
+  const [currentStep, setCurrentStep] = useState(() =>
+    emailFromQuery ? 3 : 1,
+  );
+  const [email, setEmail] = useState(() => emailFromQuery);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error" | "info";
@@ -27,13 +29,6 @@ function ForgotPasswordContent() {
     type: "success",
     isVisible: false,
   });
-
-  useEffect(() => {
-    // If token is present in URL, go directly to reset password step
-    if (token) {
-      setCurrentStep(3);
-    }
-  }, [token]);
 
   const showToast = (
     message: string,
@@ -46,14 +41,34 @@ function ForgotPasswordContent() {
     setToast((prev) => ({ ...prev, isVisible: false }));
   };
 
-  const handleEmailSuccess = (submittedEmail: string) => {
+  const handleEmailSubmit = async (submittedEmail: string) => {
+    await forgotPassword({ email: submittedEmail });
     setEmail(submittedEmail);
     setCurrentStep(2);
-    showToast("Reset email sent successfully!");
+    showToast("OTP sent to your email.", "success");
   };
 
-  const handleResendEmail = () => {
-    showToast("Email resent!", "success");
+  const handleResendEmail = async () => {
+    if (!email) {
+      showToast("Email is missing. Start again.", "error");
+      return;
+    }
+
+    await forgotPassword({ email });
+    showToast("OTP resent successfully.", "success");
+  };
+
+  const handleContinueToReset = () => {
+    setCurrentStep(3);
+  };
+
+  const handleResetPassword = async (payload: {
+    email: string;
+    otp: string;
+    newPassword: string;
+  }) => {
+    await resetPassword(payload);
+    showToast("Password reset successful.", "success");
   };
 
   const handleResetSuccess = () => {
@@ -79,7 +94,7 @@ function ForgotPasswordContent() {
           {/* Step Content with AnimatePresence */}
           <AnimatePresence mode="wait">
             {currentStep === 1 && (
-              <StepEnterEmail key="step1" onSuccess={handleEmailSuccess} />
+              <StepEnterEmail key="step1" onSubmitEmail={handleEmailSubmit} />
             )}
 
             {currentStep === 2 && (
@@ -87,11 +102,17 @@ function ForgotPasswordContent() {
                 key="step2"
                 email={email}
                 onResend={handleResendEmail}
+                onContinue={handleContinueToReset}
               />
             )}
 
             {currentStep === 3 && (
-              <StepResetPassword key="step3" onSuccess={handleResetSuccess} />
+              <StepResetPassword
+                key="step3"
+                email={email}
+                onResetPassword={handleResetPassword}
+                onSuccess={handleResetSuccess}
+              />
             )}
 
             {currentStep === 4 && <StepSuccess key="step4" />}

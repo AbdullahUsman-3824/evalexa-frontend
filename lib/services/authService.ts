@@ -1,16 +1,6 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://evalexa-backend.vercel.app";
+import { AUTH_TOKEN_KEY, apiRequest } from "@/lib/services/apiClient";
 
-const AUTH_TOKEN_KEY = "access_token";
 const AUTH_USER_KEY = "user";
-
-type ApiErrorShape = {
-  message?: string | string[];
-  error?: string;
-  statusCode?: number;
-};
 
 export type AuthUser = {
   id: number;
@@ -42,6 +32,25 @@ export type LoginResponse = {
   user: AuthUser;
 };
 
+export type VerifyEmailOtpPayload = {
+  email: string;
+  otp: string;
+};
+
+export type ForgotPasswordPayload = {
+  email: string;
+};
+
+export type ResetPasswordPayload = {
+  email: string;
+  otp: string;
+  newPassword: string;
+};
+
+type MessageResponse = {
+  message?: string;
+};
+
 function normalizeAuthUser(user: AuthUser): AuthUser {
   const normalizedName = user.name?.trim();
   const normalizedFullName = user.fullName?.trim();
@@ -64,52 +73,6 @@ function normalizeAuthUser(user: AuthUser): AuthUser {
   }
 
   return user;
-}
-
-async function parseApiResponse<T>(response: Response): Promise<T> {
-  const contentType = response.headers.get("content-type") ?? "";
-  const body = contentType.includes("application/json")
-    ? ((await response.json()) as T | ApiErrorShape)
-    : await response.text();
-
-  if (!response.ok) {
-    if (typeof body === "string") {
-      throw new Error(body || `Request failed (${response.status})`);
-    }
-
-    const apiError = body as ApiErrorShape;
-    const parsedMessage = Array.isArray(apiError.message)
-      ? apiError.message.join(", ")
-      : apiError.message;
-    throw new Error(
-      parsedMessage || apiError.error || `Request failed (${response.status})`,
-    );
-  }
-
-  return body as T;
-}
-
-async function apiRequest<T>(
-  path: string,
-  options: RequestInit = {},
-  withAuth = false,
-): Promise<T> {
-  const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
-
-  if (withAuth && typeof window !== "undefined") {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
-
-  return parseApiResponse<T>(response);
 }
 
 export function persistAuthSession(data: LoginResponse): void {
@@ -207,6 +170,49 @@ export async function loginUser(payload: LoginPayload): Promise<LoginResponse> {
 
   persistAuthSession(data);
   return data;
+}
+
+export async function verifyEmailOtp(
+  payload: VerifyEmailOtpPayload,
+): Promise<MessageResponse> {
+  return apiRequest<MessageResponse>("/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({
+      email: payload.email,
+      otp: payload.otp,
+    }),
+  });
+}
+
+export async function resendVerificationOtp(
+  email: string,
+): Promise<MessageResponse> {
+  return apiRequest<MessageResponse>("/auth/resend-otp", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function forgotPassword(
+  payload: ForgotPasswordPayload,
+): Promise<MessageResponse> {
+  return apiRequest<MessageResponse>("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email: payload.email }),
+  });
+}
+
+export async function resetPassword(
+  payload: ResetPasswordPayload,
+): Promise<MessageResponse> {
+  return apiRequest<MessageResponse>("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({
+      email: payload.email,
+      otp: payload.otp,
+      newPassword: payload.newPassword,
+    }),
+  });
 }
 
 export async function logoutUser(): Promise<void> {

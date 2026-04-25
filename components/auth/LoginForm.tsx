@@ -7,7 +7,17 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import FormInput from "@/components/ui/FormInput";
 import SocialLogin from "@/components/auth/SocialLogin";
+import Toast from "@/components/ui/Toast";
 import { loginUser } from "@/lib/services/authService";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getInitialErrors() {
+  return {
+    email: "",
+    password: "",
+  };
+}
 
 export default function LoginForm() {
   const router = useRouter();
@@ -19,33 +29,83 @@ export default function LoginForm() {
   });
 
   const [errors, setErrors] = useState({
-    email: "",
-    password: "",
+    ...getInitialErrors(),
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+    isVisible: boolean;
+  }>({
+    message: "",
+    type: "success",
+    isVisible: false,
+  });
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "success",
+  ) => {
+    setToast({ message, type, isVisible: true });
+  };
+
+  const hideToast = () => {
+    setToast((prev) => ({ ...prev, isVisible: false }));
+  };
+
+  const wait = (duration: number) =>
+    new Promise((resolve) => setTimeout(resolve, duration));
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setErrors({ email: "", password: "" });
+    const nextErrors = getInitialErrors();
+
+    const trimmedEmail = formData.email.trim().toLowerCase();
+
+    if (!trimmedEmail) {
+      nextErrors.email = "Email is required.";
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+      nextErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!formData.password) {
+      nextErrors.password = "Password is required.";
+    }
+
+    if (Object.values(nextErrors).some(Boolean)) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors(nextErrors);
     setIsLoading(true);
 
     try {
       const data = await loginUser({
-        email: formData.email,
+        email: trimmedEmail,
         password: formData.password,
       });
 
+      showToast("Login successful.", "success");
+      await wait(500);
+
       let dashboardPath = "/candidate/dashboard";
       if (data.user.role === "recruiter") {
-        dashboardPath = data.user.companyId === null ? "/company-setup" : "/recruiter/dashboard";
+        dashboardPath =
+          data.user.companyId === null
+            ? "/company-setup"
+            : "/recruiter/dashboard";
       }
 
       router.push(dashboardPath);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Login failed. Please try again.";
-      setErrors({ email: "", password: message });
+        error instanceof Error
+          ? error.message
+          : "Login failed. Please try again.";
+      setErrors(getInitialErrors());
+      showToast(message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +134,7 @@ export default function LoginForm() {
             value={formData.email}
             onChange={(value) => setFormData({ ...formData, email: value })}
             error={errors.email}
+            required
           />
         </motion.div>
 
@@ -93,6 +154,7 @@ export default function LoginForm() {
             onChange={(value) => setFormData({ ...formData, password: value })}
             error={errors.password}
             showToggle
+            required
           />
           <div className="mt-2 text-right">
             <Link
@@ -173,6 +235,13 @@ export default function LoginForm() {
           </Link>
         </div>
       </form>
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
     </motion.div>
   );
 }

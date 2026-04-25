@@ -7,10 +7,10 @@ import Link from "next/link";
 import FormInput from "@/components/ui/FormInput";
 
 interface StepEnterEmailProps {
-  onSuccess: (email: string) => void;
+  onSubmitEmail: (email: string) => Promise<void>;
 }
 
-export default function StepEnterEmail({ onSuccess }: StepEnterEmailProps) {
+export default function StepEnterEmail({ onSubmitEmail }: StepEnterEmailProps) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,11 +36,17 @@ export default function StepEnterEmail({ onSuccess }: StepEnterEmailProps) {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await onSubmitEmail(email.trim().toLowerCase());
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to send reset OTP. Please try again.";
+      setError(message);
+    } finally {
       setIsLoading(false);
-      onSuccess(email);
-    }, 1500);
+    }
   };
 
   return (
@@ -69,8 +75,8 @@ export default function StepEnterEmail({ onSuccess }: StepEnterEmailProps) {
           Forgot your password?
         </h1>
         <p className="text-sm text-slate leading-relaxed max-w-md mx-auto">
-          Enter the email address linked to your Evalexa account and we'll send
-          you a reset link.
+          Enter the email address linked to your Evalexa account and we&apos;ll
+          send you a reset link.
         </p>
       </div>
 

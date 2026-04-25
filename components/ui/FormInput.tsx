@@ -28,7 +28,7 @@ export default function FormInput({
   onChange,
   name,
   id,
-  required,
+  // required,
 }: FormInputProps) {
   const [showPassword, setShowPassword] = useState(false);
   const inputType = showToggle && showPassword ? "text" : type;
@@ -51,7 +51,7 @@ export default function FormInput({
           type={inputType}
           name={name}
           id={id}
-          required={required}
+          // required={required}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
