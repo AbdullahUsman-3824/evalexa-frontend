@@ -157,6 +157,39 @@ export function getAuthToken(): string | null {
   return localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
+function decodeJwtPayload(token: string): { sub?: number } | null {
+  const parts = token.split(".");
+  if (parts.length < 2) {
+    return null;
+  }
+
+  try {
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const paddedBase64 = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
+    return JSON.parse(atob(paddedBase64)) as { sub?: number };
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredUserId(): number | null {
+  const storedUser = getStoredUser();
+  if (storedUser?.id) {
+    return storedUser.id;
+  }
+
+  const token = getAuthToken();
+  if (!token) {
+    return null;
+  }
+
+  const payload = decodeJwtPayload(token);
+  return typeof payload?.sub === "number" ? payload.sub : null;
+}
+
 export async function registerUser(
   payload: RegisterPayload,
 ): Promise<AuthUser> {

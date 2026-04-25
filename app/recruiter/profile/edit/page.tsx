@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import CompanyInfoTab from "@/components/recruiter/profile/edit/CompanyInfoTab";
 import RecruiterTab from "@/components/recruiter/profile/edit/RecruiterTab";
 import BrandingTab from "@/components/recruiter/profile/edit/BrandingTab";
@@ -13,7 +13,7 @@ import {
   Company,
   getCompanies,
 } from "@/lib/services/companyService";
-import { getProfile, getStoredUser } from "@/lib/services/authService";
+import { getProfile, getStoredUserId } from "@/lib/services/authService";
 import { updateUser } from "@/lib/services/userService";
 import Toast from "@/components/ui/Toast";
 
@@ -29,7 +29,6 @@ export default function EditProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("company");
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error" | "info";
@@ -54,9 +53,9 @@ export default function EditProfilePage() {
   });
 
   useEffect(() => {
-    const storedUser = getStoredUser();
-    if (storedUser?.id) {
-      setUserId(storedUser.id);
+    const storedUserId = getStoredUserId();
+    if (storedUserId) {
+      setUserId(storedUserId);
     }
   }, []);
 
@@ -93,8 +92,6 @@ export default function EditProfilePage() {
       } catch (error) {
         console.error("Failed to fetch company", error);
         setToast({ message: "Failed to load company data.", type: "error" });
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchCompany();
@@ -115,7 +112,7 @@ export default function EditProfilePage() {
       return;
     }
 
-    const effectiveUserId = userId ?? getStoredUser()?.id ?? null;
+    const effectiveUserId = userId ?? getStoredUserId();
     if (!effectiveUserId) {
       setToast({
         message: "User session not found. Please log in again.",
