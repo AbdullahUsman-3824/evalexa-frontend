@@ -5,9 +5,7 @@ import { motion } from "framer-motion";
 import { KeyRound, Lock, ShieldCheck, Loader2 } from "lucide-react";
 import FormInput from "@/components/ui/FormInput";
 import PasswordStrength from "./PasswordStrength";
-import PasswordRequirements, {
-  validatePasswordRequirements,
-} from "./PasswordRequirements";
+import PasswordRequirements from "./PasswordRequirements";
 
 interface StepResetPasswordProps {
   email: string;
@@ -37,8 +35,8 @@ export default function StepResetPassword({
   const passwordsMatch =
     newPassword && confirmPassword && newPassword === confirmPassword;
   const otpValid = /^\d{6}$/.test(otp.trim());
-  const allRequirementsMet = validatePasswordRequirements(newPassword);
-  const isFormValid = otpValid && passwordsMatch && allRequirementsMet;
+  const isFormValid =
+    otpValid && Boolean(newPassword) && Boolean(passwordsMatch);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -53,8 +51,6 @@ export default function StepResetPassword({
     // Validation
     if (!newPassword) {
       newErrors.newPassword = "Password is required";
-    } else if (!allRequirementsMet) {
-      newErrors.newPassword = "Password doesn't meet all requirements";
     }
 
     if (!confirmPassword) {
@@ -121,8 +117,8 @@ export default function StepResetPassword({
           Set a new password
         </h1>
         <p className="text-sm text-slate leading-relaxed max-w-md mx-auto">
-          Your new password must be at least 8 characters and different from
-          your previous one.
+          Choose a new password and confirm it below. Strength feedback is shown
+          for guidance only.
         </p>
       </div>
 
@@ -167,7 +163,7 @@ export default function StepResetPassword({
           {/* Password Strength Indicator */}
           <PasswordStrength password={newPassword} />
 
-          {/* Password Requirements */}
+          {/* Password Requirements are informational only. */}
           {newPassword && <PasswordRequirements password={newPassword} />}
         </motion.div>
 
@@ -223,9 +219,9 @@ export default function StepResetPassword({
         {/* Submit Button */}
         <motion.button
           type="submit"
-          disabled={!isFormValid || isLoading}
-          whileHover={{ scale: !isFormValid || isLoading ? 1 : 1.02 }}
-          whileTap={{ scale: !isFormValid || isLoading ? 1 : 0.98 }}
+          disabled={isLoading}
+          whileHover={{ scale: isLoading ? 1 : 1.02 }}
+          whileTap={{ scale: isLoading ? 1 : 0.98 }}
           className="w-full h-11 bg-primary text-white font-semibold rounded-lg
             hover:bg-primary/90 transition-colors duration-200
             disabled:opacity-50 disabled:cursor-not-allowed

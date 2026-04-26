@@ -3,19 +3,28 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { User, Mail, Lock, ShieldCheck, Loader2 } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  ShieldCheck,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
 import Link from "next/link";
 import FormInput from "@/components/ui/FormInput";
 import RoleSelector from "@/components/auth/RoleSelector";
 import SocialLogin from "@/components/auth/SocialLogin";
 import Toast from "@/components/ui/Toast";
+import PasswordStrength from "@/components/auth/forgot-password/PasswordStrength";
+import PasswordRequirements from "@/components/auth/forgot-password/PasswordRequirements";
 import { registerUser } from "@/lib/services/authService";
-
-type PasswordStrength = "weak" | "fair" | "strong" | null;
 
 type SignupErrors = {
   fullName: string;
   email: string;
+  phone: string;
   password: string;
   confirmPassword: string;
   role: string;
@@ -24,12 +33,14 @@ type SignupErrors = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^\+?\d{10,15}$/;
 const PENDING_SIGNUP_KEY = "pending_signup";
 
 function getInitialErrors(): SignupErrors {
   return {
     fullName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     role: "",
@@ -44,6 +55,7 @@ export default function SignupForm() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     role: null as "recruiter" | "candidate" | null,
@@ -54,8 +66,6 @@ export default function SignupForm() {
     ...getInitialErrors(),
   });
 
-  const [passwordStrength, setPasswordStrength] =
-    useState<PasswordStrength>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -81,17 +91,18 @@ export default function SignupForm() {
   const wait = (duration: number) =>
     new Promise((resolve) => setTimeout(resolve, duration));
 
-  const calculatePasswordStrength = (password: string): PasswordStrength => {
-    if (!password) return null;
-    if (password.length < 6) return "weak";
-    if (password.length < 10) return "fair";
-    return "strong";
+  const normalizePhone = (value: string) =>
+    value.replace(/\s|-/g, "").replace(/(?!^)\+/g, "");
+
+  const handlePhoneChange = (value: string) => {
+    const sanitizedPhone = value.replace(/[^\d+\s-]/g, "");
+    setFormData({ ...formData, phone: sanitizedPhone });
   };
 
-  const handlePasswordChange = (value: string) => {
-    setFormData({ ...formData, password: value });
-    setPasswordStrength(calculatePasswordStrength(value));
-  };
+  const passwordsMatch =
+    Boolean(formData.password) &&
+    Boolean(formData.confirmPassword) &&
+    formData.password === formData.confirmPassword;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -99,6 +110,7 @@ export default function SignupForm() {
 
     const trimmedFullName = formData.fullName.trim();
     const trimmedEmail = formData.email.trim().toLowerCase();
+    const normalizedPhone = normalizePhone(formData.phone.trim());
 
     if (!trimmedFullName) {
       nextErrors.fullName = "Full name is required.";
@@ -108,6 +120,12 @@ export default function SignupForm() {
       nextErrors.email = "Email is required.";
     } else if (!EMAIL_REGEX.test(trimmedEmail)) {
       nextErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!normalizedPhone) {
+      nextErrors.phone = "Phone number is required.";
+    } else if (!PHONE_REGEX.test(normalizedPhone)) {
+      nextErrors.phone = "Enter a valid phone number (10-15 digits).";
     }
 
     if (!formData.password) {
@@ -145,7 +163,7 @@ export default function SignupForm() {
         fullName: trimmedFullName,
         email: trimmedEmail,
         password: formData.password,
-        phone: "03000000000",
+        phone: normalizedPhone,
         role: formData.role ?? "recruiter",
       });
 
@@ -179,20 +197,6 @@ export default function SignupForm() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const strengthConfig = {
-    weak: { color: "bg-red-500", text: "Weak", textColor: "text-red-500" },
-    fair: {
-      color: "bg-amber-500",
-      text: "Fair",
-      textColor: "text-amber-500",
-    },
-    strong: {
-      color: "bg-success",
-      text: "Strong",
-      textColor: "text-success",
-    },
   };
 
   return (
@@ -256,6 +260,25 @@ export default function SignupForm() {
           />
         </motion.div>
 
+        {/* Phone Number Field */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <FormInput
+            label="Phone Number"
+            type="tel"
+            name="phone"
+            placeholder="+923001234567"
+            icon={Phone}
+            value={formData.phone}
+            onChange={handlePhoneChange}
+            error={errors.phone}
+            required
+          />
+        </motion.div>
+
         {/* Password Field */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -269,48 +292,16 @@ export default function SignupForm() {
             placeholder="Create a password (min 8 characters)"
             icon={Lock}
             value={formData.password}
-            onChange={handlePasswordChange}
+            onChange={(value) => setFormData({ ...formData, password: value })}
             error={errors.password}
             showToggle
             required
           />
 
-          {/* Password Strength Indicator */}
-          {passwordStrength && (
-            <div className="mt-2 space-y-1">
-              <div className="flex space-x-1">
-                <div
-                  className={`h-1 flex-1 rounded ${
-                    passwordStrength === "weak"
-                      ? strengthConfig.weak.color
-                      : passwordStrength === "fair"
-                        ? strengthConfig.fair.color
-                        : strengthConfig.strong.color
-                  }`}
-                ></div>
-                <div
-                  className={`h-1 flex-1 rounded ${
-                    passwordStrength === "fair"
-                      ? strengthConfig.fair.color
-                      : passwordStrength === "strong"
-                        ? strengthConfig.strong.color
-                        : "bg-slate/20"
-                  }`}
-                ></div>
-                <div
-                  className={`h-1 flex-1 rounded ${
-                    passwordStrength === "strong"
-                      ? strengthConfig.strong.color
-                      : "bg-slate/20"
-                  }`}
-                ></div>
-              </div>
-              <p
-                className={`text-xs font-medium ${strengthConfig[passwordStrength].textColor}`}
-              >
-                Password strength: {strengthConfig[passwordStrength].text}
-              </p>
-            </div>
+          {/* Informational password feedback only, not submission-blocking. */}
+          <PasswordStrength password={formData.password} />
+          {formData.password && (
+            <PasswordRequirements password={formData.password} />
           )}
         </motion.div>
 
@@ -334,6 +325,25 @@ export default function SignupForm() {
             showToggle
             required
           />
+
+          {formData.confirmPassword && (
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mt-1.5 text-sm flex items-center space-x-1 ${
+                passwordsMatch ? "text-success" : "text-red-500"
+              }`}
+            >
+              {passwordsMatch ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Passwords match</span>
+                </>
+              ) : (
+                <span>Passwords do not match</span>
+              )}
+            </motion.p>
+          )}
         </motion.div>
 
         {errors.submit && (
