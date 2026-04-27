@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Upload, X } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useState } from "react";
 
 export default function BrandingTab() {
@@ -180,8 +180,8 @@ export default function BrandingTab() {
           </div>
 
           <p className="text-sm text-slate mb-4">
-            We're looking for a talented software engineer to join our growing
-            team...
+            We&apos;re looking for a talented software engineer to join our
+            growing team...
           </p>
 
           <button

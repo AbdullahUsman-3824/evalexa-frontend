@@ -107,8 +107,8 @@ export default function EducationTab() {
                 <option value="">Select degree</option>
                 <option value="high-school">High School</option>
                 <option value="associate">Associate Degree</option>
-                <option value="bachelors">Bachelor's</option>
-                <option value="masters">Master's</option>
+                <option value="bachelors">Bachelor&apos;s</option>
+                <option value="masters">Master&apos;s</option>
                 <option value="phd">PhD</option>
                 <option value="other">Other</option>
               </select>

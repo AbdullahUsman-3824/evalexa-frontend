@@ -39,18 +39,18 @@ const portfolioLinks: PortfolioLink[] = [
   },
 ];
 
-function getIcon(type: PortfolioLink["type"]) {
-  switch (type) {
-    case "github":
-      return Code;
-    case "linkedin":
-      return Share2;
-    case "website":
-      return Globe;
-    default:
-      return LinkIcon;
-  }
-}
+// function getIcon(type: PortfolioLink["type"]) {
+//   switch (type) {
+//     case "github":
+//       return Code;
+//     case "linkedin":
+//       return Share2;
+//     case "website":
+//       return Globe;
+//     default:
+//       return LinkIcon;
+//   }
+// }
 
 function getIconColor(type: PortfolioLink["type"]) {
   switch (type) {
@@ -72,7 +72,6 @@ function PortfolioLinkItem({
   link: PortfolioLink;
   index: number;
 }) {
-  const Icon = getIcon(link.type);
   const iconColor = getIconColor(link.type);
 
   return (
@@ -89,7 +88,18 @@ function PortfolioLinkItem({
         className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
         style={{ backgroundColor: `${iconColor}15` }}
       >
-        <Icon size={18} style={{ color: iconColor }} />
+        {link.type === "github" && (
+          <Code size={18} style={{ color: iconColor }} />
+        )}
+        {link.type === "linkedin" && (
+          <Share2 size={18} style={{ color: iconColor }} />
+        )}
+        {link.type === "website" && (
+          <Globe size={18} style={{ color: iconColor }} />
+        )}
+        {link.type === "other" && (
+          <LinkIcon size={18} style={{ color: iconColor }} />
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-midnight truncate">

@@ -7,7 +7,6 @@ import {
   Bookmark,
   DollarSign,
   Briefcase,
-  Calendar,
 } from "lucide-react";
 import { Job } from "./JobCard";
 

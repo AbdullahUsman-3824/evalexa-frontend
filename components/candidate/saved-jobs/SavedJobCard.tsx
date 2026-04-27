@@ -9,7 +9,6 @@ import {
   DollarSign,
   Briefcase,
   AlertCircle,
-  X,
 } from "lucide-react";
 import { Job } from "@/components/candidate/jobs/JobCard";
 
@@ -222,7 +221,7 @@ export default function SavedJobCard({
                 <h4 className="font-semibold">Remove from saved?</h4>
               </div>
               <p className="mb-4 text-sm text-slate">
-                This will remove "{job.title}" from your saved jobs.
+                This will remove &quot;{job.title}&quot; from your saved jobs.
               </p>
               <div className="flex gap-2">
                 <button

@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 interface ChecklistItem {
   label: string;
@@ -12,7 +11,6 @@ interface ChecklistItem {
 }
 
 export default function ProfileCompletion() {
-  const [mounted, setMounted] = useState(false);
   const completionPercentage = 72;
 
   const checklist: ChecklistItem[] = [
@@ -26,10 +24,6 @@ export default function ProfileCompletion() {
       link: "/candidate/profile/edit",
     },
   ];
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // SVG circle calculations
   const radius = 60;

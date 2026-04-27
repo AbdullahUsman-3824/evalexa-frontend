@@ -6,7 +6,12 @@ import NotificationGroup from "@/components/candidate/notifications/Notification
 import { Bell, ChevronDown, Loader2 } from "lucide-react";
 import { Notification } from "@/components/candidate/notifications/NotificationItem";
 
-type NotificationCategory = "All" | "Jobs" | "Applications" | "Interviews" | "Messages";
+type NotificationCategory =
+  | "All"
+  | "Jobs"
+  | "Applications"
+  | "Interviews"
+  | "Messages";
 
 interface NotificationFeedItem extends Notification {
   group: "Today" | "Yesterday" | "This Week" | "Earlier";
@@ -124,7 +129,9 @@ export default function NotificationsPage() {
       return notification.category === activeFilter;
     });
 
-    return filtered.reduce<Record<NotificationFeedItem["group"], NotificationFeedItem[]>>(
+    return filtered.reduce<
+      Record<NotificationFeedItem["group"], NotificationFeedItem[]>
+    >(
       (acc, notification) => {
         if (!acc[notification.group]) acc[notification.group] = [];
         acc[notification.group].push(notification);
@@ -135,24 +142,30 @@ export default function NotificationsPage() {
         Yesterday: [],
         "This Week": [],
         Earlier: [],
-      }
+      },
     );
   }, [notifications, activeFilter]);
 
   const handleMarkAsRead = (id: string) => {
     setNotifications((prev) =>
       prev.map((notification) =>
-        notification.id === id ? { ...notification, isRead: true } : notification
-      )
+        notification.id === id
+          ? { ...notification, isRead: true }
+          : notification,
+      ),
     );
   };
 
   const handleDelete = (id: string) => {
-    setNotifications((prev) => prev.filter((notification) => notification.id !== id));
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id),
+    );
   };
 
   const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
+    setNotifications((prev) =>
+      prev.map((notification) => ({ ...notification, isRead: true })),
+    );
   };
 
   const handleLoadMore = () => {
@@ -176,7 +189,7 @@ export default function NotificationsPage() {
   };
 
   const hasNotifications = Object.values(groupedNotifications).some(
-    (group) => group.length > 0
+    (group) => group.length > 0,
   );
 
   return (
@@ -184,7 +197,9 @@ export default function NotificationsPage() {
       <header className="flex flex-col gap-4 rounded-2xl bg-white/80 p-6 shadow-sm shadow-midnight/5 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="font-heading text-2xl text-midnight">Notifications</p>
-          <p className="mt-1 text-sm text-slate">Stay on top of your applications and recruiter messages.</p>
+          <p className="mt-1 text-sm text-slate">
+            Stay on top of your applications and recruiter messages.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
@@ -226,7 +241,9 @@ export default function NotificationsPage() {
               <span className="text-xs font-semibold">0</span>
             </div>
           </div>
-          <p className="font-heading text-lg text-midnight">You're all caught up!</p>
+          <p className="font-heading text-lg text-midnight">
+            You&apos;re all caught up!
+          </p>
           <p className="mt-1 text-sm text-slate">No new notifications</p>
         </div>
       ) : (
@@ -274,4 +291,3 @@ export default function NotificationsPage() {
     </section>
   );
 }
-

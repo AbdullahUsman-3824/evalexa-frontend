@@ -43,7 +43,9 @@ const pageTitles: Record<string, string> = {
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(null);
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(
+    getStoredUser(),
+  );
   const [companyName, setCompanyName] = useState<string>("Company");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -52,13 +54,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const hasUnreadNotifications = true; // Replace with actual logic
 
   useEffect(() => {
-    // Load stored user first to avoid hydration mismatch
-    const storedUser = getStoredUser();
-    if (storedUser) {
-      setAccountUser(storedUser);
-    }
-
-    // Then fetch fresh profile from API
+    // Fetch fresh profile from API
     void getProfile()
       .then((profile) => {
         setAccountUser(profile);
@@ -159,6 +155,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                       Notifications
                     </h3>
                   </div>
+                  {/* TODO: Implement dynamic notification loading */}
                   <div className="max-h-96 overflow-y-auto">
                     {/* Sample notifications */}
                     <div className="p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer">
@@ -235,7 +232,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
               {/* Avatar */}
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E6FFF] to-[#00C2D1] flex items-center justify-center">
                 <span className="text-white font-semibold text-xs">
-                  {accountInitials}
+                  {accountInitials} 
                 </span>
               </div>
 

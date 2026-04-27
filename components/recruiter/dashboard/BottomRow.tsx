@@ -129,7 +129,7 @@ export default function BottomRow() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-syne text-xl font-semibold text-midnight">
-            Today's Interviews
+            Today&apos;s Interviews
           </h2>
           <span className="px-2.5 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
             {todayInterviews.length} scheduled

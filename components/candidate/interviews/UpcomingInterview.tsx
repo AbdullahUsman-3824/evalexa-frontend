@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -11,7 +11,6 @@ import {
   Clock,
   Copy,
   CheckCircle,
-  User,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -79,7 +78,7 @@ export default function UpcomingInterview({
     return () => clearInterval(interval);
   }, [interview.scheduledDate, interview.scheduledTime]);
 
-  const getInterviewIcon = () => {
+  const InterviewIcon = useMemo(() => {
     switch (interview.interviewType) {
       case "AI Interview":
         return Monitor;
@@ -88,7 +87,7 @@ export default function UpcomingInterview({
       case "In-Person":
         return MapPin;
     }
-  };
+  }, [interview.interviewType]);
 
   const getInterviewColor = () => {
     switch (interview.interviewType) {
@@ -100,8 +99,6 @@ export default function UpcomingInterview({
         return "bg-success/10 text-success border-success/30";
     }
   };
-
-  const Icon = getInterviewIcon();
 
   const handleCopyLink = () => {
     if (interview.meetingLink) {
@@ -134,7 +131,7 @@ export default function UpcomingInterview({
         <span
           className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${getInterviewColor()}`}
         >
-          <Icon className="h-3.5 w-3.5" />
+          {InterviewIcon && <InterviewIcon className="h-3.5 w-3.5" />}
           {interview.interviewType}
         </span>
       </div>

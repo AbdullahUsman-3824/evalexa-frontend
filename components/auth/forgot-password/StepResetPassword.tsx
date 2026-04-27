@@ -35,8 +35,6 @@ export default function StepResetPassword({
   const passwordsMatch =
     newPassword && confirmPassword && newPassword === confirmPassword;
   const otpValid = /^\d{6}$/.test(otp.trim());
-  const isFormValid =
-    otpValid && Boolean(newPassword) && Boolean(passwordsMatch);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

@@ -1,4 +1,4 @@
-import { CalendarPlus, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarPlus, Star, ChevronLeft} from "lucide-react";
 
 interface BottomActionBarProps {
   onPrev: () => void;

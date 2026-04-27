@@ -7,7 +7,6 @@ import {
   Edit,
   Eye,
   CheckCircle,
-  AlertCircle,
   Briefcase,
   Users,
   Clock,
@@ -55,7 +54,7 @@ export default function CompanyHeader() {
           No Company Profile
         </h2>
         <p className="text-slate mb-6">
-          You haven't set up a company profile yet.
+          You haven&apos;t set up a company profile yet.
         </p>
         <button
           onClick={() => router.push("/company-setup")}

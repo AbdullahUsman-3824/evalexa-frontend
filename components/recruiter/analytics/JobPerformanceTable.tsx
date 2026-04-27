@@ -27,66 +27,69 @@ const statusClassMap: Record<JobStatus, string> = {
 };
 
 export default function JobPerformanceTable() {
-  const rows: JobRow[] = [
-    {
-      jobTitle: "Senior Frontend Engineer",
-      applicants: 84,
-      screened: 76,
-      shortlisted: 14,
-      interviews: 6,
-      hired: 1,
-      avgMatch: 87,
-      timeToFill: 11,
-      status: "In Review",
-    },
-    {
-      jobTitle: "UX/UI Designer",
-      applicants: 56,
-      screened: 49,
-      shortlisted: 9,
-      interviews: 4,
-      hired: 1,
-      avgMatch: 82,
-      timeToFill: 13,
-      status: "Filled",
-    },
-    {
-      jobTitle: "Data Scientist",
-      applicants: 42,
-      screened: 38,
-      shortlisted: 7,
-      interviews: 2,
-      hired: 1,
-      avgMatch: 85,
-      timeToFill: 16,
-      status: "In Review",
-    },
-    {
-      jobTitle: "DevOps Engineer",
-      applicants: 35,
-      screened: 31,
-      shortlisted: 5,
-      interviews: 2,
-      hired: 0,
-      avgMatch: 78,
-      timeToFill: 18,
-      status: "Open",
-    },
-    {
-      jobTitle: "Product Manager",
-      applicants: 31,
-      screened: 26,
-      shortlisted: 3,
-      interviews: 1,
-      hired: 1,
-      avgMatch: 81,
-      timeToFill: 10,
-      status: "Filled",
-    },
-  ];
-
   const [sortKey, setSortKey] = useState<SortKey>("applicants");
   const [direction, setDirection] = useState<SortDirection>("desc");
+
+  const rows = useMemo(
+    () => [
+      {
+        jobTitle: "Senior Frontend Engineer",
+        applicants: 84,
+        screened: 76,
+        shortlisted: 14,
+        interviews: 6,
+        hired: 1,
+        avgMatch: 87,
+        timeToFill: 11,
+        status: "In Review" as const,
+      },
+      {
+        jobTitle: "UX/UI Designer",
+        applicants: 56,
+        screened: 49,
+        shortlisted: 9,
+        interviews: 4,
+        hired: 1,
+        avgMatch: 82,
+        timeToFill: 13,
+        status: "Filled" as const,
+      },
+      {
+        jobTitle: "Data Scientist",
+        applicants: 42,
+        screened: 38,
+        shortlisted: 7,
+        interviews: 2,
+        hired: 1,
+        avgMatch: 85,
+        timeToFill: 16,
+        status: "In Review" as const,
+      },
+      {
+        jobTitle: "DevOps Engineer",
+        applicants: 35,
+        screened: 31,
+        shortlisted: 5,
+        interviews: 2,
+        hired: 0,
+        avgMatch: 78,
+        timeToFill: 18,
+        status: "Open" as const,
+      },
+      {
+        jobTitle: "Product Manager",
+        applicants: 31,
+        screened: 26,
+        shortlisted: 3,
+        interviews: 1,
+        hired: 1,
+        avgMatch: 81,
+        timeToFill: 10,
+        status: "Filled" as const,
+      },
+    ],
+    [],
+  );
 
   const sortedRows = useMemo(() => {
     return [...rows].sort((a, b) => {
@@ -123,7 +126,9 @@ export default function JobPerformanceTable() {
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h3 className="font-syne text-xl font-semibold text-midnight">Job Post Performance</h3>
+      <h3 className="font-syne text-xl font-semibold text-midnight">
+        Job Post Performance
+      </h3>
       <div className="mt-5 overflow-x-auto">
         <table className="min-w-full border-separate border-spacing-0 text-sm">
           <thead className="sticky top-0 z-10 bg-white">
@@ -151,7 +156,9 @@ export default function JobPerformanceTable() {
                 transition={{ duration: 0.25, delay: index * 0.06 }}
                 className={index % 2 === 0 ? "bg-white" : "bg-surface/70"}
               >
-                <td className="px-3 py-3 font-medium text-midnight">{row.jobTitle}</td>
+                <td className="px-3 py-3 font-medium text-midnight">
+                  {row.jobTitle}
+                </td>
                 <td className="px-3 py-3 text-slate">{row.applicants}</td>
                 <td className="px-3 py-3 text-slate">{row.screened}</td>
                 <td className="px-3 py-3 text-slate">{row.shortlisted}</td>
@@ -191,4 +198,3 @@ export default function JobPerformanceTable() {
     </div>
   );
 }
-

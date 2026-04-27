@@ -17,9 +17,6 @@ export default function WelcomeBanner() {
   );
 
   useEffect(() => {
-    const storedUser = getStoredUser();
-    setAccountUser(storedUser);
-
     void getProfile()
       .then((profile) => {
         setAccountUser(profile);
@@ -53,7 +50,7 @@ export default function WelcomeBanner() {
             Good morning, {displayName} 👋
           </h1>
           <p className="text-slate text-sm mb-6">
-            Here's what's happening with your hiring today.
+            Here&apos;s what&apos;s happening with your hiring today.
           </p>
 
           <div className="flex flex-wrap gap-3">

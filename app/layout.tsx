@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "Evalexa | AI-Powered Recruitment Platform",
   description:
     "Hire smarter and faster with Evalexa. Automate resume screening, rank top candidates, and conduct AI interviews.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

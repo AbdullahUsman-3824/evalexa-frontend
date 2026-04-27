@@ -5,8 +5,6 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Calendar,
-  Clock,
-  User,
   CheckCircle,
   ClipboardCheck,
   Star,
@@ -54,11 +52,7 @@ const INTERVIEW_DATA = {
   ],
 };
 
-export default function InterviewDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function InterviewDetailsPage() {
   const router = useRouter();
 
   const getStatusColor = () => {

@@ -39,7 +39,7 @@ export default function LinksTab() {
 
   const addLink = (type: PortfolioLink["type"]) => {
     const newLink: PortfolioLink = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       type,
       label: getLinkLabel(type),
       url: "",
@@ -52,7 +52,11 @@ export default function LinksTab() {
     setLinks(links.filter((link) => link.id !== id));
   };
 
-  const updateLink = (id: string, field: keyof PortfolioLink, value: any) => {
+  const updateLink = (
+    id: string,
+    field: keyof PortfolioLink,
+    value: string | boolean,
+  ) => {
     setLinks(
       links.map((link) =>
         link.id === id ? { ...link, [field]: value } : link,

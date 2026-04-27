@@ -6,8 +6,6 @@ import {
   Grid3x3,
   List,
   SlidersHorizontal,
-  X,
-  Briefcase,
   Search as SearchIcon,
 } from "lucide-react";
 import SearchBar from "@/components/candidate/jobs/SearchBar";
@@ -277,7 +275,7 @@ export default function ExploreJobsPage() {
               </h2>
               {searchQuery && (
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                  for "{searchQuery}"
+                  for &quot;{searchQuery}&quot;
                 </span>
               )}
             </div>

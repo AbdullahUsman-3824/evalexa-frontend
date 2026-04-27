@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Video,
@@ -41,7 +41,7 @@ export default function InterviewInfo({
     }
   };
 
-  const getIcon = () => {
+  const Icon = useMemo(() => {
     switch (interviewType) {
       case "AI Interview":
         return Monitor;
@@ -50,7 +50,7 @@ export default function InterviewInfo({
       case "In-Person":
         return MapPin;
     }
-  };
+  }, [interviewType]);
 
   const getColor = () => {
     switch (interviewType) {
@@ -62,8 +62,6 @@ export default function InterviewInfo({
         return "text-success";
     }
   };
-
-  const Icon = getIcon();
 
   return (
     <div className="space-y-6">
@@ -77,7 +75,7 @@ export default function InterviewInfo({
           <div
             className={`flex h-10 w-10 items-center justify-center rounded-full bg-${interviewType === "AI Interview" ? "cyan" : interviewType === "Video Call" ? "primary" : "success"}/10`}
           >
-            <Icon className={`h-5 w-5 ${getColor()}`} />
+            {Icon && <Icon className={`h-5 w-5 ${getColor()}`} />}
           </div>
           <div>
             <h3 className="font-display text-lg font-semibold text-midnight">

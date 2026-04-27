@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Building2,
   Calendar,
   Video,
   MapPin,
@@ -52,7 +51,7 @@ export default function PendingInvite({
 
   const daysUntilDeadline = getDaysUntilDeadline(invite.responseDeadline);
 
-  const getInterviewIcon = () => {
+  const InterviewIcon = useMemo(() => {
     switch (invite.interviewType) {
       case "AI Interview":
         return Monitor;
@@ -61,7 +60,7 @@ export default function PendingInvite({
       case "In-Person":
         return MapPin;
     }
-  };
+  }, [invite.interviewType]);
 
   const getInterviewColor = () => {
     switch (invite.interviewType) {
@@ -73,8 +72,6 @@ export default function PendingInvite({
         return "bg-success/10 text-success border-success/30";
     }
   };
-
-  const Icon = getInterviewIcon();
 
   const handleAccept = () => {
     onAccept(invite.id);
@@ -111,7 +108,7 @@ export default function PendingInvite({
           <span
             className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${getInterviewColor()}`}
           >
-            <Icon className="h-3.5 w-3.5" />
+            {InterviewIcon && <InterviewIcon className="h-3.5 w-3.5" />}
             {invite.interviewType}
           </span>
         </div>

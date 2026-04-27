@@ -240,7 +240,7 @@ export default function BasicInfoTab() {
         <div>
           <p className="text-sm font-medium text-midnight">Open to Work</p>
           <p className="text-xs text-slate mt-0.5">
-            Let recruiters know you're available for new opportunities
+            Let recruiters know you&apos;re available for new opportunities
           </p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">

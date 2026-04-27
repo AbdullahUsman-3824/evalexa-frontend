@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 interface LeftPanelProps {
@@ -20,13 +21,13 @@ export default function LeftPanel({ headline, subtext }: LeftPanelProps) {
       <div className="relative flex flex-col h-full p-12">
         {/* Logo */}
         <div className="mb-auto">
-          <a
+          <Link
             href="/"
             className="flex items-center space-x-1 font-display text-3xl font-bold"
           >
             <span className="text-white">Eval</span>
             <span className="text-primary">exa</span>
-          </a>
+          </Link>
         </div>
 
         {/* Center Content */}

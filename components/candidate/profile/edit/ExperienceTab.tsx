@@ -60,7 +60,7 @@ export default function ExperienceTab() {
   const updateExperience = (
     id: string,
     field: keyof Experience,
-    value: any,
+    value: string | boolean | number,
   ) => {
     setExperiences(
       experiences.map((exp) =>

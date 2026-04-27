@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Camera, Mail, Phone, Globe2, Clock3 } from "lucide-react";
 import SettingRow from "@/components/candidate/settings/SettingRow";
 
@@ -14,10 +15,12 @@ export default function AccountTab() {
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <div className="flex flex-col gap-6 md:flex-row md:items-center">
           <div className="relative">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=300&q=80"
               alt="Profile"
-              className="h-24 w-24 rounded-full object-cover"
+              width={96}
+              height={96}
+              className="rounded-full object-cover"
             />
             <button
               className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-white shadow-lg"
