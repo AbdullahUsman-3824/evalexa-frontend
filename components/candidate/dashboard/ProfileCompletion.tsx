@@ -67,9 +67,10 @@ export default function ProfileCompletion() {
               strokeDasharray={circumference}
               initial={{ strokeDashoffset: circumference }}
               animate={{
-                strokeDashoffset: mounted ? strokeDashoffset : circumference,
+                strokeDashoffset: strokeDashoffset,
               }}
               transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+              suppressHydrationWarning
             />
           </svg>
 
