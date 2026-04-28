@@ -25,9 +25,9 @@ import {
 } from "@/lib/services/jobsService";
 
 const STATUS_OPTIONS: { value: BackendJobStatus; label: string }[] = [
-  { value: "open", label: "Published" },
-  { value: "draft", label: "Draft" },
-  { value: "closed", label: "Closed" },
+  { value: "OPEN", label: "Published" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "CLOSED", label: "Closed" },
 ];
 
 export default function JobDetailsPage() {
@@ -38,7 +38,7 @@ export default function JobDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] =
-    useState<BackendJobStatus>("draft");
+    useState<BackendJobStatus>("DRAFT");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
@@ -176,7 +176,7 @@ export default function JobDetailsPage() {
                 </div>
               </div>
 
-              <div className="min-w-[240px] rounded-xl border border-slate/15 bg-surface p-4 text-sm text-midnight">
+              <div className="min-w-60 rounded-xl border border-slate/15 bg-surface p-4 text-sm text-midnight">
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate">
                   Job Status
                 </label>

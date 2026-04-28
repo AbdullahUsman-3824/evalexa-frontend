@@ -10,7 +10,11 @@ import Step3AISettings from "@/components/recruiter/jobs/create/Step3AISettings"
 import Step4Review from "@/components/recruiter/jobs/create/Step4Review";
 import type { JobPostFormData } from "@/components/recruiter/jobs/create/types";
 import { getProfile } from "@/lib/services/authService";
-import { createJob, type CreateJobPayload } from "@/lib/services/jobsService";
+import {
+  createJob,
+  type CreateJobPayload,
+  type CreateJobSkillPayload,
+} from "@/lib/services/jobsService";
 
 const INITIAL_FORM_DATA: JobPostFormData = {
   jobTitle: "",
@@ -124,7 +128,7 @@ export default function CreateJobPage() {
     };
   }, [router]);
 
-  const buildSkillsPayload = () => {
+  const buildSkillsPayload = (): CreateJobSkillPayload[] => {
     const category = formData.department || "General";
     const weights = { Low: 5, Medium: 10, High: 15 } as const;
     const seen = new Set<string>();
@@ -147,7 +151,7 @@ export default function CreateJobPage() {
           category,
           importance: isRequired ? "REQUIRED" : "PREFERRED",
           weight,
-        };
+        } as CreateJobSkillPayload;
       })
       .filter((skill): skill is NonNullable<typeof skill> => skill !== null);
   };

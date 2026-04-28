@@ -1,10 +1,10 @@
 import { apiRequest } from "@/lib/services/apiClient";
 
-export type BackendJobType = "full-time" | "part-time" | "contract";
-export type BackendExperienceLevel = "junior" | "mid" | "senior" | "lead";
-export type BackendWorkModel = "onsite" | "remote" | "hybrid";
-export type BackendJobStatus = "open" | "closed" | "draft";
-export type BackendSkillImportance = "required" | "preferred";
+export type BackendJobType = "FULL_TIME" | "PART_TIME" | "CONTRACT";
+export type BackendExperienceLevel = "JUNIOR" | "MID" | "SENIOR" | "LEAD";
+export type BackendWorkModel = "ONSITE" | "REMOTE" | "HYBRID";
+export type BackendJobStatus = "OPEN" | "CLOSED" | "DRAFT";
+export type BackendSkillImportance = "REQUIRED" | "PREFERRED";
 
 export type JobSortBy = "newest" | "deadline";
 
@@ -158,16 +158,16 @@ export async function updateJob(
 
 function labelFromSegment(segment: string) {
   return segment
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .split(/[-_]/) // Split by both hyphens and underscores
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join("-");
 }
 
 export function formatJobStatus(
   status: BackendJobStatus,
 ): "Published" | "Draft" | "Closed" {
-  if (status === "open") return "Published";
-  if (status === "closed") return "Closed";
+  if (status === "OPEN") return "Published";
+  if (status === "CLOSED") return "Closed";
   return "Draft";
 }
 
@@ -176,18 +176,18 @@ export function formatJobType(jobType: BackendJobType) {
 }
 
 export function formatWorkModel(workModel: BackendWorkModel) {
-  return workModel === "onsite" ? "On-site" : labelFromSegment(workModel);
+  return workModel === "ONSITE" ? "On-site" : labelFromSegment(workModel);
 }
 
 export function formatExperienceLevel(experienceLevel: BackendExperienceLevel) {
   switch (experienceLevel) {
-    case "junior":
+    case "JUNIOR":
       return "Entry Level";
-    case "mid":
+    case "MID":
       return "Mid Level";
-    case "senior":
+    case "SENIOR":
       return "Senior Level";
-    case "lead":
+    case "LEAD":
       return "Lead Level";
   }
 }
