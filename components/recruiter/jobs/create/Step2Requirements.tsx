@@ -42,10 +42,18 @@ const SUGGESTIONS: Record<string, string[]> = {
   frontend: ["React", "TypeScript", "Next.js", "Tailwind CSS", "Redux"],
   backend: ["Node.js", "Express", "PostgreSQL", "Redis", "Docker"],
   designer: ["Figma", "Wireframing", "Prototyping", "Design Systems"],
-  marketing: ["SEO", "Content Strategy", "Google Analytics", "Campaign Management"],
+  marketing: [
+    "SEO",
+    "Content Strategy",
+    "Google Analytics",
+    "Campaign Management",
+  ],
 };
 
-export default function Step2Requirements({ data, onChange }: Step2RequirementsProps) {
+export default function Step2Requirements({
+  data,
+  onChange,
+}: Step2RequirementsProps) {
   const [requiredSkillInput, setRequiredSkillInput] = useState("");
   const [niceSkillInput, setNiceSkillInput] = useState("");
   const [responsibilityInput, setResponsibilityInput] = useState("");
@@ -82,7 +90,8 @@ export default function Step2Requirements({ data, onChange }: Step2RequirementsP
     const { selectionStart, selectionEnd, value } = target;
     const selected = value.slice(selectionStart, selectionEnd) || "text";
     const replaced = formatter(selected);
-    const next = value.slice(0, selectionStart) + replaced + value.slice(selectionEnd);
+    const next =
+      value.slice(0, selectionStart) + replaced + value.slice(selectionEnd);
     onChange("jobDescription", next);
   };
 
@@ -106,9 +115,11 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-midnight">
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h3 className="mb-4 font-syne text-lg font-semibold text-midnight">Salary Range *</h3>
+        <h3 className="mb-4 font-syne text-lg font-semibold text-midnight">
+          Salary Range *
+        </h3>
         <div className="grid gap-3 md:grid-cols-4">
           <input
             type="number"
@@ -116,7 +127,7 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
             value={data.salaryMin}
             onChange={(e) => onChange("salaryMin", e.target.value)}
             placeholder="Min salary"
-            className="h-11 rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-11 rounded-lg border border-slate/25 bg-white px-3 text-midnight placeholder-slate/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
           <input
             type="number"
@@ -124,12 +135,12 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
             value={data.salaryMax}
             onChange={(e) => onChange("salaryMax", e.target.value)}
             placeholder="Max salary"
-            className="h-11 rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-11 rounded-lg border border-slate/25 bg-white px-3 text-midnight placeholder-slate/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
           <select
             value={data.currency}
             onChange={(e) => onChange("currency", e.target.value as Currency)}
-            className="h-11 rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-11 rounded-lg border border-slate/25 bg-white px-3 text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           >
             {CURRENCIES.map((currency) => (
               <option key={currency} value={currency}>
@@ -139,7 +150,10 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
           </select>
           <div className="flex items-center gap-4 rounded-lg border border-slate/20 px-3">
             {SALARY_PER.map((per) => (
-              <label key={per} className="flex items-center gap-1 text-sm text-midnight">
+              <label
+                key={per}
+                className="flex items-center gap-1 text-sm text-midnight"
+              >
                 <input
                   type="radio"
                   checked={data.salaryPer === per}
@@ -171,7 +185,9 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h3 className="mb-3 font-syne text-lg font-semibold text-midnight">Experience Level *</h3>
+          <h3 className="mb-3 font-syne text-lg font-semibold text-midnight">
+            Experience Level *
+          </h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {EXPERIENCE_LEVELS.map((level) => (
               <button
@@ -204,9 +220,12 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
           <select
             value={data.educationRequirement}
             onChange={(e) =>
-              onChange("educationRequirement", e.target.value as EducationRequirement)
+              onChange(
+                "educationRequirement",
+                e.target.value as EducationRequirement,
+              )
             }
-            className="h-11 w-full rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-11 w-full rounded-lg border border-slate/25 bg-white px-3 text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           >
             {EDUCATION_LEVELS.map((education) => (
               <option key={education} value={education}>
@@ -218,18 +237,22 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h3 className="mb-2 font-syne text-lg font-semibold text-midnight">Required Skills *</h3>
+        <h3 className="mb-2 font-syne text-lg font-semibold text-midnight">
+          Required Skills *
+        </h3>
         <input
           value={requiredSkillInput}
           onChange={(e) => setRequiredSkillInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              addTag(requiredSkillInput, "requiredSkills", () => setRequiredSkillInput(""));
+              addTag(requiredSkillInput, "requiredSkills", () =>
+                setRequiredSkillInput(""),
+              );
             }
           }}
           placeholder="Type skill and press Enter"
-          className="h-11 w-full rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-11 w-full rounded-lg border border-slate/25 bg-white px-3 text-midnight placeholder-slate/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
         <div className="mt-3 flex flex-wrap gap-2">
           {data.requiredSkills.map((skill) => (
@@ -252,7 +275,9 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
             </span>
           ))}
         </div>
-        <p className="mt-4 text-sm text-slate">Suggested skills for this role:</p>
+        <p className="mt-4 text-sm text-slate">
+          Suggested skills for this role:
+        </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {suggestedSkills.map((skill) => (
             <button
@@ -281,11 +306,13 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              addTag(niceSkillInput, "niceToHaveSkills", () => setNiceSkillInput(""));
+              addTag(niceSkillInput, "niceToHaveSkills", () =>
+                setNiceSkillInput(""),
+              );
             }
           }}
           placeholder="Optional skill and press Enter"
-          className="h-11 w-full rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-11 w-full rounded-lg border border-slate/25 bg-white px-3 text-midnight placeholder-slate/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
         <div className="mt-3 flex flex-wrap gap-2">
           {data.niceToHaveSkills.map((skill) => (
@@ -318,14 +345,18 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
           type="number"
           min={1}
           value={data.openings}
-          onChange={(e) => onChange("openings", Math.max(1, Number(e.target.value) || 1))}
-          className="h-11 w-40 rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          onChange={(e) =>
+            onChange("openings", Math.max(1, Number(e.target.value) || 1))
+          }
+          className="h-11 w-40 rounded-lg border border-slate/25 bg-white px-3 text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="font-syne text-lg font-semibold text-midnight">Job Description *</h3>
+          <h3 className="font-syne text-lg font-semibold text-midnight">
+            Job Description *
+          </h3>
           <button
             type="button"
             onClick={generateDescription}
@@ -333,7 +364,9 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
             className="inline-flex items-center gap-2 rounded-lg bg-cyan px-3 py-2 text-sm font-semibold text-white hover:bg-cyan/90 disabled:opacity-60"
           >
             <Sparkles className="h-4 w-4" />
-            {isGeneratingJD ? "Generating job description..." : "Generate with AI"}
+            {isGeneratingJD
+              ? "Generating job description..."
+              : "Generate with AI"}
           </button>
         </div>
 
@@ -371,16 +404,22 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
         <textarea
           ref={descriptionRef}
           value={data.jobDescription}
-          onChange={(e) => onChange("jobDescription", e.target.value.slice(0, 5000))}
+          onChange={(e) =>
+            onChange("jobDescription", e.target.value.slice(0, 5000))
+          }
           placeholder="Write a detailed job description..."
-          className="min-h-[220px] w-full rounded-lg border border-slate/25 p-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="min-h-55 w-full rounded-lg border border-slate/25 bg-white p-3 text-midnight placeholder-slate/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
-        <p className="mt-1 text-right text-xs text-slate">{data.jobDescription.length}/5000</p>
+        <p className="mt-1 text-right text-xs text-slate">
+          {data.jobDescription.length}/5000
+        </p>
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-syne text-lg font-semibold text-midnight">Responsibilities</h3>
+          <h3 className="font-syne text-lg font-semibold text-midnight">
+            Responsibilities
+          </h3>
           <button
             type="button"
             onClick={() => {
@@ -398,7 +437,7 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
           value={responsibilityInput}
           onChange={(e) => setResponsibilityInput(e.target.value)}
           placeholder="Add responsibility and click button"
-          className="mb-3 h-11 w-full rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="mb-3 h-11 w-full rounded-lg border border-slate/25 bg-white px-3 text-midnight placeholder-slate/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
         <div className="space-y-2">
           {data.responsibilities.map((item, index) => (
@@ -425,7 +464,9 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h3 className="mb-3 font-syne text-lg font-semibold text-midnight">Benefits</h3>
+        <h3 className="mb-3 font-syne text-lg font-semibold text-midnight">
+          Benefits
+        </h3>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {[
             "Health Insurance",
@@ -461,4 +502,3 @@ You should be comfortable working in a ${data.workMode.toLowerCase()} environmen
     </div>
   );
 }
-

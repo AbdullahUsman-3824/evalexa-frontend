@@ -1,181 +1,121 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowRight, Eye, Settings } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-
-interface Job {
-  id: string;
-  title: string;
-  department: string;
-  applicants: number;
-  newToday: number;
-  avgMatch: number;
-  status: "Published" | "Draft" | "Closing Soon";
-  target: number;
-}
+import { ArrowRight, Loader2 } from "lucide-react";
+import {
+  formatCurrencyRange,
+  formatJobStatus,
+  formatWorkModel,
+  getJobs,
+  type JobRecord,
+} from "@/lib/services/jobsService";
 
 export default function ActiveJobsOverview() {
   const router = useRouter();
+  const [jobs, setJobs] = useState<JobRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const jobs: Job[] = [
-    {
-      id: "1",
-      title: "Senior Frontend Developer",
-      department: "Engineering",
-      applicants: 42,
-      newToday: 5,
-      avgMatch: 87,
-      status: "Published",
-      target: 50,
-    },
-    {
-      id: "2",
-      title: "Product Marketing Manager",
-      department: "Marketing",
-      applicants: 38,
-      newToday: 8,
-      avgMatch: 92,
-      status: "Published",
-      target: 40,
-    },
-    {
-      id: "3",
-      title: "Data Scientist",
-      department: "Data & Analytics",
-      applicants: 29,
-      newToday: 2,
-      avgMatch: 78,
-      status: "Closing Soon",
-      target: 30,
-    },
-    {
-      id: "4",
-      title: "UX/UI Designer",
-      department: "Design",
-      applicants: 56,
-      newToday: 12,
-      avgMatch: 84,
-      status: "Published",
-      target: 60,
-    },
-  ];
+  useEffect(() => {
+    let isMounted = true;
 
-  const getStatusColor = (status: Job["status"]) => {
-    switch (status) {
-      case "Published":
-        return "bg-success/10 text-success";
-      case "Draft":
-        return "bg-slate/10 text-slate";
-      case "Closing Soon":
-        return "bg-warning/10 text-warning";
+    async function loadJobs() {
+      try {
+        const data = await getJobs({ sortBy: "newest" });
+        if (isMounted) {
+          setJobs(data);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     }
-  };
+
+    void loadJobs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const visibleJobs = useMemo(() => jobs.slice(0, 4), [jobs]);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="mb-6 flex items-center justify-between">
         <h2 className="font-syne text-xl font-semibold text-midnight">
           Active Job Posts
         </h2>
         <button
           onClick={() => router.push("/recruiter/jobs")}
-          className="flex items-center gap-1.5 text-primary hover:text-blue-600 text-sm font-medium transition-colors"
+          className="flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-blue-600"
         >
           View All
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="h-4 w-4" />
         </button>
       </div>
 
-      {/* Jobs List */}
-      <div className="space-y-4">
-        {jobs.map((job, index) => (
-          <motion.div
-            key={job.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.1 }}
-            className="border border-gray-200 rounded-lg p-4 hover:border-primary/30 hover:shadow-md transition-all"
-          >
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              {/* Left - Job Info */}
-              <div className="flex-1">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-syne text-base font-semibold text-midnight mb-1">
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-sm text-slate">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          Loading active jobs...
+        </div>
+      ) : visibleJobs.length > 0 ? (
+        <div className="space-y-4">
+          {visibleJobs.map((job) => (
+            <div
+              key={job.id}
+              className="rounded-lg border border-gray-200 p-4 transition-all hover:border-primary/30 hover:shadow-md"
+            >
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-syne text-base font-semibold text-midnight">
                       {job.title}
                     </h3>
-                    <span className="inline-block px-2.5 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                      {job.department}
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                        formatJobStatus(job.status) === "Published"
+                          ? "bg-success/10 text-success"
+                          : formatJobStatus(job.status) === "Closed"
+                            ? "bg-danger/10 text-danger"
+                            : "bg-slate/10 text-slate"
+                      }`}
+                    >
+                      {formatJobStatus(job.status)}
                     </span>
                   </div>
-                  <span
-                    className={`px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                      job.status,
-                    )}`}
+                  <p className="text-sm text-slate">
+                    {job.company.name} · {job.location} ·{" "}
+                    {formatWorkModel(job.workModel)}
+                  </p>
+                  <p className="text-sm font-medium text-midnight">
+                    {formatCurrencyRange(job.salaryMin, job.salaryMax)}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => router.push(`/recruiter/jobs/${job.id}`)}
+                    className="rounded-lg bg-surface px-4 py-2 text-sm font-medium text-midnight transition-colors hover:bg-gray-200"
                   >
-                    {job.status}
-                  </span>
+                    View
+                  </button>
+                  <button
+                    onClick={() => router.push(`/recruiter/jobs/${job.id}`)}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600"
+                  >
+                    Manage
+                  </button>
                 </div>
-
-                {/* Metrics */}
-                <div className="flex flex-wrap items-center gap-4 text-sm">
-                  <span className="text-midnight font-medium">
-                    {job.applicants} applicants
-                  </span>
-                  <span className="text-success font-medium">
-                    +{job.newToday} today
-                  </span>
-                  <span className="text-cyan font-medium">
-                    {job.avgMatch}% avg match
-                  </span>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="mt-3">
-                  <div className="flex items-center justify-between text-xs text-slate mb-1.5">
-                    <span>Applicants Progress</span>
-                    <span>
-                      {job.applicants} / {job.target}
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${(job.applicants / job.target) * 100}%`,
-                      }}
-                      transition={{ duration: 1, delay: index * 0.1 + 0.3 }}
-                      className="h-full bg-primary rounded-full"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right - Actions */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => router.push(`/recruiter/jobs/${job.id}`)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-surface hover:bg-gray-200 text-midnight text-sm font-medium rounded-lg transition-colors"
-                >
-                  <Eye className="w-4 h-4" />
-                  View
-                </button>
-                <button
-                  onClick={() =>
-                    router.push(`/recruiter/jobs/${job.id}/manage`)
-                  }
-                  className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
-                >
-                  <Settings className="w-4 h-4" />
-                  Manage
-                </button>
               </div>
             </div>
-          </motion.div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-slate">No active jobs found.</p>
+      )}
     </div>
   );
 }

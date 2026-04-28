@@ -32,9 +32,12 @@ const JOB_TYPES: JobType[] = [
 
 const WORK_MODES: WorkMode[] = ["On-site", "Remote", "Hybrid"];
 
-export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) {
+export default function Step1BasicInfo({
+  data,
+  onChange,
+}: Step1BasicInfoProps) {
   return (
-    <div className="grid gap-6 lg:grid-cols-5">
+    <div className="grid gap-6 lg:grid-cols-5 text-midnight">
       <div className="space-y-6 lg:col-span-3">
         <div className="rounded-xl bg-white p-6 shadow-sm">
           <label className="mb-2 block text-sm font-semibold text-midnight">
@@ -44,9 +47,11 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
             value={data.jobTitle}
             onChange={(e) => onChange("jobTitle", e.target.value.slice(0, 80))}
             placeholder="e.g. Senior Frontend Developer"
-            className="h-11 w-full rounded-lg border border-slate/25 px-4 text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-11 w-full rounded-lg border border-slate/25 bg-white px-4 text-midnight placeholder-slate/50 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
-          <p className="mt-1 text-right text-xs text-slate">{data.jobTitle.length}/80</p>
+          <p className="mt-1 text-right text-xs text-slate">
+            {data.jobTitle.length}/80
+          </p>
         </div>
 
         <div className="rounded-xl bg-white p-6 shadow-sm">
@@ -56,7 +61,7 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
           <select
             value={data.department}
             onChange={(e) => onChange("department", e.target.value)}
-            className="h-11 w-full rounded-lg border border-slate/25 px-4 text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-11 w-full rounded-lg border border-slate/25 bg-white px-4 text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           >
             {DEPARTMENTS.map((dep) => (
               <option key={dep} value={dep}>
@@ -90,7 +95,9 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
         </div>
 
         <div className="rounded-xl bg-white p-6 shadow-sm">
-          <p className="mb-3 text-sm font-semibold text-midnight">Work Mode *</p>
+          <p className="mb-3 text-sm font-semibold text-midnight">
+            Work Mode *
+          </p>
           <div className="grid gap-3 sm:grid-cols-3">
             {WORK_MODES.map((mode) => {
               const selected = data.workMode === mode;
@@ -121,7 +128,7 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
               value={data.location}
               onChange={(e) => onChange("location", e.target.value)}
               placeholder="City, country"
-              className="h-11 w-full rounded-lg border border-slate/25 px-4 text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11 w-full rounded-lg border border-slate/25 bg-white px-4 text-midnight placeholder-slate/50 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
         )}
@@ -134,13 +141,15 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
             type="date"
             value={data.applicationDeadline}
             onChange={(e) => onChange("applicationDeadline", e.target.value)}
-            className="h-11 w-full rounded-lg border border-slate/25 px-4 text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-11 w-full rounded-lg border border-slate/25 bg-white px-4 text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
 
           <div className="mt-4 flex items-center justify-between rounded-lg border border-slate/20 p-3">
             <div>
               <p className="text-sm font-medium text-midnight">Urgent</p>
-              <p className="text-xs text-slate">Adds an Urgently Hiring badge</p>
+              <p className="text-xs text-slate">
+                Adds an Urgently Hiring badge
+              </p>
             </div>
             <button
               type="button"
@@ -168,4 +177,3 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
     </div>
   );
 }
-

@@ -17,11 +17,21 @@ interface Step3AISettingsProps {
   ) => void;
 }
 
-const QUESTION_TYPES: QuestionAnswerType[] = ["Text", "Yes/No", "Multiple Choice"];
-const INTERVIEW_TYPES: AIInterviewType[] = ["Text-based Q&A", "Video Interview Analysis"];
+const QUESTION_TYPES: QuestionAnswerType[] = [
+  "Text",
+  "Yes/No",
+  "Multiple Choice",
+];
+const INTERVIEW_TYPES: AIInterviewType[] = [
+  "Text-based Q&A",
+  "Video Interview Analysis",
+];
 const SKILL_WEIGHTS: SkillWeight[] = ["Low", "Medium", "High"];
 
-export default function Step3AISettings({ data, onChange }: Step3AISettingsProps) {
+export default function Step3AISettings({
+  data,
+  onChange,
+}: Step3AISettingsProps) {
   const scoreColor =
     data.minMatchScore < 40
       ? "text-danger"
@@ -53,11 +63,13 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-midnight">
       <div className="flex items-center gap-3 rounded-xl bg-white p-5 shadow-sm">
         <Sparkles className="h-6 w-6 text-cyan" />
         <div>
-          <h2 className="font-syne text-xl font-semibold text-midnight">Configure AI Screening</h2>
+          <h2 className="font-syne text-xl font-semibold text-midnight">
+            Configure AI Screening
+          </h2>
           <p className="text-sm text-slate">
             Set how Evalexa AI should evaluate candidates
           </p>
@@ -67,15 +79,19 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-syne text-lg font-semibold text-midnight">AI Resume Screening</h3>
+            <h3 className="font-syne text-lg font-semibold text-midnight">
+              AI Resume Screening
+            </h3>
             <p className="text-sm text-slate">
-              Automatically analyze and rank candidates based on their resume and your
-              requirements
+              Automatically analyze and rank candidates based on their resume
+              and your requirements
             </p>
           </div>
           <button
             type="button"
-            onClick={() => onChange("aiScreeningEnabled", !data.aiScreeningEnabled)}
+            onClick={() =>
+              onChange("aiScreeningEnabled", !data.aiScreeningEnabled)
+            }
             className={`relative h-8 w-14 rounded-full transition ${
               data.aiScreeningEnabled ? "bg-primary" : "bg-slate/30"
             }`}
@@ -89,14 +105,23 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
         </div>
       </div>
 
-      <div className={data.aiScreeningEnabled ? "space-y-6" : "pointer-events-none space-y-6 opacity-50"}>
+      <div
+        className={
+          data.aiScreeningEnabled
+            ? "space-y-6"
+            : "pointer-events-none space-y-6 opacity-50"
+        }
+      >
         <div className="rounded-xl bg-white p-6 shadow-sm">
           <h3 className="mb-2 font-syne text-lg font-semibold text-midnight">
             Minimum Match Score
           </h3>
           <p className="mb-4 text-sm text-slate">
             Only show candidates above{" "}
-            <span className={`font-semibold ${scoreColor}`}>{data.minMatchScore}%</span> match
+            <span className={`font-semibold ${scoreColor}`}>
+              {data.minMatchScore}%
+            </span>{" "}
+            match
           </p>
           <input
             type="range"
@@ -112,10 +137,14 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
         </div>
 
         <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h3 className="mb-3 font-syne text-lg font-semibold text-midnight">Skill Weights</h3>
+          <h3 className="mb-3 font-syne text-lg font-semibold text-midnight">
+            Skill Weights
+          </h3>
           <div className="space-y-3">
             {data.requiredSkills.length === 0 ? (
-              <p className="text-sm text-slate">Add required skills in step 2 to configure importance.</p>
+              <p className="text-sm text-slate">
+                Add required skills in step 2 to configure importance.
+              </p>
             ) : (
               data.requiredSkills.map((skill) => (
                 <div
@@ -125,7 +154,8 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
                   <span className="font-medium text-midnight">{skill}</span>
                   <div className="flex gap-2">
                     {SKILL_WEIGHTS.map((weight) => {
-                      const selected = (data.skillWeights[skill] || "Medium") === weight;
+                      const selected =
+                        (data.skillWeights[skill] || "Medium") === weight;
                       return (
                         <button
                           key={weight}
@@ -156,12 +186,18 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
         <div className="rounded-xl bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-syne text-lg font-semibold text-midnight">Auto-Shortlist</h3>
-              <p className="text-sm text-slate">Automatically shortlist candidates above X%</p>
+              <h3 className="font-syne text-lg font-semibold text-midnight">
+                Auto-Shortlist
+              </h3>
+              <p className="text-sm text-slate">
+                Automatically shortlist candidates above X%
+              </p>
             </div>
             <button
               type="button"
-              onClick={() => onChange("autoShortlistEnabled", !data.autoShortlistEnabled)}
+              onClick={() =>
+                onChange("autoShortlistEnabled", !data.autoShortlistEnabled)
+              }
               className={`relative h-6 w-11 rounded-full transition ${
                 data.autoShortlistEnabled ? "bg-primary" : "bg-slate/30"
               }`}
@@ -179,10 +215,14 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
               min={0}
               max={100}
               value={data.autoShortlistThreshold}
-              onChange={(e) => onChange("autoShortlistThreshold", Number(e.target.value))}
-              className="h-11 w-36 rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              onChange={(e) =>
+                onChange("autoShortlistThreshold", Number(e.target.value))
+              }
+              className="h-11 w-36 rounded-lg border border-slate/25 bg-white px-3 text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
-            <p className="mt-1 text-xs text-warning">Recruiter review still required</p>
+            <p className="mt-1 text-xs text-warning">
+              Recruiter review still required
+            </p>
           </div>
         </div>
 
@@ -202,13 +242,18 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
           </div>
           <div className="space-y-3">
             {data.screeningQuestions.map((question) => (
-              <div key={question.id} className="rounded-lg border border-slate/20 p-3">
+              <div
+                key={question.id}
+                className="rounded-lg border border-slate/20 p-3"
+              >
                 <div className="grid gap-3 md:grid-cols-[1fr,180px,auto,auto] md:items-center">
                   <input
                     value={question.text}
-                    onChange={(e) => updateQuestion(question.id, { text: e.target.value })}
+                    onChange={(e) =>
+                      updateQuestion(question.id, { text: e.target.value })
+                    }
                     placeholder="Type screening question"
-                    className="h-11 rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="h-11 rounded-lg border border-slate/25 bg-white px-3 text-midnight placeholder-slate/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                   <select
                     value={question.answerType}
@@ -217,7 +262,7 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
                         answerType: e.target.value as QuestionAnswerType,
                       })
                     }
-                    className="h-11 rounded-lg border border-slate/25 px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="h-11 rounded-lg border border-slate/25 bg-white px-3 text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   >
                     {QUESTION_TYPES.map((type) => (
                       <option key={type} value={type}>
@@ -230,7 +275,9 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
                       type="checkbox"
                       checked={question.required}
                       onChange={(e) =>
-                        updateQuestion(question.id, { required: e.target.checked })
+                        updateQuestion(question.id, {
+                          required: e.target.checked,
+                        })
                       }
                     />
                     Required
@@ -240,7 +287,9 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
                     onClick={() =>
                       onChange(
                         "screeningQuestions",
-                        data.screeningQuestions.filter((q) => q.id !== question.id),
+                        data.screeningQuestions.filter(
+                          (q) => q.id !== question.id,
+                        ),
                       )
                     }
                   >
@@ -255,12 +304,18 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
         <div className="rounded-xl bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-syne text-lg font-semibold text-midnight">AI Interview</h3>
-              <p className="text-sm text-slate">Invite top candidates for AI interview</p>
+              <h3 className="font-syne text-lg font-semibold text-midnight">
+                AI Interview
+              </h3>
+              <p className="text-sm text-slate">
+                Invite top candidates for AI interview
+              </p>
             </div>
             <button
               type="button"
-              onClick={() => onChange("aiInterviewEnabled", !data.aiInterviewEnabled)}
+              onClick={() =>
+                onChange("aiInterviewEnabled", !data.aiInterviewEnabled)
+              }
               className={`relative h-6 w-11 rounded-full transition ${
                 data.aiInterviewEnabled ? "bg-primary" : "bg-slate/30"
               }`}
@@ -281,8 +336,10 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
                 min={0}
                 max={100}
                 value={data.aiInterviewThreshold}
-                onChange={(e) => onChange("aiInterviewThreshold", Number(e.target.value))}
-                className="h-10 w-24 rounded-lg border border-slate/25 px-2 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(e) =>
+                  onChange("aiInterviewThreshold", Number(e.target.value))
+                }
+                className="h-10 w-24 rounded-lg border border-slate/25 bg-white px-2 text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               <span>% match</span>
             </div>
@@ -309,4 +366,3 @@ export default function Step3AISettings({ data, onChange }: Step3AISettingsProps
     </div>
   );
 }
-

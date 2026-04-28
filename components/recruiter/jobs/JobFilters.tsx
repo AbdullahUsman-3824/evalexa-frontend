@@ -1,7 +1,7 @@
 "use client";
 
 export type JobFilterStatus = "All" | "Published" | "Draft" | "Closed";
-export type JobSortOption = "Newest" | "Most Applicants" | "Deadline";
+export type JobSortOption = "Newest" | "Deadline" | "Salary";
 
 interface JobFiltersProps {
   search: string;
@@ -14,7 +14,7 @@ interface JobFiltersProps {
 }
 
 const statuses: JobFilterStatus[] = ["All", "Published", "Draft", "Closed"];
-const sortOptions: JobSortOption[] = ["Newest", "Most Applicants", "Deadline"];
+const sortOptions: JobSortOption[] = ["Newest", "Deadline", "Salary"];
 
 export default function JobFilters({
   search,
@@ -59,7 +59,9 @@ export default function JobFilters({
 
           <select
             value={sortBy}
-            onChange={(event) => onSortChange(event.target.value as JobSortOption)}
+            onChange={(event) =>
+              onSortChange(event.target.value as JobSortOption)
+            }
             className="h-10 rounded-lg border border-slate/25 bg-white px-3 text-sm text-midnight outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
           >
             {sortOptions.map((option) => (
@@ -73,4 +75,3 @@ export default function JobFilters({
     </section>
   );
 }
-

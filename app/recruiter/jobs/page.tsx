@@ -1,190 +1,123 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BriefcaseBusiness, PlusCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  BriefcaseBusiness,
+  Loader2,
+  PlusCircle,
+  TriangleAlert,
+} from "lucide-react";
 import JobFilters, {
   type JobFilterStatus,
   type JobSortOption,
 } from "@/components/recruiter/jobs/JobFilters";
-import JobPostCard, { type JobPost } from "@/components/recruiter/jobs/JobPostCard";
+import JobPostCard from "@/components/recruiter/jobs/JobPostCard";
+import {
+  formatJobStatus,
+  getJobs,
+  type JobRecord,
+} from "@/lib/services/jobsService";
 
-const jobsData: JobPost[] = [
-  {
-    id: "job-1",
-    title: "Senior Frontend Engineer",
-    status: "Published",
-    department: "Engineering",
-    jobType: "Full-time",
-    workMode: "Remote",
-    postedDate: "2025-03-15",
-    deadline: "2025-04-30",
-    applicants: 42,
-    newToday: 5,
-    aiScreened: 38,
-    shortlisted: 8,
-    avgMatch: 84,
-    targetApplicants: 100,
-    viewCount: 234,
-    shareUrl: "https://evalexa.app/jobs/job-1",
-  },
-  {
-    id: "job-2",
-    title: "Product Designer",
-    status: "Published",
-    department: "Design",
-    jobType: "Full-time",
-    workMode: "Hybrid",
-    postedDate: "2025-03-20",
-    deadline: "2025-04-28",
-    applicants: 31,
-    newToday: 2,
-    aiScreened: 28,
-    shortlisted: 6,
-    avgMatch: 82,
-    targetApplicants: 80,
-    viewCount: 190,
-    shareUrl: "https://evalexa.app/jobs/job-2",
-  },
-  {
-    id: "job-3",
-    title: "AI Research Intern",
-    status: "Draft",
-    department: "AI Lab",
-    jobType: "Internship",
-    workMode: "On-site",
-    postedDate: "2025-03-25",
-    deadline: "2025-05-09",
-    applicants: 0,
-    newToday: 0,
-    aiScreened: 0,
-    shortlisted: 0,
-    avgMatch: 0,
-    targetApplicants: 50,
-    missingFields: ["Compensation", "Screening Questions"],
-  },
-  {
-    id: "job-4",
-    title: "HR Operations Specialist",
-    status: "Published",
-    department: "HR",
-    jobType: "Full-time",
-    workMode: "On-site",
-    postedDate: "2025-03-11",
-    deadline: "2025-04-18",
-    applicants: 57,
-    newToday: 4,
-    aiScreened: 49,
-    shortlisted: 13,
-    avgMatch: 80,
-    targetApplicants: 120,
-    viewCount: 301,
-    shareUrl: "https://evalexa.app/jobs/job-4",
-  },
-  {
-    id: "job-5",
-    title: "Marketing Analyst",
-    status: "Draft",
-    department: "Marketing",
-    jobType: "Full-time",
-    workMode: "Remote",
-    postedDate: "2025-03-27",
-    deadline: "2025-05-15",
-    applicants: 0,
-    newToday: 0,
-    aiScreened: 0,
-    shortlisted: 0,
-    avgMatch: 0,
-    targetApplicants: 70,
-    missingFields: ["Job Description"],
-  },
-  {
-    id: "job-6",
-    title: "Data Engineer",
-    status: "Published",
-    department: "Data",
-    jobType: "Full-time",
-    workMode: "Remote",
-    postedDate: "2025-03-16",
-    deadline: "2025-04-21",
-    applicants: 23,
-    newToday: 1,
-    aiScreened: 21,
-    shortlisted: 4,
-    avgMatch: 86,
-    targetApplicants: 90,
-    viewCount: 158,
-    shareUrl: "https://evalexa.app/jobs/job-6",
-  },
-  {
-    id: "job-7",
-    title: "Customer Success Lead",
-    status: "Closed",
-    department: "Operations",
-    jobType: "Full-time",
-    workMode: "Hybrid",
-    postedDate: "2025-02-10",
-    deadline: "2025-03-22",
-    applicants: 74,
-    newToday: 0,
-    aiScreened: 70,
-    shortlisted: 12,
-    avgMatch: 79,
-    targetApplicants: 60,
-  },
-  {
-    id: "job-8",
-    title: "Mobile Engineer (React Native)",
-    status: "Published",
-    department: "Engineering",
-    jobType: "Full-time",
-    workMode: "Remote",
-    postedDate: "2025-03-12",
-    deadline: "2025-04-17",
-    applicants: 36,
-    newToday: 3,
-    aiScreened: 32,
-    shortlisted: 7,
-    avgMatch: 85,
-    targetApplicants: 95,
-    viewCount: 210,
-    shareUrl: "https://evalexa.app/jobs/job-8",
-  },
-];
-
-const getStatusCounts = (jobs: JobPost[]) => {
+function getStatusCounts(jobs: JobRecord[]) {
   return {
     All: jobs.length,
-    Published: jobs.filter((job) => job.status === "Published").length,
-    Draft: jobs.filter((job) => job.status === "Draft").length,
-    Closed: jobs.filter((job) => job.status === "Closed").length,
+    Published: jobs.filter((job) => formatJobStatus(job.status) === "Published")
+      .length,
+    Draft: jobs.filter((job) => formatJobStatus(job.status) === "Draft").length,
+    Closed: jobs.filter((job) => formatJobStatus(job.status) === "Closed")
+      .length,
   };
-};
+}
 
 export default function JobPostsPage() {
-  const [jobs] = useState<JobPost[]>(jobsData);
+  const [jobs, setJobs] = useState<JobRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [activeStatus, setActiveStatus] = useState<JobFilterStatus>("All");
   const [sortBy, setSortBy] = useState<JobSortOption>("Newest");
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadJobs() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await getJobs();
+        if (isMounted) {
+          setJobs(data);
+        }
+      } catch (requestError) {
+        if (isMounted) {
+          setError(
+            requestError instanceof Error
+              ? requestError.message
+              : "Unable to load jobs.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadJobs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const counts = useMemo(() => getStatusCounts(jobs), [jobs]);
 
   const filteredJobs = useMemo(() => {
-    const searched = jobs.filter((job) =>
-      job.title.toLowerCase().includes(search.trim().toLowerCase()),
-    );
+    const normalizedSearch = search.trim().toLowerCase();
+
+    const searched = jobs.filter((job) => {
+      if (!normalizedSearch) return true;
+
+      const skillText = job.jobSkills
+        .map((relation) => relation.skill.name)
+        .join(" ");
+      const haystack = [
+        job.title,
+        job.description,
+        job.location,
+        job.company.name,
+        job.company.location ?? "",
+        skillText,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(normalizedSearch);
+    });
 
     const statusFiltered =
       activeStatus === "All"
         ? searched
-        : searched.filter((job) => job.status === activeStatus);
+        : searched.filter(
+            (job) => formatJobStatus(job.status) === activeStatus,
+          );
 
     return [...statusFiltered].sort((a, b) => {
-      if (sortBy === "Most Applicants") return b.applicants - a.applicants;
       if (sortBy === "Deadline") {
-        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+        return (
+          new Date(a.applicationDeadline).getTime() -
+          new Date(b.applicationDeadline).getTime()
+        );
       }
-      return new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime();
+
+      if (sortBy === "Salary") {
+        return b.salaryMax - a.salaryMax;
+      }
+
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [jobs, search, activeStatus, sortBy]);
 
@@ -197,7 +130,9 @@ export default function JobPostsPage() {
       <div className="mx-auto max-w-7xl space-y-5">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="font-syne text-2xl font-bold text-midnight">My Job Posts</h1>
+            <h1 className="font-syne text-2xl font-bold text-midnight">
+              My Job Posts
+            </h1>
             <p className="text-slate">{subtitle}</p>
           </div>
           <Link
@@ -208,6 +143,15 @@ export default function JobPostsPage() {
             Post New Job
           </Link>
         </header>
+
+        {error && (
+          <section className="rounded-xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger">
+            <div className="flex items-center gap-2">
+              <TriangleAlert className="h-4 w-4" />
+              <span>{error}</span>
+            </div>
+          </section>
+        )}
 
         {!hasNoJobs && (
           <JobFilters
@@ -221,7 +165,14 @@ export default function JobPostsPage() {
           />
         )}
 
-        {hasNoJobs && (
+        {isLoading && (
+          <section className="rounded-xl border border-slate/15 bg-white p-10 text-center text-slate">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+            <p className="mt-3">Loading jobs...</p>
+          </section>
+        )}
+
+        {!isLoading && hasNoJobs && (
           <section className="rounded-xl border border-slate/15 bg-white p-10 text-center">
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-surface">
               <div className="relative h-9 w-10 rounded-md border-2 border-primary/50 bg-white">
@@ -231,7 +182,9 @@ export default function JobPostsPage() {
             <h2 className="font-syne text-xl font-semibold text-midnight">
               You haven&apos;t posted any jobs yet
             </h2>
-            <p className="mt-1 text-slate">Create your first listing to start attracting talent.</p>
+            <p className="mt-1 text-slate">
+              Create your first listing to start attracting talent.
+            </p>
             <Link
               href="/recruiter/jobs/create"
               className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white"
@@ -242,10 +195,12 @@ export default function JobPostsPage() {
           </section>
         )}
 
-        {hasNoResults && (
+        {!isLoading && hasNoResults && (
           <section className="rounded-xl border border-slate/15 bg-white p-10 text-center">
             <BriefcaseBusiness className="mx-auto mb-3 h-10 w-10 text-slate" />
-            <h3 className="font-syne text-lg font-semibold text-midnight">No jobs match this filter</h3>
+            <h3 className="font-syne text-lg font-semibold text-midnight">
+              No jobs match this filter
+            </h3>
             <button
               type="button"
               onClick={() => {
@@ -259,10 +214,17 @@ export default function JobPostsPage() {
           </section>
         )}
 
-        {!hasNoJobs && !hasNoResults && (
+        {!isLoading && !hasNoJobs && !hasNoResults && (
           <section className="space-y-4">
-            {filteredJobs.map((job) => (
-              <JobPostCard key={job.id} job={job} />
+            {filteredJobs.map((job, index) => (
+              <motion.div
+                key={job.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04, duration: 0.25 }}
+              >
+                <JobPostCard job={job} />
+              </motion.div>
             ))}
           </section>
         )}
