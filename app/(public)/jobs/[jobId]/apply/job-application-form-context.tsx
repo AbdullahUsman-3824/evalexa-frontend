@@ -37,7 +37,10 @@ export type EducationEntry = EducationDraft & { id: string };
 export type ExperienceEntry = ExperienceDraft & { id: string };
 
 export type Errors = Partial<
-  Record<"firstName" | "lastName" | "email" | "phone" | "address" | "resume", string>
+  Record<
+    "firstName" | "lastName" | "email" | "phone" | "address" | "resume",
+    string
+  >
 >;
 
 export type CountryCode = {
@@ -55,7 +58,14 @@ export const countryCodes: CountryCode[] = [
   { flag: "🇸🇦", code: "+966", name: "Saudi Arabia" },
 ];
 
-export const degreeLevels = ["High School", "Diploma", "Bachelor's", "Master's", "PhD", "Other"];
+export const degreeLevels = [
+  "High School",
+  "Diploma",
+  "Bachelor's",
+  "Master's",
+  "PhD",
+  "Other",
+];
 
 export const months = [
   "January",
@@ -176,9 +186,14 @@ type JobApplicationFormContextValue = {
   handleSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
 };
 
-const JobApplicationFormContext = createContext<JobApplicationFormContextValue | null>(null);
+const JobApplicationFormContext =
+  createContext<JobApplicationFormContextValue | null>(null);
 
-export function JobApplicationFormProvider({ children }: { children: ReactNode }) {
+export function JobApplicationFormProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [contentVisible, setContentVisible] = useState(true);
 
@@ -186,16 +201,20 @@ export function JobApplicationFormProvider({ children }: { children: ReactNode }
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [headline, setHeadline] = useState("");
-  const [countryCode, setCountryCode] = useState(countryCodes[0]?.code ?? "+92");
+  const [countryCode, setCountryCode] = useState(
+    countryCodes[0]?.code ?? "+92",
+  );
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("Lahore, Pakistan");
 
   const [showEducationForm, setShowEducationForm] = useState(false);
-  const [educationDraft, setEducationDraft] = useState<EducationDraft>(emptyEducationDraft);
+  const [educationDraft, setEducationDraft] =
+    useState<EducationDraft>(emptyEducationDraft);
   const [educations, setEducations] = useState<EducationEntry[]>([]);
 
   const [showExperienceForm, setShowExperienceForm] = useState(false);
-  const [experienceDraft, setExperienceDraft] = useState<ExperienceDraft>(emptyExperienceDraft);
+  const [experienceDraft, setExperienceDraft] =
+    useState<ExperienceDraft>(emptyExperienceDraft);
   const [experiences, setExperiences] = useState<ExperienceEntry[]>([]);
 
   const [summary, setSummary] = useState("");
@@ -272,7 +291,9 @@ export function JobApplicationFormProvider({ children }: { children: ReactNode }
 
   const handleAutofillImport = (file: File | null) => {
     if (!file) return;
-    setToastMessage(`Imported ${file.name}. You can review and edit the fields below.`);
+    setToastMessage(
+      `Imported ${file.name}. You can review and edit the fields below.`,
+    );
     window.setTimeout(() => setToastMessage(""), 2500);
   };
 
@@ -286,7 +307,9 @@ export function JobApplicationFormProvider({ children }: { children: ReactNode }
       return;
     }
 
-    setToastMessage("This import source is coming soon. Please use This device for now.");
+    setToastMessage(
+      "This import source is coming soon. Please use This device for now.",
+    );
     window.setTimeout(() => setToastMessage(""), 2500);
   };
 
@@ -298,14 +321,20 @@ export function JobApplicationFormProvider({ children }: { children: ReactNode }
 
   const addEducation = () => {
     if (!educationDraft.level || !educationDraft.institution) return;
-    setEducations((previous) => [...previous, { ...educationDraft, id: crypto.randomUUID() }]);
+    setEducations((previous) => [
+      ...previous,
+      { ...educationDraft, id: crypto.randomUUID() },
+    ]);
     setEducationDraft(emptyEducationDraft);
     setShowEducationForm(false);
   };
 
   const addExperience = () => {
     if (!experienceDraft.title || !experienceDraft.company) return;
-    setExperiences((previous) => [...previous, { ...experienceDraft, id: crypto.randomUUID() }]);
+    setExperiences((previous) => [
+      ...previous,
+      { ...experienceDraft, id: crypto.randomUUID() },
+    ]);
     setExperienceDraft(emptyExperienceDraft);
     setShowExperienceForm(false);
   };
@@ -482,7 +511,9 @@ export function useJobApplicationFormContext() {
   const context = useContext(JobApplicationFormContext);
 
   if (!context) {
-    throw new Error("useJobApplicationFormContext must be used within JobApplicationFormProvider");
+    throw new Error(
+      "useJobApplicationFormContext must be used within JobApplicationFormProvider",
+    );
   }
 
   return context;

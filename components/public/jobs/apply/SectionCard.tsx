@@ -10,7 +10,11 @@ interface SectionCardProps {
   children: ReactNode;
 }
 
-export default function SectionCard({ title, onClear, children }: SectionCardProps) {
+export default function SectionCard({
+  title,
+  onClear,
+  children,
+}: SectionCardProps) {
   return (
     <div className={sectionCardClass}>
       <div className="mb-4 flex items-center justify-between border-b border-[#F0F4FA] pb-4">

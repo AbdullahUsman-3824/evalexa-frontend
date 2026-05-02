@@ -8,7 +8,8 @@ import ProfileSection from "./ProfileSection";
 import { useJobApplicationFormContext } from "@/app/(public)/jobs/[jobId]/apply/job-application-form-context";
 
 export default function ApplicationTab() {
-  const { handleSubmit, requiredFilled, submitting } = useJobApplicationFormContext();
+  const { handleSubmit, requiredFilled, submitting } =
+    useJobApplicationFormContext();
 
   return (
     <section className="space-y-4 px-0 sm:px-4">
@@ -55,7 +56,8 @@ export default function ApplicationTab() {
         </div>
 
         <p className="mt-3 text-[12px] text-[#B0B8CC]">
-          Powered by <span className="font-medium text-primary">Evalexa</span> · Cookie settings · Accessibility
+          Powered by <span className="font-medium text-primary">Evalexa</span> ·
+          Cookie settings · Accessibility
         </p>
       </footer>
     </section>

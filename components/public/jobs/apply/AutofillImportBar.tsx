@@ -24,7 +24,8 @@ export default function AutofillImportBar() {
               AUTOFILL APPLICATION
             </div>
             <p className="mt-2 text-[13px] text-slate">
-              Save time by importing your resume in one of the following formats: .pdf, .doc, .docx, .odt, or .rtf
+              Save time by importing your resume in one of the following
+              formats: .pdf, .doc, .docx, .odt, or .rtf
             </p>
           </div>
         </div>
@@ -91,7 +92,9 @@ export default function AutofillImportBar() {
         type="file"
         accept=".pdf,.doc,.docx,.odt,.rtf"
         className="hidden"
-        onChange={(event) => handleAutofillImport(event.target.files?.[0] ?? null)}
+        onChange={(event) =>
+          handleAutofillImport(event.target.files?.[0] ?? null)
+        }
       />
     </div>
   );

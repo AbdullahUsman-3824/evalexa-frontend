@@ -80,7 +80,10 @@ export default function PersonalInformationSection() {
 
       <div className="mt-2">
         <label className="mb-1 block text-[13px] font-medium text-[#4A5568]">
-          Headline <span className="ml-2 text-[12px] font-normal text-[#9BA3B2]">(Optional)</span>
+          Headline{" "}
+          <span className="ml-2 text-[12px] font-normal text-[#9BA3B2]">
+            (Optional)
+          </span>
         </label>
         <input
           value={headline}
@@ -134,7 +137,8 @@ export default function PersonalInformationSection() {
           className={`${inputBaseClass} ${errors.address ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
         />
         <p className="mt-1 text-xs text-slate">
-          Include your city, region, and country, so that employers can easily manage your application.
+          Include your city, region, and country, so that employers can easily
+          manage your application.
         </p>
         <FieldError message={errors.address} />
       </div>

@@ -13,7 +13,9 @@ interface JobOverviewSectionProps {
   };
 }
 
-export default function JobOverviewSection({ jobData }: JobOverviewSectionProps) {
+export default function JobOverviewSection({
+  jobData,
+}: JobOverviewSectionProps) {
   const { switchTab } = useJobApplicationFormContext();
 
   return (
@@ -33,14 +35,19 @@ export default function JobOverviewSection({ jobData }: JobOverviewSectionProps)
           </button>
         </div>
 
-        <p className="text-[15px] leading-8 text-[#4A5568]">{jobData.description}</p>
+        <p className="text-[15px] leading-8 text-[#4A5568]">
+          {jobData.description}
+        </p>
 
         <h3 className="mt-6 border-l-3 border-[#1E6FFF] pl-4 text-[15px] font-semibold text-[#0D1B2A]">
           Responsibilities:
         </h3>
         <ul className="mt-3 space-y-3 pl-4">
           {jobData.responsibilities.map((item) => (
-            <li key={item} className="flex items-start gap-3 text-[14px] leading-7 text-[#4A5568]">
+            <li
+              key={item}
+              className="flex items-start gap-3 text-[14px] leading-7 text-[#4A5568]"
+            >
               <span className="mt-1 inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[#1E6FFF]" />
               <span className="flex-1">{item}</span>
             </li>
@@ -52,7 +59,10 @@ export default function JobOverviewSection({ jobData }: JobOverviewSectionProps)
         </h3>
         <ul className="mt-3 space-y-3 pl-4">
           {jobData.requirements.map((item) => (
-            <li key={item} className="flex items-start gap-3 text-[14px] leading-7 text-[#4A5568]">
+            <li
+              key={item}
+              className="flex items-start gap-3 text-[14px] leading-7 text-[#4A5568]"
+            >
               <span className="mt-1 inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[#1E6FFF]" />
               <span className="flex-1">{item}</span>
             </li>
@@ -60,7 +70,8 @@ export default function JobOverviewSection({ jobData }: JobOverviewSectionProps)
         </ul>
 
         <p className="mt-6 text-[15px] italic leading-7 text-[#4A5568]">
-          We encourage all motivated candidates to apply and start their engineering journey with us.
+          We encourage all motivated candidates to apply and start their
+          engineering journey with us.
         </p>
 
         <button

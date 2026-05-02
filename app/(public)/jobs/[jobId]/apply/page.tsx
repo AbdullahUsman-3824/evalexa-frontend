@@ -1,7 +1,10 @@
 "use client";
 
 import { DM_Sans } from "next/font/google";
-import { useJobApplicationFormContext, JobApplicationFormProvider } from "./job-application-form-context";
+import {
+  useJobApplicationFormContext,
+  JobApplicationFormProvider,
+} from "./job-application-form-context";
 import JobApplyHeader from "@/components/public/jobs/apply/JobApplyHeader";
 import JobApplyTabs from "@/components/public/jobs/apply/JobApplyTabs";
 import JobOverviewSection from "@/components/public/jobs/apply/JobOverviewSection";
@@ -40,10 +43,13 @@ const jobData = {
 };
 
 function JobApplyPageContent() {
-  const { activeTab, contentVisible, toastMessage, setToastMessage } = useJobApplicationFormContext();
+  const { activeTab, contentVisible, toastMessage, setToastMessage } =
+    useJobApplicationFormContext();
 
   return (
-    <div className={`${dmSans.className} min-h-screen bg-[#EEF2F7] text-midnight`}>
+    <div
+      className={`${dmSans.className} min-h-screen bg-[#EEF2F7] text-midnight`}
+    >
       <JobApplyHeader
         company={jobData.company}
         title={jobData.title}
@@ -58,7 +64,9 @@ function JobApplyPageContent() {
         <div className="fixed right-4 top-4 z-50 rounded-lg border border-border bg-white px-4 py-3 text-sm text-midnight shadow-lg">
           <div className="flex items-start gap-3">
             <p className="flex-1">{toastMessage}</p>
-            <button type="button" onClick={() => setToastMessage("")}>×</button>
+            <button type="button" onClick={() => setToastMessage("")}>
+              ×
+            </button>
           </div>
         </div>
       ) : null}

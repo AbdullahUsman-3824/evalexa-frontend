@@ -48,7 +48,9 @@ export default function ProfileSection() {
       <div className="space-y-5">
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <label className="text-[13px] text-slate">Education (Optional)</label>
+            <label className="text-[13px] text-slate">
+              Education (Optional)
+            </label>
             <button
               type="button"
               onClick={() => setShowEducationForm((previous) => !previous)}
@@ -70,7 +72,10 @@ export default function ProfileSection() {
                   <select
                     value={educationDraft.level}
                     onChange={(event) =>
-                      setEducationDraft((previous) => ({ ...previous, level: event.target.value }))
+                      setEducationDraft((previous) => ({
+                        ...previous,
+                        level: event.target.value,
+                      }))
                     }
                     className={inputBaseClass}
                   >
@@ -86,7 +91,10 @@ export default function ProfileSection() {
                     placeholder="Field of Study"
                     value={educationDraft.field}
                     onChange={(event) =>
-                      setEducationDraft((previous) => ({ ...previous, field: event.target.value }))
+                      setEducationDraft((previous) => ({
+                        ...previous,
+                        field: event.target.value,
+                      }))
                     }
                     className={inputBaseClass}
                   />
@@ -95,7 +103,10 @@ export default function ProfileSection() {
                     placeholder="Institution"
                     value={educationDraft.institution}
                     onChange={(event) =>
-                      setEducationDraft((previous) => ({ ...previous, institution: event.target.value }))
+                      setEducationDraft((previous) => ({
+                        ...previous,
+                        institution: event.target.value,
+                      }))
                     }
                     className={inputBaseClass}
                   />
@@ -104,7 +115,10 @@ export default function ProfileSection() {
                     <select
                       value={educationDraft.startYear}
                       onChange={(event) =>
-                        setEducationDraft((previous) => ({ ...previous, startYear: event.target.value }))
+                        setEducationDraft((previous) => ({
+                          ...previous,
+                          startYear: event.target.value,
+                        }))
                       }
                       className={inputBaseClass}
                     >
@@ -119,7 +133,10 @@ export default function ProfileSection() {
                     <select
                       value={educationDraft.endYear}
                       onChange={(event) =>
-                        setEducationDraft((previous) => ({ ...previous, endYear: event.target.value }))
+                        setEducationDraft((previous) => ({
+                          ...previous,
+                          endYear: event.target.value,
+                        }))
                       }
                       className={inputBaseClass}
                     >
@@ -178,7 +195,9 @@ export default function ProfileSection() {
                   <button
                     type="button"
                     onClick={() =>
-                      setEducations((previous) => previous.filter((item) => item.id !== entry.id))
+                      setEducations((previous) =>
+                        previous.filter((item) => item.id !== entry.id),
+                      )
                     }
                     className="text-slate transition hover:text-[#DC2626]"
                     aria-label="Remove education"
@@ -193,7 +212,9 @@ export default function ProfileSection() {
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <label className="text-[13px] text-slate">Experience (Optional)</label>
+            <label className="text-[13px] text-slate">
+              Experience (Optional)
+            </label>
             <button
               type="button"
               onClick={() => setShowExperienceForm((previous) => !previous)}
@@ -216,7 +237,10 @@ export default function ProfileSection() {
                     placeholder="Job Title"
                     value={experienceDraft.title}
                     onChange={(event) =>
-                      setExperienceDraft((previous) => ({ ...previous, title: event.target.value }))
+                      setExperienceDraft((previous) => ({
+                        ...previous,
+                        title: event.target.value,
+                      }))
                     }
                     className={inputBaseClass}
                   />
@@ -225,7 +249,10 @@ export default function ProfileSection() {
                     placeholder="Company"
                     value={experienceDraft.company}
                     onChange={(event) =>
-                      setExperienceDraft((previous) => ({ ...previous, company: event.target.value }))
+                      setExperienceDraft((previous) => ({
+                        ...previous,
+                        company: event.target.value,
+                      }))
                     }
                     className={inputBaseClass}
                   />
@@ -234,7 +261,10 @@ export default function ProfileSection() {
                     <select
                       value={experienceDraft.startMonth}
                       onChange={(event) =>
-                        setExperienceDraft((previous) => ({ ...previous, startMonth: event.target.value }))
+                        setExperienceDraft((previous) => ({
+                          ...previous,
+                          startMonth: event.target.value,
+                        }))
                       }
                       className={inputBaseClass}
                     >
@@ -248,7 +278,10 @@ export default function ProfileSection() {
                     <select
                       value={experienceDraft.startYear}
                       onChange={(event) =>
-                        setExperienceDraft((previous) => ({ ...previous, startYear: event.target.value }))
+                        setExperienceDraft((previous) => ({
+                          ...previous,
+                          startYear: event.target.value,
+                        }))
                       }
                       className={inputBaseClass}
                     >
@@ -265,7 +298,10 @@ export default function ProfileSection() {
                     <select
                       value={experienceDraft.endMonth}
                       onChange={(event) =>
-                        setExperienceDraft((previous) => ({ ...previous, endMonth: event.target.value }))
+                        setExperienceDraft((previous) => ({
+                          ...previous,
+                          endMonth: event.target.value,
+                        }))
                       }
                       disabled={experienceDraft.current}
                       className={inputBaseClass}
@@ -280,7 +316,10 @@ export default function ProfileSection() {
                     <select
                       value={experienceDraft.endYear}
                       onChange={(event) =>
-                        setExperienceDraft((previous) => ({ ...previous, endYear: event.target.value }))
+                        setExperienceDraft((previous) => ({
+                          ...previous,
+                          endYear: event.target.value,
+                        }))
                       }
                       disabled={experienceDraft.current}
                       className={inputBaseClass}
@@ -316,7 +355,10 @@ export default function ProfileSection() {
                   placeholder="Description (Optional)"
                   value={experienceDraft.description}
                   onChange={(event) =>
-                    setExperienceDraft((previous) => ({ ...previous, description: event.target.value }))
+                    setExperienceDraft((previous) => ({
+                      ...previous,
+                      description: event.target.value,
+                    }))
                   }
                   className={`${textareaBaseClass} mt-3`}
                 />
@@ -352,16 +394,23 @@ export default function ProfileSection() {
                   className="flex items-start justify-between rounded-lg border border-border bg-white p-3"
                 >
                   <div>
-                    <p className="text-sm font-medium text-midnight">{entry.title}</p>
+                    <p className="text-sm font-medium text-midnight">
+                      {entry.title}
+                    </p>
                     <p className="text-sm text-slate">{entry.company}</p>
                     <p className="text-xs text-slate">
-                      {entry.startMonth} {entry.startYear} - {entry.current ? "Present" : `${entry.endMonth} ${entry.endYear}`}
+                      {entry.startMonth} {entry.startYear} -{" "}
+                      {entry.current
+                        ? "Present"
+                        : `${entry.endMonth} ${entry.endYear}`}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() =>
-                      setExperiences((previous) => previous.filter((item) => item.id !== entry.id))
+                      setExperiences((previous) =>
+                        previous.filter((item) => item.id !== entry.id),
+                      )
                     }
                     className="text-slate transition hover:text-[#DC2626]"
                     aria-label="Remove experience"
@@ -376,7 +425,10 @@ export default function ProfileSection() {
 
         <div>
           <label className="mb-1 block text-[13px] font-medium text-[#4A5568]">
-            Summary <span className="ml-2 text-[12px] font-normal text-[#9BA3B2]">(Optional)</span>
+            Summary{" "}
+            <span className="ml-2 text-[12px] font-normal text-[#9BA3B2]">
+              (Optional)
+            </span>
           </label>
           <textarea
             rows={5}
@@ -401,7 +453,9 @@ export default function ProfileSection() {
             type="file"
             accept=".pdf,.doc,.docx"
             className="hidden"
-            onChange={(event) => handleResumeSelected(event.target.files?.[0] ?? null)}
+            onChange={(event) =>
+              handleResumeSelected(event.target.files?.[0] ?? null)
+            }
           />
 
           <div
@@ -422,7 +476,9 @@ export default function ProfileSection() {
                 <CheckCircle size={18} className="text-[#00B37E]" />
                 <div className="text-sm">
                   <div className="font-medium">{resumeFile.name}</div>
-                  <div className="text-xs text-[#9BA3B2]">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB</div>
+                  <div className="text-xs text-[#9BA3B2]">
+                    {(resumeFile.size / 1024 / 1024).toFixed(2)} MB
+                  </div>
                 </div>
                 <button
                   type="button"
