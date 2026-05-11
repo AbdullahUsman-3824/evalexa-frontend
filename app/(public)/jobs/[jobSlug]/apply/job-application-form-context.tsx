@@ -11,8 +11,8 @@ import {
   type RefObject,
   type SetStateAction,
 } from "react";
-
-export type Tab = "overview" | "application";
+import { useParams } from "next/navigation";
+import { submitPublicJobApplication } from "@/lib/services/jobsService";
 
 export type EducationDraft = {
   level: string;
@@ -116,9 +116,6 @@ export const sectionCardClass =
   "rounded-[14px] border border-[#E8ECF4] bg-white py-6 px-7 shadow-[0_2px_8px_rgba(0,0,0,0.06)] mb-4";
 
 type JobApplicationFormContextValue = {
-  activeTab: Tab;
-  contentVisible: boolean;
-  switchTab: (tab: Tab) => void;
   firstName: string;
   setFirstName: Dispatch<SetStateAction<string>>;
   lastName: string;
@@ -194,8 +191,8 @@ export function JobApplicationFormProvider({
 }: {
   children: ReactNode;
 }) {
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [contentVisible, setContentVisible] = useState(true);
+  const params = useParams();
+  const jobSlug = (params?.jobSlug as string | undefined) ?? "";
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -278,15 +275,6 @@ export function JobApplicationFormProvider({
 
   const clearDetailsSection = () => {
     setCoverLetter("");
-  };
-
-  const switchTab = (tab: Tab) => {
-    if (tab === activeTab) return;
-    setContentVisible(false);
-    window.setTimeout(() => {
-      setActiveTab(tab);
-      setContentVisible(true);
-    }, 75);
   };
 
   const handleAutofillImport = (file: File | null) => {
@@ -423,20 +411,48 @@ export function JobApplicationFormProvider({
       return;
     }
 
+    if (!jobSlug) {
+      setToastMessage("Unable to determine job. Please try again.");
+      window.setTimeout(() => setToastMessage(""), 3000);
+      return;
+    }
+
     setSubmitting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 1200));
-    setSubmitting(false);
-    setToastMessage("Application submitted successfully.");
-    resetAll();
-    window.setTimeout(() => setToastMessage(""), 3000);
+
+    try {
+      const formData = new FormData();
+      formData.append("firstName", firstName);
+      formData.append("lastName", lastName);
+      formData.append("email", email);
+      formData.append("phone", `${countryCode} ${phone}`);
+      formData.append("address", address);
+      formData.append("headline", headline);
+      formData.append("summary", summary);
+      formData.append("coverLetter", coverLetter);
+      formData.append("educations", JSON.stringify(educations));
+      formData.append("experiences", JSON.stringify(experiences));
+      if (resumeFile) formData.append("resume", resumeFile, resumeFile.name);
+
+      await submitPublicJobApplication(jobSlug, formData);
+
+      setToastMessage("Application submitted successfully.");
+      resetAll();
+      window.setTimeout(() => setToastMessage(""), 3000);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Submission failed. Please try again.";
+      setToastMessage(message);
+      window.setTimeout(() => setToastMessage(""), 4000);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <JobApplicationFormContext.Provider
       value={{
-        activeTab,
-        contentVisible,
-        switchTab,
         firstName,
         setFirstName,
         lastName,

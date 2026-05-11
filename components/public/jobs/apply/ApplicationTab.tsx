@@ -5,7 +5,7 @@ import AutofillImportBar from "./AutofillImportBar";
 import DetailsSection from "./DetailsSection";
 import PersonalInformationSection from "./PersonalInformationSection";
 import ProfileSection from "./ProfileSection";
-import { useJobApplicationFormContext } from "@/app/(public)/jobs/[jobId]/apply/job-application-form-context";
+import { useJobApplicationFormContext } from "@/app/(public)/jobs/[jobSlug]/apply/job-application-form-context";
 
 export default function ApplicationTab() {
   const { handleSubmit, requiredFilled, submitting } =

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   Loader2,
@@ -32,8 +32,7 @@ const STATUS_OPTIONS: { value: BackendJobStatus; label: string }[] = [
 
 export default function JobDetailsPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const jobId = Number(params?.id);
+  const jobId = params?.id;
   const [job, setJob] = useState<JobRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +45,7 @@ export default function JobDetailsPage() {
     let isMounted = true;
 
     async function loadJob() {
-      if (Number.isNaN(jobId)) {
+      if (!jobId) {
         if (isMounted) {
           setError("Invalid job id.");
           setIsLoading(false);

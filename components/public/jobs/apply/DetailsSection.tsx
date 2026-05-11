@@ -4,7 +4,7 @@ import SectionCard from "./SectionCard";
 import {
   textareaBaseClass,
   useJobApplicationFormContext,
-} from "@/app/(public)/jobs/[jobId]/apply/job-application-form-context";
+} from "@/app/(public)/jobs/[jobSlug]/apply/job-application-form-context";
 
 export default function DetailsSection() {
   const { clearDetailsSection, coverLetter, setCoverLetter } =

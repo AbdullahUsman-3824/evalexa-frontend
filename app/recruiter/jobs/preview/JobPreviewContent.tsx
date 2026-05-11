@@ -29,7 +29,6 @@ export function JobPreviewContent() {
   const [job, setJob] = useState<JobRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const parsedJobId = jobId ? Number(jobId) : null;
 
   useEffect(() => {
     let isMounted = true;
@@ -39,12 +38,8 @@ export function JobPreviewContent() {
       setError(null);
 
       try {
-        if (parsedJobId !== null) {
-          if (Number.isNaN(parsedJobId)) {
-            throw new Error("Invalid job id.");
-          }
-
-          const data = await getJob(parsedJobId);
+        if (jobId) {
+          const data = await getJob(jobId);
           if (isMounted) setJob(data);
         } else {
           const jobs = await getJobs();
@@ -68,7 +63,7 @@ export function JobPreviewContent() {
     return () => {
       isMounted = false;
     };
-  }, [parsedJobId]);
+  }, [jobId]);
 
   const requiredSkills = useMemo(
     () =>

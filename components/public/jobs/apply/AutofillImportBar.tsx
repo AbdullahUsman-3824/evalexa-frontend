@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, Zap } from "lucide-react";
-import { useJobApplicationFormContext } from "@/app/(public)/jobs/[jobId]/apply/job-application-form-context";
+import { useJobApplicationFormContext } from "@/app/(public)/jobs/[jobSlug]/apply/job-application-form-context";
 
 export default function AutofillImportBar() {
   const {

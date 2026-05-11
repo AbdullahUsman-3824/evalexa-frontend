@@ -12,7 +12,7 @@ import {
   textareaBaseClass,
   useJobApplicationFormContext,
   years,
-} from "@/app/(public)/jobs/[jobId]/apply/job-application-form-context";
+} from "@/app/(public)/jobs/[jobSlug]/apply/job-application-form-context";
 
 export default function ProfileSection() {
   const {

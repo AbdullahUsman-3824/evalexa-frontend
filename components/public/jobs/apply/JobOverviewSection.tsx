@@ -1,7 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import { Syne } from "next/font/google";
-import { useJobApplicationFormContext } from "@/app/(public)/jobs/[jobId]/apply/job-application-form-context";
 
 const syne = Syne({ subsets: ["latin"], weight: ["700", "800"] });
 
@@ -11,13 +11,13 @@ interface JobOverviewSectionProps {
     responsibilities: string[];
     requirements: string[];
   };
+  applyHref: string;
 }
 
 export default function JobOverviewSection({
   jobData,
+  applyHref,
 }: JobOverviewSectionProps) {
-  const { switchTab } = useJobApplicationFormContext();
-
   return (
     <section className="px-0 sm:px-4">
       <div className="rounded-[14px] border border-[#E8ECF4] bg-white p-7 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
@@ -74,13 +74,12 @@ export default function JobOverviewSection({
           engineering journey with us.
         </p>
 
-        <button
-          type="button"
-          onClick={() => switchTab("application")}
+        <Link
+          href={applyHref}
           className="mt-8 h-13 w-full rounded-lg bg-success text-[15px] font-medium text-white transition hover:bg-[#009E6E]"
         >
           Apply for this job
-        </button>
+        </Link>
       </div>
     </section>
   );

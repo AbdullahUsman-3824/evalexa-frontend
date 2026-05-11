@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
-import { sectionCardClass } from "@/app/(public)/jobs/[jobId]/apply/job-application-form-context";
+import { sectionCardClass } from "@/app/(public)/jobs/[jobSlug]/apply/job-application-form-context";
 
 interface SectionCardProps {
   title: string;

@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/services/apiClient";
+import { API_BASE_URL } from "@/lib/services/apiClient";
 
 export type BackendJobType = "FULL_TIME" | "PART_TIME" | "CONTRACT";
 export type BackendExperienceLevel = "JUNIOR" | "MID" | "SENIOR" | "LEAD";
@@ -9,7 +10,7 @@ export type BackendSkillImportance = "REQUIRED" | "PREFERRED";
 export type JobSortBy = "newest" | "deadline";
 
 export interface JobSkillRecord {
-  jobId: number;
+  jobId: string;
   skillId: number;
   importance: BackendSkillImportance;
   weight: number;
@@ -22,7 +23,7 @@ export interface JobSkillRecord {
 
 export interface JobAiConfigRecord {
   id: number;
-  jobId: number;
+  jobId: string;
   minMatchScore: number;
   autoShortlistThreshold: number;
   enableAutoShortlist: boolean;
@@ -46,7 +47,7 @@ export interface JobCreatorRecord {
 }
 
 export interface JobRecord {
-  id: number;
+  id: string;
   companyId: number;
   createdBy: number;
   title: string;
@@ -127,7 +128,7 @@ export async function getJobs(query?: JobQuery): Promise<JobRecord[]> {
   return apiRequest<JobRecord[]>(`/jobs${buildQueryString(query)}`, {}, true);
 }
 
-export async function getJob(id: number): Promise<JobRecord> {
+export async function getJob(id: string): Promise<JobRecord> {
   return apiRequest<JobRecord>(`/jobs/${id}`, {}, true);
 }
 
@@ -143,7 +144,7 @@ export async function createJob(payload: CreateJobPayload): Promise<JobRecord> {
 }
 
 export async function updateJob(
-  id: number,
+  id: string,
   payload: UpdateJobPayload,
 ): Promise<JobRecord> {
   return apiRequest<JobRecord>(
@@ -217,4 +218,157 @@ export function formatRelativeDays(dateString: string) {
 
 export function formatCurrencyRange(min: number, max: number) {
   return `PKR ${min.toLocaleString()} - ${max.toLocaleString()}`;
+}
+
+/* Public-facing job types + endpoints */
+export type PublicJobSkill = {
+  importance: BackendSkillImportance;
+  weight: number;
+  skill: {
+    id: string;
+    name: string;
+    category: string;
+  };
+};
+
+export type PublicJobCompany = {
+  id: string;
+  name: string;
+  slug: string;
+  logo: string | null;
+  industry: string;
+  companySize: string;
+  website: string | null;
+  location: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PublicJob = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  jobType: BackendJobType;
+  experienceLevel: BackendExperienceLevel;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  location: string;
+  workModel: BackendWorkModel;
+  status: BackendJobStatus;
+  applicationDeadline: string;
+  createdAt: string;
+  updatedAt: string;
+  company: PublicJobCompany;
+  jobSkills: PublicJobSkill[];
+};
+
+export type PublicJobsPagination = {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+};
+
+export type PublicJobsResponse = {
+  items: PublicJob[];
+  pagination: PublicJobsPagination;
+};
+
+export type PublicJobsQuery = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  location?: string;
+  employmentType?: BackendJobType;
+  experienceLevel?: BackendExperienceLevel;
+  company?: string;
+  skills?: string; // comma-separated
+  sort?: "newest" | "oldest" | "deadline" | "salary-high" | "salary-low";
+};
+
+function buildPublicJobsQueryString(query?: PublicJobsQuery) {
+  if (!query) return "";
+
+  const params = new URLSearchParams();
+
+  if (query.page !== undefined) params.set("page", String(query.page));
+  if (query.limit !== undefined) params.set("limit", String(query.limit));
+  if (query.search?.trim()) params.set("search", query.search.trim());
+  if (query.location?.trim()) params.set("location", query.location.trim());
+  if (query.employmentType) params.set("employmentType", query.employmentType);
+  if (query.experienceLevel)
+    params.set("experienceLevel", query.experienceLevel);
+  if (query.company?.trim()) params.set("company", query.company.trim());
+  if (query.skills?.trim()) params.set("skills", query.skills.trim());
+  if (query.sort) params.set("sort", query.sort);
+
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
+
+/** Public: list open, non-expired jobs */
+export async function getPublicJobs(
+  query?: PublicJobsQuery,
+): Promise<PublicJobsResponse> {
+  const qs = buildPublicJobsQueryString(query);
+  return apiRequest<PublicJobsResponse>(`/public/jobs${qs}`, { method: "GET" });
+}
+
+/** Public: small curated featured jobs */
+export async function getPublicFeaturedJobs(): Promise<PublicJob[]> {
+  return apiRequest<PublicJob[]>(`/public/jobs/featured`, { method: "GET" });
+}
+
+/** Public: job detail by slug (only open + not expired) */
+export async function getPublicJobBySlug(slug: string): Promise<PublicJob> {
+  return apiRequest<PublicJob>(`/public/jobs/${encodeURIComponent(slug)}`, {
+    method: "GET",
+  });
+}
+
+/** Public: similar jobs to a slug */
+export async function getPublicSimilarJobs(
+  slug: string,
+  limit = 6,
+): Promise<PublicJob[]> {
+  const qs = limit ? `?limit=${limit}` : "";
+  return apiRequest<PublicJob[]>(
+    `/public/jobs/${encodeURIComponent(slug)}/similar${qs}`,
+    { method: "GET" },
+  );
+}
+
+/** Submit a public job application using multipart/form-data (no auth). */
+export async function submitPublicJobApplication(
+  slug: string,
+  formData: FormData,
+): Promise<{ [key: string]: unknown }> {
+  const endpoint = `/public/jobs/${encodeURIComponent(slug)}/apply`;
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: "POST",
+    body: formData,
+    // Note: FormData will set Content-Type header automatically with boundary
+  });
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const body = contentType.includes("application/json")
+    ? await response.json()
+    : await response.text();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof body === "string"
+        ? body || `Request failed (${response.status})`
+        : typeof body === "object" && body?.message
+          ? body.message
+          : `Request failed (${response.status})`,
+    );
+  }
+
+  return (typeof body === "object" && body) || {};
 }
