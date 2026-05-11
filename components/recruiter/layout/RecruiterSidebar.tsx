@@ -50,7 +50,7 @@ const navSections: NavSection[] = [
     items: [
       {
         label: "Post a Job",
-        href: "/recruiter/jobs/create",
+        href: "/recruiter/jobs/post",
         icon: PlusCircle,
         special: true,
       },

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Syne } from "next/font/google";
 
 const syne = Syne({ subsets: ["latin"], weight: ["700", "800"] });
@@ -11,12 +10,10 @@ interface JobOverviewSectionProps {
     responsibilities: string[];
     requirements: string[];
   };
-  applyHref: string;
 }
 
 export default function JobOverviewSection({
   jobData,
-  applyHref,
 }: JobOverviewSectionProps) {
   return (
     <section className="px-0 sm:px-4">
@@ -73,13 +70,6 @@ export default function JobOverviewSection({
           We encourage all motivated candidates to apply and start their
           engineering journey with us.
         </p>
-
-        <Link
-          href={applyHref}
-          className="mt-8 h-13 w-full rounded-lg bg-success text-[15px] font-medium text-white transition hover:bg-[#009E6E]"
-        >
-          Apply for this job
-        </Link>
       </div>
     </section>
   );

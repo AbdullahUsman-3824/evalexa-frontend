@@ -27,7 +27,7 @@ interface RecruiterTopNavProps {
 const pageTitles: Record<string, string> = {
   "/recruiter/dashboard": "Dashboard",
   "/recruiter/analytics": "Analytics",
-  "/recruiter/jobs/create": "Post a Job",
+  "/recruiter/jobs/post": "Post a Job",
   "/recruiter/jobs": "My Job Posts",
   "/recruiter/applicants": "Applicants",
   "/recruiter/ranking": "AI Ranking",
@@ -232,7 +232,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
               {/* Avatar */}
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E6FFF] to-[#00C2D1] flex items-center justify-center">
                 <span className="text-white font-semibold text-xs">
-                  {accountInitials} 
+                  {accountInitials}
                 </span>
               </div>
 

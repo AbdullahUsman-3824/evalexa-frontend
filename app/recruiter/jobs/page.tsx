@@ -136,7 +136,7 @@ export default function JobPostsPage() {
             <p className="text-slate">{subtitle}</p>
           </div>
           <Link
-            href="/recruiter/jobs/create"
+            href="/recruiter/jobs/post"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
           >
             <PlusCircle className="h-4 w-4" />
@@ -186,7 +186,7 @@ export default function JobPostsPage() {
               Create your first listing to start attracting talent.
             </p>
             <Link
-              href="/recruiter/jobs/create"
+              href="/recruiter/jobs/post"
               className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white"
             >
               <PlusCircle className="h-4 w-4" />

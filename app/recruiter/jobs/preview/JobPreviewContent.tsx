@@ -98,7 +98,7 @@ export function JobPreviewContent() {
             </div>
             <div className="flex items-center gap-2">
               <Link
-                href="/recruiter/jobs/create"
+                href="/recruiter/jobs/post"
                 className="rounded-lg border border-primary px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/10"
               >
                 Create New

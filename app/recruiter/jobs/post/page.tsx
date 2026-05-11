@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import StepIndicator from "@/components/recruiter/jobs/create/StepIndicator";
-import Step1BasicInfo from "@/components/recruiter/jobs/create/Step1BasicInfo";
-import Step2Requirements from "@/components/recruiter/jobs/create/Step2Requirements";
-import Step3AISettings from "@/components/recruiter/jobs/create/Step3AISettings";
-import Step4Review from "@/components/recruiter/jobs/create/Step4Review";
-import type { JobPostFormData } from "@/components/recruiter/jobs/create/types";
+import StepIndicator from "@/components/recruiter/jobs/post/StepIndicator";
+import Step1BasicInfo from "@/components/recruiter/jobs/post/Step1BasicInfo";
+import Step2Requirements from "@/components/recruiter/jobs/post/Step2Requirements";
+import Step3AISettings from "@/components/recruiter/jobs/post/Step3AISettings";
+import Step4Review from "@/components/recruiter/jobs/post/Step4Review";
+import type { JobPostFormData } from "@/components/recruiter/jobs/post/types";
 import { getProfile } from "@/lib/services/authService";
 import {
   createJob,
