@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  MapPin,
+  Briefcase,
+  Clock,
+  DollarSign,
+  CalendarDays,
+} from "lucide-react";
+import {
   getPublicCompany,
   getPublicCompanyJobs,
   type PublicCompany,
@@ -132,37 +139,35 @@ export default function PublicCompanyJobsSection({
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#F7F9FC_0%,#EEF3FF_100%)] px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-6 flex items-center justify-between gap-4">
+    <main className="min-h-screen bg-surface px-6 py-8">
+      <div className="mx-auto max-w-6xl space-y-5">
+        <div className="flex items-center justify-between gap-4">
           <Link
             href={`/companies/${companySlug}`}
-            className="text-sm font-medium text-slate-600 hover:text-slate-950"
+            className="text-sm font-medium text-slate hover:text-midnight"
           >
             ← Back to company
           </Link>
           <Link
             href="/companies"
-            className="text-sm font-medium text-slate-600 hover:text-slate-950"
+            className="text-sm font-medium text-slate hover:text-midnight"
           >
             All companies
           </Link>
         </div>
 
-        <section className="rounded-3xl border border-white/70 bg-white p-6 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.22)] sm:p-8">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
+        <section className="rounded-xl border border-slate/20 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate">
             {company?.name ?? "Company jobs"}
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-            Open jobs
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+          <h1 className="mt-2 text-3xl font-bold text-midnight">Open jobs</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate">
             Browse public openings and sort them by recency or deadline.
           </p>
 
           <div className="mt-6 grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]">
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
                 Search
               </span>
               <input
@@ -172,12 +177,12 @@ export default function PublicCompanyJobsSection({
                 }
                 type="search"
                 placeholder="Search titles and descriptions"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition placeholder:text-slate/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
                 Job type
               </span>
               <select
@@ -193,7 +198,7 @@ export default function PublicCompanyJobsSection({
                     ),
                   )
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">All types</option>
                 <option value="FULL_TIME">Full-time</option>
@@ -203,7 +208,7 @@ export default function PublicCompanyJobsSection({
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
                 Work model
               </span>
               <select
@@ -219,7 +224,7 @@ export default function PublicCompanyJobsSection({
                     ),
                   )
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 <option value="">All models</option>
                 <option value="ONSITE">On-site</option>
@@ -229,7 +234,7 @@ export default function PublicCompanyJobsSection({
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
                 Sort
               </span>
               <select
@@ -243,7 +248,7 @@ export default function PublicCompanyJobsSection({
                     ),
                   )
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 {sortOptions.map((option) => (
                   <option key={option} value={option}>
@@ -256,95 +261,120 @@ export default function PublicCompanyJobsSection({
         </section>
 
         {error ? (
-          <div className="mt-6 rounded-3xl border border-rose-200 bg-rose-50 px-6 py-5 text-sm text-rose-700">
+          <div className="rounded-xl border border-danger/20 bg-danger/5 px-6 py-5 text-sm text-danger">
             {error}
           </div>
         ) : null}
 
         {loading ? (
-          <div className="mt-6 grid gap-5">
+          <div className="mt-6 grid gap-4">
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="h-32 animate-pulse rounded-3xl border border-slate-200 bg-white"
+                className="h-32 animate-pulse rounded-xl border border-slate-200 bg-white"
               />
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-            <h2 className="text-xl font-semibold text-slate-950">
+          <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+            <h2 className="text-lg font-semibold text-midnight">
               No open jobs found
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate">
               Try another filter or come back later.
             </p>
           </div>
         ) : (
           <>
-            <div className="mt-6 grid gap-5">
+            <div className="mt-6 grid gap-4">
               {items.map((job) => (
-                <article
+                <Link
+                  href={`/jobs/${job.slug}`}
                   key={job.id}
-                  className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_1px_0_rgba(15,23,42,0.02)]"
+                  className="group rounded-2xl border border-slate/20 bg-white p-5 shadow-sm transition hover:shadow-md"
                 >
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <h2 className="text-xl font-semibold text-slate-950">
+                      <h2 className="text-sm font-semibold text-midnight">
                         {job.title}
                       </h2>
-                      <div className="mt-3 flex flex-wrap gap-2 text-sm text-slate-600">
-                        <span className="rounded-full bg-slate-100 px-3 py-1.5">
-                          📍 {job.location}
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-primary">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {job.location}
                         </span>
-                        <span className="rounded-full bg-slate-100 px-3 py-1.5">
-                          💼 {formatWorkModel(job.workModel)}
+                        <span className="inline-flex items-center gap-1 rounded-full bg-cyan/10 px-2.5 py-1 text-cyan">
+                          <Briefcase className="h-3.5 w-3.5" />
+                          {formatWorkModel(job.workModel)}
                         </span>
-                        <span className="rounded-full bg-slate-100 px-3 py-1.5">
-                          🏷 {formatJobType(job.jobType)}
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate/10 px-2.5 py-1 text-slate">
+                          <Clock className="h-3.5 w-3.5" />
+                          {formatJobType(job.jobType)}
                         </span>
-                        <span className="rounded-full bg-slate-100 px-3 py-1.5">
-                          💰 {formatSalary(job)}
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-success">
+                          <DollarSign className="h-3.5 w-3.5" />
+                          {formatSalary(job)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="text-sm text-slate-500 md:text-right">
-                      <p>Deadline</p>
-                      <p className="mt-1 font-medium text-slate-950">
-                        {formatDeadline(job.applicationDeadline)}
-                      </p>
+                    <div className="flex flex-col items-start gap-3 md:items-end md:pt-2">
+                      <div className="text-xs text-slate flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4" />
+                        <p className="font-semibold text-midnight">
+                          {formatDeadline(job.applicationDeadline)}
+                        </p>
+                      </div>
+                      <span className="font-semibold text-primary transition group-hover:translate-x-1">
+                        Explore →
+                      </span>
                     </div>
                   </div>
-                </article>
+                </Link>
               ))}
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-600">
-                Showing {items.length} of {pagination.totalItems} jobs
+            <div className="mt-6 flex flex-col gap-4 rounded-xl border border-slate/20 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-medium text-slate">
+                Showing{" "}
+                <span className="text-midnight font-semibold">
+                  {items.length}
+                </span>{" "}
+                of{" "}
+                <span className="text-midnight font-semibold">
+                  {pagination.totalItems}
+                </span>{" "}
+                jobs
               </p>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   disabled={!pagination.hasPreviousPage}
                   onClick={() =>
                     setPage((currentPage) => Math.max(currentPage - 1, 1))
                   }
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-midnight transition hover:border-primary hover:bg-primary/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Previous
+                  ← Previous
                 </button>
-                <span className="text-sm text-slate-500">
-                  Page {pagination.page} of {Math.max(pagination.totalPages, 1)}
+                <span className="text-xs font-medium text-slate">
+                  Page{" "}
+                  <span className="text-midnight font-semibold">
+                    {pagination.page}
+                  </span>{" "}
+                  of{" "}
+                  <span className="text-midnight font-semibold">
+                    {Math.max(pagination.totalPages, 1)}
+                  </span>
                 </span>
                 <button
                   type="button"
                   disabled={!pagination.hasNextPage}
                   onClick={() => setPage((currentPage) => currentPage + 1)}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-midnight transition hover:border-primary hover:bg-primary/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Next
+                  Next →
                 </button>
               </div>
             </div>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { MapPin, DollarSign, CalendarDays, Search } from "lucide-react";
 import {
   getPublicJobs,
   getPublicFeaturedJobs,
@@ -119,57 +120,29 @@ export default function PublicJobsSection() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#F7F9FC_0%,#EEF3FF_100%)] px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-8 rounded-3xl border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_-20px_rgba(15,23,42,0.18)] backdrop-blur">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Jobs
-              </p>
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-                Find jobs open to external applicants.
-              </h1>
-              <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-                Search by title, company, skills, location and more.
-              </p>
-            </div>
+    <main className="min-h-screen bg-surface px-6 py-8">
+      <div className="mx-auto max-w-6xl space-y-5">
+        {/* Header Section */}
+        <div>
+          <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate">
+            <Search className="h-4 w-4" />
+            Browse Jobs
+          </p>
+          <h1 className="font-display text-3xl font-bold text-midnight sm:text-4xl">
+            Discover your next opportunity
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate">
+            Search by title, company, skills, location and more. Find roles that
+            match your profile.
+          </p>
+        </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 lg:min-w-[420px]">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-slate-500">Results</div>
-                <div className="mt-1 text-lg font-semibold text-slate-950">
-                  {loading ? "..." : pagination.totalItems}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-slate-500">Page</div>
-                <div className="mt-1 text-lg font-semibold text-slate-950">
-                  {pagination.page}/{Math.max(pagination.totalPages, 1)}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-slate-500">Sort</div>
-                <div className="mt-1 text-lg font-semibold text-slate-950">
-                  {sort}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-slate-500">Featured</div>
-                <div className="mt-1 text-lg font-semibold text-slate-950">
-                  {featured ? featured.length : "—"}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]">
+        {/* Filters Section */}
+        <div className="rounded-xl border border-slate/20 bg-white p-4 shadow-sm">
+          <div className="grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]">
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                Search
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
+                Search Jobs
               </span>
               <input
                 type="search"
@@ -178,12 +151,12 @@ export default function PublicJobsSection() {
                   handleFilterChange(() => setSearch(event.target.value))
                 }
                 placeholder="Job title, keywords, or skills"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition placeholder:text-slate/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
                 Location
               </span>
               <input
@@ -193,13 +166,13 @@ export default function PublicJobsSection() {
                   handleFilterChange(() => setLocation(event.target.value))
                 }
                 placeholder="City, country, or remote"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition placeholder:text-slate/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                Sort
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
+                Sort By
               </span>
               <select
                 value={sort}
@@ -212,26 +185,26 @@ export default function PublicJobsSection() {
                     ),
                   )
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 {sortOptions.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {option.replace("-", " ")}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                Page size
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
+                Per Page
               </span>
               <select
                 value={limit}
                 onChange={(event) =>
                   handleFilterChange(() => setLimit(Number(event.target.value)))
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 {[12, 24, 36, 50].map((option) => (
                   <option key={option} value={option}>
@@ -244,91 +217,124 @@ export default function PublicJobsSection() {
         </div>
 
         {error ? (
-          <div className="rounded-3xl border border-rose-200 bg-rose-50 px-6 py-5 text-sm text-rose-700">
-            {error}
+          <div className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
+            <strong>Error:</strong> {error}
           </div>
         ) : null}
 
         {loading ? (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={index}
-                className="h-[160px] animate-pulse rounded-3xl border border-slate-200 bg-white p-6"
+                className="h-[200px] animate-pulse rounded-xl border border-slate-200 bg-white p-4"
               />
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-            <h2 className="text-xl font-semibold text-slate-950">
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+            <h2 className="text-lg font-semibold text-midnight">
               No jobs found
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate">
               Try clearing filters or broadening your search terms.
             </p>
           </div>
         ) : (
           <>
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {items.map((job) => (
                 <Link
                   href={`/jobs/${job.slug}`}
                   key={job.id}
-                  className="group flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_1px_0_rgba(15,23,42,0.02)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_-18px_rgba(15,23,42,0.22)]"
+                  className="group flex h-full flex-col rounded-2xl border border-slate/20 bg-white p-5 shadow-sm transition hover:shadow-md"
                 >
-                  <div className="mb-3 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-950">
+                  <div className="mb-3 flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-midnight">
                         {job.title}
                       </h3>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {job.company.name} • {job.location}
+                      <p className="mt-1 text-xs text-slate">
+                        {job.company.name}
                       </p>
                     </div>
-                    <div className="text-sm text-slate-500">{job.jobType}</div>
+                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                      {job.jobType}
+                    </span>
                   </div>
 
-                  <p className="mb-4 line-clamp-3 text-sm leading-6 text-slate-600">
+                  <p className="mb-3 line-clamp-2 text-xs leading-5 text-slate">
                     {job.description}
                   </p>
 
-                  <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-5 text-sm text-slate-600">
-                    <span>
-                      📅 Apply by{" "}
-                      {new Date(job.applicationDeadline).toLocaleDateString()}
-                    </span>
-                    <span className="font-medium text-slate-900">View job</span>
+                  <div className="mt-auto space-y-2 border-t border-slate/10 pt-3">
+                    <div className="flex flex-wrap gap-2 text-xs text-slate">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {job.location}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <DollarSign className="h-3.5 w-3.5" />
+                        {job.salaryMin && job.salaryMax
+                          ? `${job.salaryMin}-${job.salaryMax}`
+                          : "Negotiable"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1 text-slate">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {new Date(job.applicationDeadline).toLocaleDateString()}
+                      </span>
+                      <span className="font-semibold text-primary transition group-hover:translate-x-1">
+                        Explore →
+                      </span>
+                    </div>
                   </div>
                 </Link>
               ))}
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-600">
-                Showing {items.length} of {pagination.totalItems} jobs
+            <div className="mt-6 flex flex-col gap-4 rounded-xl border border-slate/20 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-medium text-slate">
+                Showing{" "}
+                <span className="text-midnight font-semibold">
+                  {items.length}
+                </span>{" "}
+                of{" "}
+                <span className="text-midnight font-semibold">
+                  {pagination.totalItems}
+                </span>{" "}
+                jobs
               </p>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   disabled={!pagination.hasPreviousPage}
                   onClick={() =>
                     setPage((currentPage) => Math.max(currentPage - 1, 1))
                   }
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-midnight transition hover:border-primary hover:bg-primary/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Previous
+                  ← Previous
                 </button>
-                <span className="text-sm text-slate-500">
-                  Page {pagination.page} of {Math.max(pagination.totalPages, 1)}
+                <span className="text-xs font-medium text-slate">
+                  Page{" "}
+                  <span className="text-midnight font-semibold">
+                    {pagination.page}
+                  </span>{" "}
+                  of{" "}
+                  <span className="text-midnight font-semibold">
+                    {Math.max(pagination.totalPages, 1)}
+                  </span>
                 </span>
                 <button
                   type="button"
                   disabled={!pagination.hasNextPage}
                   onClick={() => setPage((currentPage) => currentPage + 1)}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-midnight transition hover:border-primary hover:bg-primary/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Next
+                  Next →
                 </button>
               </div>
             </div>

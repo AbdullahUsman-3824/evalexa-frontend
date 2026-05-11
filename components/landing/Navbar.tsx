@@ -58,8 +58,17 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA Button - Desktop */}
-          <div className="hidden md:block">
+          {/* CTA Buttons - Desktop */}
+          <div className="hidden md:flex items-center gap-3">
+            <Link href="/login">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center px-6 py-2.5 text-white font-medium rounded-lg hover:text-primary transition-colors duration-200 cursor-pointer"
+              >
+                Login
+              </motion.div>
+            </Link>
             <Link href="/signup">
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -107,13 +116,22 @@ export default function Navbar() {
                   {link.name}
                 </a>
               ))}
-              <Link
-                href="/signup"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full text-center bg-primary text-white font-medium py-3 rounded-lg hover:bg-primary/90 transition-colors duration-200"
-              >
-                Get Started
-              </Link>
+              <div className="flex gap-3 pt-2">
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 text-center bg-slate/10 text-white font-medium py-3 rounded-lg hover:bg-slate/20 transition-colors duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 text-center bg-primary text-white font-medium py-3 rounded-lg hover:bg-primary/90 transition-colors duration-200"
+                >
+                  Get Started
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}

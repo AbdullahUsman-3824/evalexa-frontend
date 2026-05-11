@@ -10,6 +10,7 @@ import {
   Tag,
   BriefcaseBusiness,
   ArrowRight,
+  Edit,
 } from "lucide-react";
 import {
   type JobRecord,
@@ -146,6 +147,13 @@ export default function JobPostCard({ job }: JobPostCardProps) {
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate/10 pt-4">
         <p className="text-sm text-slate">Managed by {job.creator.fullName}</p>
         <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/recruiter/jobs/${job.id}/edit`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+          >
+            <Edit className="h-4 w-4" />
+            Edit
+          </Link>
           <Link
             href={`/recruiter/jobs/${job.id}`}
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"

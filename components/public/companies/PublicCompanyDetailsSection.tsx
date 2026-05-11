@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { MapPin, Briefcase, Users, Zap } from "lucide-react";
 import {
   getPublicCompany,
   type PublicCompanyDetails,
@@ -69,10 +70,10 @@ export default function PublicCompanyDetailsSection({
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[linear-gradient(180deg,#F7F9FC_0%,#EEF3FF_100%)] px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-slate-200 bg-white p-8">
-          <div className="h-8 w-48 animate-pulse rounded-full bg-slate-200" />
-          <div className="mt-6 h-32 animate-pulse rounded-3xl bg-slate-100" />
+      <main className="min-h-screen bg-surface px-6 py-8">
+        <div className="mx-auto max-w-6xl rounded-xl border border-slate/20 bg-white p-6 shadow-sm">
+          <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-200" />
+          <div className="mt-6 h-32 animate-pulse rounded-xl bg-slate-100" />
         </div>
       </main>
     );
@@ -80,12 +81,12 @@ export default function PublicCompanyDetailsSection({
 
   if (error || !company) {
     return (
-      <main className="min-h-screen bg-[linear-gradient(180deg,#F7F9FC_0%,#EEF3FF_100%)] px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-rose-200 bg-rose-50 px-6 py-10 text-sm text-rose-700">
+      <main className="min-h-screen bg-surface px-6 py-8">
+        <div className="mx-auto max-w-6xl rounded-xl border border-danger/20 bg-danger/5 px-6 py-10 text-sm text-danger">
           <p>{error ?? "Company not found."}</p>
           <Link
             href="/companies"
-            className="mt-4 inline-block font-medium text-rose-800 underline"
+            className="mt-4 inline-block font-medium text-danger underline"
           >
             Back to companies
           </Link>
@@ -95,29 +96,29 @@ export default function PublicCompanyDetailsSection({
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#F7F9FC_0%,#EEF3FF_100%)] px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
+    <main className="min-h-screen bg-surface px-6 py-8">
+      <div className="mx-auto max-w-6xl">
         <Link
           href="/companies"
-          className="mb-6 inline-flex text-sm font-medium text-slate-600 hover:text-slate-950"
+          className="mb-6 inline-flex text-sm font-medium text-slate hover:text-midnight"
         >
           ← Back to companies
         </Link>
 
-        <section className="overflow-hidden rounded-3xl border border-white/70 bg-white shadow-[0_20px_60px_-24px_rgba(15,23,42,0.28)]">
-          <div className="border-b border-slate-100 bg-[linear-gradient(135deg,rgba(15,23,42,0.04),rgba(14,165,233,0.08))] p-6 sm:p-8">
+        <section className="overflow-hidden rounded-2xl border border-slate/20 bg-white shadow-sm">
+          <div className="border-b border-slate/10 bg-surface p-6 sm:p-8">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-slate-950 via-slate-800 to-sky-700 text-2xl font-semibold text-white shadow-lg shadow-slate-200">
+              <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xl font-semibold text-primary">
                 {getCompanyInitials(company)}
               </div>
               <div>
-                <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-                  Public company
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate">
+                  Company Profile
                 </p>
-                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                <h1 className="mt-2 text-3xl font-bold text-midnight">
                   {company.name}
                 </h1>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-slate">
                   {company.industry} • {company.location}
                 </p>
               </div>
@@ -125,42 +126,54 @@ export default function PublicCompanyDetailsSection({
           </div>
 
           <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-4 sm:p-8">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                Location
-              </p>
-              <p className="mt-2 font-semibold text-slate-950">
+            <div className="rounded-xl border border-slate/10 bg-surface p-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-slate" />
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate">
+                  Location
+                </p>
+              </div>
+              <p className="mt-2 font-semibold text-midnight">
                 {company.location}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                Industry
-              </p>
-              <p className="mt-2 font-semibold text-slate-950">
+            <div className="rounded-xl border border-slate/10 bg-surface p-4">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-slate" />
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate">
+                  Industry
+                </p>
+              </div>
+              <p className="mt-2 font-semibold text-midnight">
                 {company.industry}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                Company size
-              </p>
-              <p className="mt-2 font-semibold text-slate-950">
+            <div className="rounded-xl border border-slate/10 bg-surface p-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-slate" />
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate">
+                  Company size
+                </p>
+              </div>
+              <p className="mt-2 font-semibold text-midnight">
                 {company.companySize}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                Open jobs
-              </p>
-              <p className="mt-2 font-semibold text-slate-950">
+            <div className="rounded-xl border border-slate/10 bg-surface p-4">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-slate" />
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate">
+                  Open jobs
+                </p>
+              </div>
+              <p className="mt-2 font-semibold text-midnight">
                 {company.openJobsCount}
               </p>
             </div>
           </div>
 
           <div className="px-6 pb-6 sm:px-8 sm:pb-8">
-            <p className="max-w-3xl text-sm leading-7 text-slate-600">
+            <p className="max-w-3xl text-sm leading-7 text-slate">
               {company.description ?? "No company description available."}
             </p>
 
@@ -170,7 +183,7 @@ export default function PublicCompanyDetailsSection({
                   href={company.website}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                  className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90"
                 >
                   Visit website
                 </a>
@@ -178,7 +191,7 @@ export default function PublicCompanyDetailsSection({
 
               <Link
                 href={`/companies/${company.slug}/jobs`}
-                className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                className="inline-flex items-center rounded-lg border border-slate/20 px-4 py-2 text-sm font-medium text-midnight transition hover:border-primary/30 hover:bg-primary/5"
               >
                 View open jobs
               </Link>

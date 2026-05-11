@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Building2, MapPin, Users } from "lucide-react";
 import {
   getPublicCompanies,
   type PublicCompany,
@@ -123,57 +124,28 @@ export default function PublicCompaniesSection() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#F7F9FC_0%,#EEF3FF_100%)] px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-8 rounded-3xl border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_-20px_rgba(15,23,42,0.18)] backdrop-blur">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Public companies
-              </p>
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-                Discover teams hiring right now.
-              </h1>
-              <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-                Browse public companies, filter by industry, and sort by the
-                signals that matter most to you.
-              </p>
-            </div>
+    <main className="min-h-screen bg-surface px-6 py-8">
+      <div className="mx-auto max-w-6xl space-y-5">
+        {/* Header Section */}
+        <div>
+          <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate">
+            <Building2 className="h-4 w-4" />
+            Browse Companies
+          </p>
+          <h1 className="font-display text-3xl font-bold text-midnight sm:text-4xl">
+            Discover teams hiring right now
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate">
+            Browse public companies, filter by industry, and sort by the signals
+            that matter most to you.
+          </p>
+        </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 lg:min-w-[420px]">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-slate-500">Results</div>
-                <div className="mt-1 text-lg font-semibold text-slate-950">
-                  {loading ? "..." : pagination.totalItems}
-                </div>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-slate-500">Page</div>
-                <div className="mt-1 text-lg font-semibold text-slate-950">
-                  {pagination.page}/{Math.max(pagination.totalPages, 1)}
-                </div>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-slate-500">Sort</div>
-                <div className="mt-1 text-lg font-semibold text-slate-950">
-                  {formatSortLabel(sort)}
-                </div>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-slate-500">Open jobs</div>
-                <div className="mt-1 text-lg font-semibold text-slate-950">
-                  {items.reduce(
-                    (total, company) => total + company.openJobsCount,
-                    0,
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]">
+        {/* Filters Section */}
+        <div className="rounded-xl border border-slate/20 bg-white p-4 shadow-sm">
+          <div className="grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]">
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
                 Search
               </span>
               <input
@@ -182,13 +154,13 @@ export default function PublicCompaniesSection() {
                 onChange={(event) =>
                   handleFilterChange(() => setSearch(event.target.value))
                 }
-                placeholder="Company name, slug, location, or description"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+                placeholder="Company name, location, or description"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition placeholder:text-slate/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
                 Industry
               </span>
               <input
@@ -198,12 +170,12 @@ export default function PublicCompaniesSection() {
                   handleFilterChange(() => setIndustry(event.target.value))
                 }
                 placeholder="Software, Design, AI/ML"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition placeholder:text-slate/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
                 Sort
               </span>
               <select
@@ -217,7 +189,7 @@ export default function PublicCompaniesSection() {
                     ),
                   )
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 {sortOptions.map((option) => (
                   <option key={option} value={option}>
@@ -228,15 +200,15 @@ export default function PublicCompaniesSection() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-                Page size
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate">
+                Per Page
               </span>
               <select
                 value={limit}
                 onChange={(event) =>
                   handleFilterChange(() => setLimit(Number(event.target.value)))
                 }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 {[12, 24, 36, 50].map((option) => (
                   <option key={option} value={option}>
@@ -249,100 +221,119 @@ export default function PublicCompaniesSection() {
         </div>
 
         {error ? (
-          <div className="rounded-3xl border border-rose-200 bg-rose-50 px-6 py-5 text-sm text-rose-700">
-            {error}
+          <div className="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
+            <strong>Error:</strong> {error}
           </div>
         ) : null}
 
         {loading ? (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={index}
-                className="h-[240px] animate-pulse rounded-3xl border border-slate-200 bg-white p-6"
+                className="h-[200px] animate-pulse rounded-xl border border-slate-200 bg-white p-4"
               />
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-            <h2 className="text-xl font-semibold text-slate-950">
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+            <h2 className="text-lg font-semibold text-midnight">
               No companies found
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate">
               Try clearing filters or broadening your search terms.
             </p>
           </div>
         ) : (
           <>
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {items.map((company) => (
                 <Link
                   href={`/companies/${company.slug}`}
                   key={company.id}
-                  className="group flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_1px_0_rgba(15,23,42,0.02)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_-18px_rgba(15,23,42,0.22)]"
+                  className="group flex h-full flex-col rounded-2xl border border-slate/20 bg-white p-5 shadow-sm transition hover:shadow-md"
                 >
-                  <div className="mb-5 flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-950 via-slate-800 to-sky-700 text-sm font-semibold text-white shadow-lg shadow-slate-200">
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
                       {getCompanyInitials(company)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-lg font-semibold text-slate-950">
+                      <h2 className="truncate text-sm font-semibold text-midnight">
                         {company.name}
                       </h2>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-0.5 text-xs text-slate">
                         {company.industry}
                       </p>
                     </div>
                   </div>
 
-                  <p className="mb-5 line-clamp-3 text-sm leading-6 text-slate-600">
-                    {company.description ?? "No company description available."}
+                  <p className="mb-3 line-clamp-2 text-xs leading-5 text-slate">
+                    {company.description}
                   </p>
 
-                  <div className="mt-auto space-y-2 text-sm text-slate-600">
-                    <p>📍 {company.location}</p>
-                    <p>🏢 {company.companySize}</p>
-                    <p>🔗 {company.website ?? "Website not available"}</p>
-                  </div>
-
-                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
-                    <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">
-                      {company.openJobsCount} open jobs
-                    </span>
-                    <span className="text-sm font-medium text-slate-950 transition group-hover:translate-x-0.5">
-                      View profile
-                    </span>
+                  <div className="mt-auto space-y-2 border-t border-slate/10 pt-3 text-xs text-slate">
+                    <p className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {company.location}
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Users className="h-3.5 w-3.5" />
+                      {company.companySize}
+                    </p>
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                        {company.openJobsCount} jobs
+                      </span>
+                      <span className="font-semibold text-primary transition group-hover:translate-x-1">
+                        View →
+                      </span>
+                    </div>
                   </div>
                 </Link>
               ))}
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-600">
-                Showing {items.length} of {pagination.totalItems} companies
+            <div className="mt-6 flex flex-col gap-4 rounded-xl border border-slate/20 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-medium text-slate">
+                Showing{" "}
+                <span className="text-midnight font-semibold">
+                  {items.length}
+                </span>{" "}
+                of{" "}
+                <span className="text-midnight font-semibold">
+                  {pagination.totalItems}
+                </span>{" "}
+                companies
               </p>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   disabled={!pagination.hasPreviousPage}
                   onClick={() =>
                     setPage((currentPage) => Math.max(currentPage - 1, 1))
                   }
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-midnight transition hover:border-primary hover:bg-primary/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Previous
+                  ← Previous
                 </button>
-                <span className="text-sm text-slate-500">
-                  Page {pagination.page} of {Math.max(pagination.totalPages, 1)}
+                <span className="text-xs font-medium text-slate">
+                  Page{" "}
+                  <span className="text-midnight font-semibold">
+                    {pagination.page}
+                  </span>{" "}
+                  of{" "}
+                  <span className="text-midnight font-semibold">
+                    {Math.max(pagination.totalPages, 1)}
+                  </span>
                 </span>
                 <button
                   type="button"
                   disabled={!pagination.hasNextPage}
                   onClick={() => setPage((currentPage) => currentPage + 1)}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-midnight transition hover:border-primary hover:bg-primary/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Next
+                  Next →
                 </button>
               </div>
             </div>
