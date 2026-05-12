@@ -15,33 +15,42 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getCompanies, Company } from "@/lib/services/companyService";
+import { getJobs } from "@/lib/services/jobsService";
 
 export default function CompanyHeader() {
   const router = useRouter();
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
   const [company, setCompany] = useState<Company | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCompany = async () => {
-      try {
-        const companies = await getCompanies();
-        setCompany(companies[0] ?? null);
-      } catch (error) {
-        console.error("Failed to fetch company", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchCompany();
-  }, []);
-
-  const fallbackStats = {
+  const [stats, setStats] = useState({
     activeJobs: 0,
     totalHires: 0,
     avgResponseTime: "N/A",
     rating: 0,
-  };
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const companies = await getCompanies();
+        setCompany(companies[0] ?? null);
+
+        // Fetch active jobs count
+        if (companies[0]) {
+          const jobs = await getJobs({ status: "OPEN" });
+          const activeJobsCount = jobs.filter(
+            (job) => job.companyId === companies[0].id,
+          ).length;
+          setStats((prev) => ({ ...prev, activeJobs: activeJobsCount }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch company data", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   if (isLoading) {
     return <div className="h-64 rounded-2xl bg-midnight/5 animate-pulse"></div>;
@@ -178,7 +187,7 @@ export default function CompanyHeader() {
               <Briefcase className="w-5 h-5 text-primary" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {fallbackStats.activeJobs}
+              {stats.activeJobs}
             </p>
             <p className="text-slate text-xs">Active Jobs</p>
           </div>
@@ -188,7 +197,7 @@ export default function CompanyHeader() {
               <Users className="w-5 h-5 text-success" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {fallbackStats.totalHires}
+              {stats.totalHires}
             </p>
             <p className="text-slate text-xs">Total Hires</p>
           </div>
@@ -198,7 +207,7 @@ export default function CompanyHeader() {
               <Clock className="w-5 h-5 text-cyan" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {fallbackStats.avgResponseTime}
+              {stats.avgResponseTime}
             </p>
             <p className="text-slate text-xs">Avg Response Time</p>
           </div>
@@ -207,9 +216,7 @@ export default function CompanyHeader() {
             <div className="flex items-center justify-center gap-2 mb-2">
               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
             </div>
-            <p className="text-white text-2xl font-bold mb-1">
-              {fallbackStats.rating}
-            </p>
+            <p className="text-white text-2xl font-bold mb-1">{stats.rating}</p>
             <p className="text-slate text-xs">Candidate Rating</p>
           </div>
         </div>
