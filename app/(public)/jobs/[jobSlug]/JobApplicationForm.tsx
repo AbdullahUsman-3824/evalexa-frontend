@@ -11,9 +11,16 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { submitPublicJobApplication } from "@/lib/services/jobsService";
+import {
+  submitPublicJobApplication,
+  uploadPublicResume,
+  type ResumeUploadResponse,
+  type PublicJobApplicationPayload,
+} from "@/lib/services/jobsService";
 
 export type JobDetailData = {
+  jobId: string;
+  companyId: string;
   description: string;
   responsibilities: string[];
   requirements: string[];
@@ -183,6 +190,10 @@ export default function JobApplicationForm({
 
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [candidateId, setCandidateId] = useState<string | undefined>(undefined);
+  const [resumeId, setResumeId] = useState<string | undefined>(undefined);
+  const [resumeUrl, setResumeUrl] = useState<string | undefined>(undefined);
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -234,6 +245,7 @@ export default function JobApplicationForm({
     setEducationDraft(emptyEducationDraft);
     setExperienceDraft(emptyExperienceDraft);
     setErrors((previous) => ({ ...previous, resume: undefined }));
+    setCandidateId(undefined);
   };
 
   const clearDetailsSection = () => {
@@ -242,6 +254,8 @@ export default function JobApplicationForm({
 
   const handleAutofillImport = (file: File | null) => {
     if (!file) return;
+    // Treat autofill import as a resume upload as well
+    handleResumeSelected(file);
     setToastMessage(
       `Imported ${file.name}. You can review and edit the fields below.`,
     );
@@ -266,8 +280,174 @@ export default function JobApplicationForm({
 
   const handleResumeSelected = (file: File | null) => {
     if (!file) return;
+
     setResumeFile(file);
     setErrors((previous) => ({ ...previous, resume: undefined }));
+
+    // Upload immediately and map returned parsed data into form
+    (async () => {
+      setIsUploading(true);
+      try {
+        const resp = await uploadPublicResume(file, candidateId);
+        handleResumeUploadResponse(resp, file);
+        setToastMessage("Resume uploaded and parsed.");
+        window.setTimeout(() => setToastMessage(""), 2500);
+      } catch (err: unknown) {
+        setToastMessage(
+          err instanceof Error ? err.message : "Resume upload failed.",
+        );
+        window.setTimeout(() => setToastMessage(""), 3500);
+      } finally {
+        setIsUploading(false);
+      }
+    })();
+  };
+
+  // Helper to parse dates in MM/YYYY or ISO format
+  const parseDate = (
+    dateString: string | null | undefined,
+  ): { month: string; year: string } => {
+    if (!dateString) return { month: "", year: "" };
+
+    // Try MM/YYYY format first (e.g., "02/2023")
+    if (/^\d{2}\/\d{4}$/.test(dateString)) {
+      const [monthStr, yearStr] = dateString.split("/");
+      const monthNum = parseInt(monthStr, 10) - 1; // Convert 1-based to 0-based
+      return {
+        month:
+          monthNum >= 0 && monthNum < months.length ? months[monthNum] : "",
+        year: yearStr || "",
+      };
+    }
+
+    // Try ISO date format
+    try {
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return {
+          month: months[date.getMonth()] || "",
+          year: String(date.getFullYear()),
+        };
+      }
+    } catch {
+      // fallthrough
+    }
+
+    return { month: "", year: "" };
+  };
+
+  const splitPhone = (
+    value: string | null | undefined,
+  ): { code: string; number: string } => {
+    if (!value) {
+      return { code: countryCodes[0]?.code ?? "+92", number: "" };
+    }
+
+    const trimmed = value.trim();
+    const match = trimmed.match(/^(\+\d+)\s*(.*)$/);
+    if (!match) {
+      return { code: countryCodes[0]?.code ?? "+92", number: trimmed };
+    }
+
+    return {
+      code: match[1] || countryCodes[0]?.code || "+92",
+      number: (match[2] || "").trim(),
+    };
+  };
+
+  const normalizePhoneForSubmit = (code: string, value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+
+    // If the number already includes a country code, send it as-is.
+    if (/^\+\d+/.test(trimmed)) {
+      return trimmed;
+    }
+
+    return `${code} ${trimmed}`.trim();
+  };
+
+  const toIsoDateFromMonthYear = (
+    monthName: string,
+    year: string,
+    fallbackDay: "01" | "28" = "01",
+  ): string | undefined => {
+    const cleanYear = year.trim();
+    if (!cleanYear) return undefined;
+
+    const monthIndex = months.findIndex(
+      (month) => month.toLowerCase() === monthName.trim().toLowerCase(),
+    );
+
+    if (monthIndex < 0) return undefined;
+    return `${cleanYear}-${String(monthIndex + 1).padStart(2, "0")}-${fallbackDay}`;
+  };
+
+  const toIsoDateFromYear = (
+    year: string,
+    fallbackMonthDay: "01-01" | "12-28" = "01-01",
+  ): string | undefined => {
+    const cleanYear = year.trim();
+    if (!cleanYear) return undefined;
+    return `${cleanYear}-${fallbackMonthDay}`;
+  };
+
+  const handleResumeUploadResponse = (
+    resp: ResumeUploadResponse,
+    file: File,
+  ) => {
+    setCandidateId(resp.candidateId ?? undefined);
+    setResumeId(resp.resumeId ?? undefined);
+    setResumeUrl(resp.resumeUrl ?? undefined);
+
+    // Map personal
+    if (resp.personal) {
+      if (resp.personal.firstName) setFirstName(resp.personal.firstName);
+      if (resp.personal.lastName) setLastName(resp.personal.lastName);
+      if (resp.personal.email) setEmail(resp.personal.email);
+      if (resp.personal.phone) {
+        const parsedPhone = splitPhone(resp.personal.phone);
+        setCountryCode(parsedPhone.code);
+        setPhone(parsedPhone.number);
+      }
+      if (resp.personal.headline) setHeadline(resp.personal.headline);
+      if (resp.personal.address) setAddress(resp.personal.address);
+    }
+
+    // Map education
+    if (Array.isArray(resp.education) && resp.education.length > 0) {
+      const mapped = resp.education.map((e) => ({
+        id: crypto.randomUUID(),
+        level: e.degree ?? "",
+        field: e.field ?? "",
+        institution: e.institution ?? "",
+        startYear: parseDate(e.startDate).year,
+        endYear: parseDate(e.endDate).year,
+      }));
+      setEducations(mapped);
+    }
+
+    // Map experience
+    if (Array.isArray(resp.experience) && resp.experience.length > 0) {
+      const mapped = resp.experience.map((ex) => {
+        const startParsed = parseDate(ex.startDate);
+        const endParsed = parseDate(ex.endDate);
+        return {
+          id: crypto.randomUUID(),
+          title: ex.title ?? "",
+          company: ex.company ?? "",
+          startMonth: startParsed.month,
+          startYear: startParsed.year,
+          endMonth: endParsed.month,
+          endYear: endParsed.year,
+          current: !!ex.isCurrent,
+          description: ex.description ?? "",
+        } as ExperienceEntry;
+      });
+      setExperiences(mapped);
+    }
+    // keep the file reference
+    setResumeFile(file);
   };
 
   const addEducation = () => {
@@ -357,6 +537,9 @@ export default function JobApplicationForm({
     setSummary("");
     setCoverLetter("");
     setResumeFile(null);
+    setCandidateId(undefined);
+    setResumeId(undefined);
+    setResumeUrl(undefined);
     setErrors({});
   };
 
@@ -378,20 +561,45 @@ export default function JobApplicationForm({
 
     setSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append("firstName", firstName);
-      formData.append("lastName", lastName);
-      formData.append("email", email);
-      formData.append("phone", `${countryCode} ${phone}`);
-      formData.append("address", address);
-      formData.append("headline", headline);
-      formData.append("summary", summary);
-      formData.append("coverLetter", coverLetter);
-      formData.append("educations", JSON.stringify(educations));
-      formData.append("experiences", JSON.stringify(experiences));
-      if (resumeFile) formData.append("resume", resumeFile, resumeFile.name);
+      const payload: PublicJobApplicationPayload = {
+        candidateId: candidateId ?? undefined,
+        resumeId: resumeId ?? undefined,
+        resumeUrl: resumeUrl ?? undefined,
+        personal: {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim() || undefined,
+          phone: normalizePhoneForSubmit(countryCode, phone) || undefined,
+          headline: headline.trim() || undefined,
+          address: address.trim() || undefined,
+        },
+        education: educations.map((item) => ({
+          school: item.institution.trim(),
+          fieldOfStudy: item.field.trim() || undefined,
+          degree: item.level.trim() || undefined,
+          startDate: toIsoDateFromYear(item.startYear, "01-01"),
+          endDate: toIsoDateFromYear(item.endYear, "12-28"),
+        })),
+        experience: experiences.map((item) => ({
+          title: item.title.trim(),
+          company: item.company.trim() || undefined,
+          industry: undefined,
+          summary: item.description.trim() || undefined,
+          startDate: toIsoDateFromMonthYear(
+            item.startMonth,
+            item.startYear,
+            "01",
+          ),
+          endDate: item.current
+            ? undefined
+            : toIsoDateFromMonthYear(item.endMonth, item.endYear, "28"),
+          isCurrent: item.current,
+        })),
+        jobId: jobData.jobId,
+        companyId: jobData.companyId,
+      };
 
-      await submitPublicJobApplication(jobSlug, formData);
+      await submitPublicJobApplication(jobSlug, payload);
 
       setToastMessage("Application submitted successfully.");
       resetAll();
@@ -1123,7 +1331,7 @@ export default function JobApplicationForm({
 
         <button
           type="submit"
-          disabled={!requiredFilled || submitting}
+          disabled={!requiredFilled || submitting || isUploading}
           className="flex h-13.5 w-full items-center justify-center gap-2 rounded-xl bg-success text-[15px] font-semibold text-white shadow-[0_4px_16px_rgba(0,179,126,0.35)] transition hover:bg-[#009E6E] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? (

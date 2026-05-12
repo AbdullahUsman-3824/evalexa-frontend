@@ -28,6 +28,8 @@ export default function JobDetailPage() {
         if (!isMounted) return;
 
         setJobData({
+          jobId: job?.id ?? "",
+          companyId: job?.company?.id ?? "",
           description: job?.description ?? "",
           responsibilities: [],
           requirements: [],

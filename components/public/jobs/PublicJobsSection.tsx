@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { MapPin, DollarSign, CalendarDays, Search } from "lucide-react";
 import {
   getPublicJobs,
-  getPublicFeaturedJobs,
   type PublicJob,
   type PublicJobsPagination,
   type PublicJobsQuery,
@@ -45,7 +44,6 @@ export default function PublicJobsSection() {
   const [pagination, setPagination] = useState(initialPagination);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [featured, setFeatured] = useState<PublicJob[] | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -90,26 +88,6 @@ export default function PublicJobsSection() {
       active = false;
     };
   }, [employmentType, experienceLevel, limit, page, search, sort, location]);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadFeatured() {
-      try {
-        const resp = await getPublicFeaturedJobs();
-        if (!active) return;
-        setFeatured(resp);
-      } catch {
-        // ignore featured errors
-      }
-    }
-
-    void loadFeatured();
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   function handleFilterChange(updater: () => void, shouldResetPage = true) {
     updater();

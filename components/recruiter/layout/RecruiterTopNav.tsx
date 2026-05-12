@@ -43,7 +43,9 @@ const pageTitles: Record<string, string> = {
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(null);
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(
+    () => getStoredUser() ?? null,
+  );
   const [companyName, setCompanyName] = useState<string>("Company");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -52,12 +54,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const hasUnreadNotifications = true; // Replace with actual logic
 
   useEffect(() => {
-    const storedUser = getStoredUser();
-    if (storedUser) {
-      setAccountUser(storedUser);
-    }
-
-    // Fetch fresh profile from API
+    // Fetch fresh profile from API (stored user already used as initial state)
     void getProfile()
       .then((profile) => {
         setAccountUser(profile);

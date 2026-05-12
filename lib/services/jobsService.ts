@@ -1,5 +1,8 @@
-import { apiRequest } from "@/lib/services/apiClient";
-import { API_BASE_URL } from "@/lib/services/apiClient";
+import {
+  apiRequest,
+  API_BASE_URL,
+  parseApiResponse,
+} from "@/lib/services/apiClient";
 
 export type BackendJobType = "FULL_TIME" | "PART_TIME" | "CONTRACT";
 export type BackendExperienceLevel = "JUNIOR" | "MID" | "SENIOR" | "LEAD";
@@ -108,6 +111,76 @@ export interface UpdateJobPayload extends Partial<CreateJobPayload> {
   skills?: CreateJobSkillPayload[];
   aiConfig?: CreateJobPayload["aiConfig"];
 }
+
+export type ResumeUploadResponse = {
+  candidateId: string;
+  resumeId: string;
+  resumeUrl: string;
+  personal: {
+    firstName: string;
+    lastName: string;
+    email: string | null;
+    phone: string | null;
+    headline: string | null;
+    address: string | null;
+    linkedinUrl: string | null;
+  };
+  education: Array<{
+    degree: string | null;
+    field: string | null;
+    institution: string | null;
+    startDate: string | null;
+    endDate: string | null;
+    grade: string | null;
+  }>;
+  experience: Array<{
+    title: string | null;
+    company: string | null;
+    startDate: string | null;
+    endDate: string | null;
+    isCurrent: boolean;
+    description: string | null;
+  }>;
+};
+
+export type PublicJobApplicationPayload = {
+  candidateId?: string;
+  resumeId?: string;
+  resumeUrl?: string;
+  personal: {
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    headline?: string;
+    address?: string;
+  };
+  education: Array<{
+    school: string;
+    fieldOfStudy?: string;
+    degree?: string;
+    startDate?: string;
+    endDate?: string;
+  }>;
+  experience: Array<{
+    title: string;
+    company?: string;
+    industry?: string;
+    summary?: string;
+    startDate?: string;
+    endDate?: string;
+    isCurrent?: boolean;
+  }>;
+  jobId: string;
+  companyId: string;
+};
+
+export type PublicJobApplicationResponse = {
+  applicationId: string;
+  candidateId: string;
+  resumeId: string;
+  status: "APPLIED";
+};
 
 function buildQueryString(query?: JobQuery) {
   if (!query) return "";
@@ -342,33 +415,40 @@ export async function getPublicSimilarJobs(
   );
 }
 
-/** Submit a public job application using multipart/form-data (no auth). */
+/** Submit a public job application as JSON (no auth). */
 export async function submitPublicJobApplication(
   slug: string,
-  formData: FormData,
-): Promise<{ [key: string]: unknown }> {
+  payload: PublicJobApplicationPayload,
+): Promise<PublicJobApplicationResponse> {
   const endpoint = `/public/jobs/${encodeURIComponent(slug)}/apply`;
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: "POST",
-    body: formData,
-    // Note: FormData will set Content-Type header automatically with boundary
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
   });
 
-  const contentType = response.headers.get("content-type") ?? "";
-  const body = contentType.includes("application/json")
-    ? await response.json()
-    : await response.text();
+  return parseApiResponse<PublicJobApplicationResponse>(response);
+}
 
-  if (!response.ok) {
-    throw new Error(
-      typeof body === "string"
-        ? body || `Request failed (${response.status})`
-        : typeof body === "object" && body?.message
-          ? body.message
-          : `Request failed (${response.status})`,
-    );
-  }
+/** Upload a resume so the backend can extract and return parsed profile data. */
+export async function uploadPublicResume(
+  file: File,
+  candidateId?: string,
+): Promise<ResumeUploadResponse> {
+  const formData = new FormData();
+  formData.append("file", file, file.name);
 
-  return (typeof body === "object" && body) || {};
+  const queryString = candidateId
+    ? `?candidateId=${encodeURIComponent(candidateId)}`
+    : "";
+
+  const response = await fetch(`${API_BASE_URL}/resume/upload${queryString}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  return parseApiResponse<ResumeUploadResponse>(response);
 }
