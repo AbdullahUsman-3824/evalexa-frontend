@@ -23,12 +23,14 @@ export type ApplicantStatus =
 
 export interface ApplicantCandidate {
   id: string;
+  candidateId: string;
   name: string;
   title: string;
+  location: string;
   appliedLabel: string;
   appliedDaysAgo: number;
-  matchScore: number;
-  resumeScore: number;
+  matchScore: number | null;
+  resumeScore: number | null;
   matchedSkills: string[];
   missingSkills: string[];
   experienceYears: number;
@@ -105,6 +107,7 @@ export default function CandidateCard({
               {candidate.name}
             </h3>
             <p className="text-xs text-slate">{candidate.title}</p>
+            <p className="text-xs text-slate">{candidate.location}</p>
             <p className="text-xs text-slate">
               Applied {candidate.appliedLabel}
             </p>
@@ -125,14 +128,22 @@ export default function CandidateCard({
       </div>
 
       <div className="mt-3 flex items-center gap-2">
-        <span
-          className={`rounded-full px-3 py-1 text-sm font-semibold ${matchTone(candidate.matchScore)}`}
-        >
-          {candidate.matchScore}% AI Match
-        </span>
-        <span className="rounded-full bg-cyan/10 px-2.5 py-1 text-xs font-medium text-cyan">
-          Resume {candidate.resumeScore}
-        </span>
+        {candidate.matchScore !== null ? (
+          <span
+            className={`rounded-full px-3 py-1 text-sm font-semibold ${matchTone(candidate.matchScore)}`}
+          >
+            {candidate.matchScore}% AI Match
+          </span>
+        ) : (
+          <span className="rounded-full bg-slate/10 px-3 py-1 text-sm font-semibold text-slate">
+            Pending AI Analysis
+          </span>
+        )}
+        {candidate.resumeScore !== null && (
+          <span className="rounded-full bg-cyan/10 px-2.5 py-1 text-xs font-medium text-cyan">
+            Resume {candidate.resumeScore}
+          </span>
+        )}
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -169,7 +180,7 @@ export default function CandidateCard({
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Link
-          href={`/recruiter/applicants/${candidate.id}`}
+          href={`/recruiter/applicants/${candidate.candidateId}`}
           className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90"
         >
           View Profile

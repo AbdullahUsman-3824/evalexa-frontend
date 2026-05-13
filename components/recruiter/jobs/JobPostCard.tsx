@@ -161,10 +161,18 @@ export default function JobPostCard({ job }: JobPostCardProps) {
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
-            href={`/recruiter/jobs/preview?jobId=${job.id}`}
-            className="rounded-lg border border-slate/25 px-3 py-2 text-sm font-medium text-midnight transition-colors hover:bg-surface"
+            href={job.slug ? `/jobs/${job.slug}` : "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-disabled={!job.slug}
+            prefetch={false}
+            className={`rounded-lg border border-slate/25 px-3 py-2 text-sm font-medium transition-colors ${
+              job.slug
+                ? "text-midnight hover:bg-surface"
+                : "cursor-not-allowed text-slate/60"
+            }`}
           >
-            Preview
+            View Public Link
           </Link>
         </div>
       </div>

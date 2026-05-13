@@ -14,7 +14,12 @@ import {
 } from "lucide-react";
 import type { ApplicantCandidate, ApplicantStatus } from "./CandidateCard";
 
-type SortKey = "name" | "matchScore" | "resumeScore" | "experienceYears" | "appliedDaysAgo";
+type SortKey =
+  | "name"
+  | "matchScore"
+  | "resumeScore"
+  | "experienceYears"
+  | "appliedDaysAgo";
 
 interface ApplicantTableProps {
   candidates: ApplicantCandidate[];
@@ -41,7 +46,11 @@ const statusClass: Record<ApplicantStatus, string> = {
 
 function sortIcon(active: boolean, direction: "asc" | "desc") {
   if (!active) return <ArrowUpDown className="h-3.5 w-3.5" />;
-  return direction === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />;
+  return direction === "asc" ? (
+    <ArrowUp className="h-3.5 w-3.5" />
+  ) : (
+    <ArrowDown className="h-3.5 w-3.5" />
+  );
 }
 
 function rankBadge(index: number) {
@@ -70,7 +79,9 @@ export default function ApplicantTable({
   const start = (currentPage - 1) * pageSize;
   const pageRows = candidates.slice(start, start + pageSize);
   const pageIds = pageRows.map((row) => row.id);
-  const allPageSelected = pageRows.length > 0 && pageRows.every((row) => selectedIds.includes(row.id));
+  const allPageSelected =
+    pageRows.length > 0 &&
+    pageRows.every((row) => selectedIds.includes(row.id));
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
@@ -84,7 +95,9 @@ export default function ApplicantTable({
                 <input
                   type="checkbox"
                   checked={allPageSelected}
-                  onChange={(event) => onSelectAllPage(event.target.checked, pageIds)}
+                  onChange={(event) =>
+                    onSelectAllPage(event.target.checked, pageIds)
+                  }
                   aria-label="Select page rows"
                 />
               </th>
@@ -95,8 +108,7 @@ export default function ApplicantTable({
                   className="inline-flex items-center gap-1 hover:text-midnight"
                   onClick={() => onSortChange("matchScore")}
                 >
-                  Match %
-                  {sortIcon(sortKey === "matchScore", sortDirection)}
+                  Match %{sortIcon(sortKey === "matchScore", sortDirection)}
                 </button>
               </th>
               <th className="px-3 py-3 font-medium">
@@ -152,8 +164,11 @@ export default function ApplicantTable({
                   <div className="flex items-center gap-2">
                     {rankBadge(start + idx)}
                     <div>
-                      <p className="font-medium text-midnight">{candidate.name}</p>
+                      <p className="font-medium text-midnight">
+                        {candidate.name}
+                      </p>
                       <p className="text-xs text-slate">{candidate.title}</p>
+                      <p className="text-xs text-slate">{candidate.location}</p>
                     </div>
                   </div>
                 </td>
@@ -166,22 +181,34 @@ export default function ApplicantTable({
                 <td className="px-3 py-3">
                   <div className="flex flex-wrap gap-1">
                     {candidate.matchedSkills.slice(0, 2).map((skill) => (
-                      <span key={skill} className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] text-success">
+                      <span
+                        key={skill}
+                        className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] text-success"
+                      >
                         {skill}
                       </span>
                     ))}
                   </div>
                 </td>
-                <td className="px-3 py-3 text-midnight">{candidate.experienceYears} yrs</td>
+                <td className="px-3 py-3 text-midnight">
+                  {candidate.experienceYears} yrs
+                </td>
                 <td className="px-3 py-3">
-                  <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusClass[candidate.status]}`}>
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-medium ${statusClass[candidate.status]}`}
+                  >
                     {candidate.status}
                   </span>
                 </td>
-                <td className="px-3 py-3 text-slate">{candidate.appliedLabel}</td>
+                <td className="px-3 py-3 text-slate">
+                  {candidate.appliedLabel}
+                </td>
                 <td className="px-3 py-3">
                   <div className="flex items-center gap-2">
-                    <Link href={`/recruiter/applicants/${candidate.id}`} className="text-primary hover:underline">
+                    <Link
+                      href={`/recruiter/applicants/${candidate.id}`}
+                      className="text-primary hover:underline"
+                    >
                       View
                     </Link>
                     <button
@@ -190,7 +217,9 @@ export default function ApplicantTable({
                       className="rounded p-1 text-warning hover:bg-warning/10"
                       aria-label="Shortlist"
                     >
-                      <Star className={`h-4 w-4 ${candidate.shortlisted ? "fill-warning" : ""}`} />
+                      <Star
+                        className={`h-4 w-4 ${candidate.shortlisted ? "fill-warning" : ""}`}
+                      />
                     </button>
                     <button
                       type="button"
@@ -217,7 +246,8 @@ export default function ApplicantTable({
 
       <div className="flex items-center justify-between border-t border-slate/10 px-4 py-3 text-sm">
         <p className="text-slate">
-          Showing {start + 1}-{Math.min(start + pageSize, candidates.length)} of {candidates.length}
+          Showing {start + 1}-{Math.min(start + pageSize, candidates.length)} of{" "}
+          {candidates.length}
         </p>
         <div className="flex items-center gap-2">
           <button
@@ -244,4 +274,3 @@ export default function ApplicantTable({
     </section>
   );
 }
-

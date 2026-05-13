@@ -1,1 +1,5 @@
-export { default } from "@/app/recruiter/jobs/[id]/applicants/page";
+import RecruiterApplicantsPage from "@/components/recruiter/applicants/RecruiterApplicantsPage";
+
+export default function ApplicantsPage() {
+  return <RecruiterApplicantsPage />;
+}

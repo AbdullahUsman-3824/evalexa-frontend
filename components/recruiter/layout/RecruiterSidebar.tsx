@@ -54,7 +54,7 @@ const navSections: NavSection[] = [
         icon: PlusCircle,
         special: true,
       },
-      { label: "My Job Posts", href: "/recruiter/jobs", icon: Briefcase },
+      { label: "Manage Jobs", href: "/recruiter/jobs", icon: Briefcase },
       { label: "Applicants", href: "/recruiter/applicants", icon: Users },
     ],
   },
@@ -113,7 +113,16 @@ export default function RecruiterSidebar({
   const pathname = usePathname();
   const router = useRouter();
 
-  const isActive = (href: string) => pathname === href;
+  const hasExactMatch = navSections.some((section) =>
+    section.items.some((item) => item.href === pathname),
+  );
+
+  const isActive = (href: string) => {
+    if (pathname === href) return true;
+    if (hasExactMatch) return false;
+    return pathname.startsWith(`${href}/`);
+  };
+
   const handleSignOut = async () => {
     await logoutUser();
     if (onClose) onClose();
@@ -241,10 +250,7 @@ export default function RecruiterSidebar({
 
         {/* Bottom spacing */}
         <div className="h-2 flex-shrink-0">
-          <button
-            className="hidden"
-            aria-hidden="true"
-          />
+          <button className="hidden" aria-hidden="true" />
         </div>
       </aside>
     </>

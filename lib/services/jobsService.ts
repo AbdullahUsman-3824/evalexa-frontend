@@ -51,6 +51,7 @@ export interface JobCreatorRecord {
 
 export interface JobRecord {
   id: string;
+  slug?: string;
   companyId: number;
   createdBy: number;
   title: string;
@@ -69,6 +70,12 @@ export interface JobRecord {
   creator: JobCreatorRecord;
   aiConfig: JobAiConfigRecord | null;
   jobSkills: JobSkillRecord[];
+}
+
+export interface JobTitleRecord {
+  id: string;
+  title: string;
+  slug?: string;
 }
 
 export interface JobQuery {
@@ -110,6 +117,99 @@ export interface CreateJobPayload {
 export interface UpdateJobPayload extends Partial<CreateJobPayload> {
   skills?: CreateJobSkillPayload[];
   aiConfig?: CreateJobPayload["aiConfig"];
+}
+/* Application types */
+export type ApplicationStatus =
+  | "APPLIED"
+  | "SCREENING"
+  | "SHORTLISTED"
+  | "INTERVIEW"
+  | "OFFER"
+  | "REJECTED"
+  | "HIRED";
+
+export type ScreeningStage = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+
+export type ApplicationSource = "FORM_FILL" | "RESUME" | "BULK_UPLOAD";
+
+export interface ApplicationCandidate {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+}
+
+export interface ApplicationResume {
+  id: string;
+  resumeUrl: string;
+  extractedEducation: string;
+  extractedExperience: number; // in months
+  uploadedAt: string;
+}
+
+export interface Application {
+  id: string;
+  status: ApplicationStatus;
+  screeningStage: ScreeningStage;
+  source: ApplicationSource;
+  matchScore: number;
+  rankPosition: number;
+  isAutoShortlisted: boolean;
+  appliedAt: string;
+  updatedAt: string;
+  candidate: ApplicationCandidate;
+  resume: ApplicationResume;
+}
+
+/* Candidate Details types */
+export interface CandidateResume {
+  id: string;
+  resumeUrl: string;
+  fileName: string;
+  description: string;
+  parsedData: Record<string, unknown>;
+  extractedSkills: string[];
+  extractedExperience: number; // in months
+  extractedEducation: string;
+  isPrimary: boolean;
+  uploadedAt: string;
+}
+
+export interface CandidateApplication {
+  id: string;
+  jobId: string;
+  companyId: string;
+  resumeId: string;
+  source: ApplicationSource;
+  status: ApplicationStatus;
+  screeningStage: ScreeningStage;
+  matchScore: number;
+  rankPosition: number;
+  isAutoShortlisted: boolean;
+  appliedAt: string;
+  updatedAt: string;
+  job: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+}
+
+export interface CandidateDetails {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  linkedinUrl: string;
+  portfolioUrl: string;
+  location: string;
+  _count: {
+    resumes: number;
+    applications: number;
+  };
+  resumes: CandidateResume[];
+  applications: CandidateApplication[];
 }
 
 export type ResumeUploadResponse = {
@@ -205,6 +305,10 @@ export async function getJob(id: string): Promise<JobRecord> {
   return apiRequest<JobRecord>(`/jobs/${id}`, {}, true);
 }
 
+export async function getJobTitles(): Promise<JobTitleRecord[]> {
+  return apiRequest<JobTitleRecord[]>("/jobs/titles", {}, true);
+}
+
 export async function createJob(payload: CreateJobPayload): Promise<JobRecord> {
   return apiRequest<JobRecord>(
     "/jobs",
@@ -226,6 +330,26 @@ export async function updateJob(
       method: "PATCH",
       body: JSON.stringify(payload),
     },
+    true,
+  );
+}
+
+export async function getApplicationsForJob(
+  jobId: string,
+): Promise<Application[]> {
+  return apiRequest<Application[]>(
+    `/application/job/${jobId}`,
+    { method: "GET" },
+    true,
+  );
+}
+
+export async function getCandidateDetails(
+  candidateId: string,
+): Promise<CandidateDetails> {
+  return apiRequest<CandidateDetails>(
+    `/candidate/${candidateId}`,
+    { method: "GET" },
     true,
   );
 }
