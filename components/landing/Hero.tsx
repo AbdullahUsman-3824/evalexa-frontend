@@ -57,8 +57,9 @@ export default function Hero() {
               transition={{ delay: 0.4 }}
               className="text-lg sm:text-xl text-slate max-w-2xl"
             >
-              Evalexa automates resume screening, ranks top candidates, and
-              conducts AI interviews — so you can focus on the final decision.
+              Evalexa helps you hire faster with AI screening, candidate
+              ranking, and interview support, while also letting you explore
+              jobs and companies before you sign in.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -77,15 +78,25 @@ export default function Hero() {
                   Start Hiring Free
                 </motion.div>
               </Link>
-              <motion.a
-                href="#how-it-works"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-midnight transition-all duration-200 text-center"
-              >
-                See How It Works
-              </motion.a>
+              <Link href="/jobs">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full sm:w-auto px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-midnight transition-all duration-200 text-center cursor-pointer"
+                >
+                  Explore Jobs
+                </motion.div>
+              </Link>
             </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="text-sm text-slate/90"
+            >
+              Browse jobs and companies without signing up.
+            </motion.p>
           </motion.div>
 
           {/* Right Content - Floating Candidate Card */}

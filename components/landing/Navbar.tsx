@@ -19,9 +19,9 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { name: "Dashboard", href: "#dashboard" },
+    { name: "Jobs", href: "/jobs" },
+    { name: "Companies", href: "/companies" },
     { name: "Features", href: "#features" },
-    { name: "How It Works", href: "#how-it-works" },
     { name: "Pricing", href: "#pricing" },
   ];
 
@@ -47,15 +47,25 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-slate hover:text-white transition-colors duration-200 font-medium"
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              link.href.startsWith("#") ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-slate font-medium transition-colors duration-200 hover:text-white"
+                >
+                  {link.name}
+                </a>
+              ) : (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="text-slate font-medium transition-colors duration-200 hover:text-white"
+                >
+                  {link.name}
+                </Link>
+              ),
+            )}
           </div>
 
           {/* CTA Buttons - Desktop */}
@@ -106,16 +116,27 @@ export default function Navbar() {
             className="md:hidden bg-navy border-t border-slate/20"
           >
             <div className="px-4 py-6 space-y-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block text-slate hover:text-white transition-colors duration-200 font-medium py-2"
-                >
-                  {link.name}
-                </a>
-              ))}
+              {navLinks.map((link) =>
+                link.href.startsWith("#") ? (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 font-medium text-slate transition-colors duration-200 hover:text-white"
+                  >
+                    {link.name}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 font-medium text-slate transition-colors duration-200 hover:text-white"
+                  >
+                    {link.name}
+                  </Link>
+                ),
+              )}
               <div className="flex gap-3 pt-2">
                 <Link
                   href="/login"

@@ -12,7 +12,7 @@ export default function CTABanner() {
 
   return (
     <section
-      id="get-started"
+      id="pricing"
       ref={ref}
       className="relative bg-primary py-20 md:py-28 overflow-hidden"
     >
