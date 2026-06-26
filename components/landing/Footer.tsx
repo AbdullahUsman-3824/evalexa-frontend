@@ -50,7 +50,7 @@ export default function Footer() {
               <span className="text-primary">exa</span>
             </a>
 
-            <p className="text-slate text-sm leading-relaxed mb-6">
+            <p className="text-secondary text-sm leading-relaxed mb-6">
               AI-powered recruitment platform helping companies hire smarter and
               faster.
             </p>
@@ -80,7 +80,7 @@ export default function Footer() {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-slate hover:text-white transition-colors duration-200 text-sm"
+                    className="text-secondary hover:text-white transition-colors duration-200 text-sm"
                   >
                     {link.name}
                   </a>
@@ -97,7 +97,7 @@ export default function Footer() {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-slate hover:text-white transition-colors duration-200 text-sm"
+                    className="text-secondary hover:text-white transition-colors duration-200 text-sm"
                   >
                     {link.name}
                   </a>
@@ -114,7 +114,7 @@ export default function Footer() {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-slate hover:text-white transition-colors duration-200 text-sm"
+                    className="text-secondary hover:text-white transition-colors duration-200 text-sm"
                   >
                     {link.name}
                   </a>
@@ -128,7 +128,7 @@ export default function Footer() {
         <div className="pt-8 border-t border-slate/20">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             {/* Copyright */}
-            <p className="text-slate text-sm text-center md:text-left">
+            <p className="text-secondary text-sm text-center md:text-left">
               &copy; {currentYear} Evalexa. All rights reserved.
             </p>
 
@@ -136,19 +136,19 @@ export default function Footer() {
             <div className="flex space-x-6 text-sm">
               <a
                 href="#privacy"
-                className="text-slate hover:text-white transition-colors duration-200"
+                className="text-secondary hover:text-white transition-colors duration-200"
               >
                 Privacy Policy
               </a>
               <a
                 href="#terms"
-                className="text-slate hover:text-white transition-colors duration-200"
+                className="text-secondary hover:text-white transition-colors duration-200"
               >
                 Terms of Service
               </a>
               <a
                 href="#cookies"
-                className="text-slate hover:text-white transition-colors duration-200"
+                className="text-secondary hover:text-white transition-colors duration-200"
               >
                 Cookie Policy
               </a>

@@ -42,7 +42,7 @@ export default function Navbar() {
             className="flex items-center space-x-1 font-display text-2xl font-bold"
           >
             <span className="text-white">Eval</span>
-            <span className="text-primary">exa</span>
+            <span className="text-cyan">exa</span>
           </a>
 
           {/* Desktop Navigation */}
@@ -52,7 +52,7 @@ export default function Navbar() {
                 <a
                   key={link.name}
                   href={link.href}
-                  className="text-slate font-medium transition-colors duration-200 hover:text-white"
+                  className="text-secondary font-medium transition-colors duration-200 hover:text-white"
                 >
                   {link.name}
                 </a>
@@ -60,7 +60,7 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="text-slate font-medium transition-colors duration-200 hover:text-white"
+                  className="text-secondary font-medium transition-colors duration-200 hover:text-white"
                 >
                   {link.name}
                 </Link>
@@ -83,7 +83,7 @@ export default function Navbar() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center px-6 py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors duration-200 cursor-pointer"
+                className="inline-flex items-center px-6 py-2.5 bg-primary text-midnight font-medium rounded-lg hover:bg-primary/90 transition-colors duration-200 cursor-pointer"
               >
                 Get Started
               </motion.div>
@@ -122,7 +122,7 @@ export default function Navbar() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block py-2 font-medium text-slate transition-colors duration-200 hover:text-white"
+                    className="block py-2 font-medium text-secondary transition-colors duration-200 hover:text-white"
                   >
                     {link.name}
                   </a>
@@ -131,7 +131,7 @@ export default function Navbar() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block py-2 font-medium text-slate transition-colors duration-200 hover:text-white"
+                    className="block py-2 font-medium text-secondary transition-colors duration-200 hover:text-white"
                   >
                     {link.name}
                   </Link>

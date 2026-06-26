@@ -59,7 +59,7 @@ export default function PublicDiscovery() {
             <h2 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
               See who is hiring before you log in.
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-secondary">
               Browse public companies and their open positions to get a feel for
               the marketplace without leaving the landing page.
             </p>
@@ -110,14 +110,14 @@ export default function PublicDiscovery() {
                     <h3 className="truncate text-base font-semibold text-white">
                       {company.name}
                     </h3>
-                    <p className="mt-1 flex items-center gap-1 text-sm text-slate">
+                    <p className="mt-1 flex items-center gap-1 text-sm text-secondary">
                       <MapPin className="h-3.5 w-3.5" />
                       {company.location}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-white/10 pt-4 text-sm text-slate">
+                <div className="flex items-center justify-between border-t border-white/10 pt-4 text-sm text-secondary">
                   <span>{company.openJobsCount} open positions</span>
                   <span className="font-medium text-primary transition group-hover:translate-x-1">
                     Explore →
@@ -126,7 +126,7 @@ export default function PublicDiscovery() {
               </Link>
             ))
           ) : (
-            <div className="col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-slate">
+            <div className="col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-secondary">
               Public companies will appear here once they are available.
             </div>
           )}

@@ -47,7 +47,7 @@ export default function Hero() {
               transition={{ delay: 0.3 }}
               className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight"
             >
-              Hire Smarter. <span className="text-primary">Hire Faster.</span>
+              Hire Smarter. <span className="text-cyan">Hire Faster.</span>
             </motion.h1>
 
             {/* Subheading */}
@@ -55,7 +55,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-lg sm:text-xl text-slate max-w-2xl"
+              className="text-lg sm:text-xl text-secondary max-w-2xl"
             >
               Evalexa helps you hire faster with AI screening, candidate
               ranking, and interview support, while also letting you explore
@@ -73,7 +73,7 @@ export default function Hero() {
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors duration-200 text-center cursor-pointer"
+                  className="w-full sm:w-auto px-8 py-4 bg-primary text-midnight font-semibold rounded-lg hover:bg-primary/90 transition-colors duration-200 text-center cursor-pointer"
                 >
                   Start Hiring Free
                 </motion.div>
@@ -93,7 +93,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="text-sm text-slate/90"
+              className="text-sm text-secondary/90"
             >
               Browse jobs and companies without signing up.
             </motion.p>
@@ -128,14 +128,14 @@ export default function Hero() {
                     <h3 className="text-xl font-bold text-white">
                       Ayesha Khan
                     </h3>
-                    <p className="text-slate">Senior Full-Stack Developer</p>
+                    <p className="text-secondary">Senior Full-Stack Developer</p>
                   </div>
                 </div>
 
                 {/* AI Match Score */}
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-slate">
+                    <span className="text-sm font-medium text-secondary">
                       AI Match Score
                     </span>
                     <span className="text-2xl font-bold text-success">94%</span>
@@ -152,7 +152,7 @@ export default function Hero() {
 
                 {/* Skills */}
                 <div>
-                  <p className="text-sm font-medium text-slate mb-3">
+                  <p className="text-sm font-medium text-secondary mb-3">
                     Top Skills
                   </p>
                   <div className="flex flex-wrap gap-2">

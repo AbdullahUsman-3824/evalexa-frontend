@@ -30,12 +30,12 @@ export default function CTABanner() {
           className="space-y-8"
         >
           {/* Headline */}
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white leading-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-midnight leading-tight">
             Ready to Transform Your Hiring?
           </h2>
 
           {/* Subtext */}
-          <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-midnight max-w-2xl mx-auto">
             Join 500+ companies using Evalexa to hire smarter, faster, and
             better. Start your free trial today — no credit card required.
           </p>
@@ -51,7 +51,7 @@ export default function CTABanner() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center space-x-2 px-8 py-4 bg-white text-primary font-bold rounded-lg hover:bg-surface transition-colors duration-200 shadow-xl cursor-pointer"
+                className="inline-flex items-center space-x-2 px-8 py-4 bg-white text-midnight font-bold rounded-lg hover:bg-surface transition-colors duration-200 shadow-xl cursor-pointer"
               >
                 <span>Get Started for Free</span>
                 <ArrowRight className="w-5 h-5" />
@@ -73,7 +73,7 @@ export default function CTABanner() {
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="pt-8 flex flex-wrap justify-center items-center gap-6 text-white/80 text-sm"
+            className="pt-8 flex flex-wrap justify-center items-center gap-6 text-midnight/80 text-sm"
           >
             <div className="flex items-center space-x-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

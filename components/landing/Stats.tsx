@@ -29,8 +29,8 @@ export default function Stats() {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: stat.delay }}
               className="text-center"
-            >
-              <div className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-primary mb-2">
+            > 
+              <div className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-primary-dark mb-2">
                 {stat.number}
               </div>
               <div className="text-base sm:text-lg text-slate font-medium">

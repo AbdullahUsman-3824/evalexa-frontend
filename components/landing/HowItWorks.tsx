@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
-import { ArrowRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 export default function HowItWorks() {
   const ref = useRef(null);
@@ -53,7 +53,7 @@ export default function HowItWorks() {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-4">
             How Evalexa Works
           </h2>
-          <p className="text-lg text-slate max-w-2xl mx-auto">
+          <p className="text-lg text-secondary max-w-2xl mx-auto">
             Four simple steps to transform your hiring process and find the best
             talent faster.
           </p>
@@ -63,20 +63,20 @@ export default function HowItWorks() {
         <div className="hidden lg:block">
           <div className="relative">
             {/* Connecting Line */}
-            <div className="absolute top-16 left-0 right-0 h-0.5 bg-slate/30"></div>
+            {/* <div className="absolute top-16 left-0 right-0 h-0.5 bg-slate/30"></div> */}
 
             <div className="grid grid-cols-4 gap-8">
               {steps.map((step, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={isInView ? { opacity: 1, x: 0 } : {}}
                   transition={{ duration: 0.5, delay: index * 0.15 }}
                   className="relative"
                 >
                   {/* Step Number Circle */}
                   <div className="flex justify-center mb-6">
-                    <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-2xl font-bold shadow-lg relative z-10">
+                    <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-2xl text-midnight font-bold shadow-lg relative z-10">
                       {index + 1}
                     </div>
                   </div>
@@ -86,15 +86,15 @@ export default function HowItWorks() {
                     <h3 className="text-xl font-display font-bold mb-3">
                       {step.title}
                     </h3>
-                    <p className="text-slate leading-relaxed">
+                    <p className="text-secondary leading-relaxed">
                       {step.description}
                     </p>
                   </div>
 
                   {/* Arrow between steps (not on last step) */}
                   {index < steps.length - 1 && (
-                    <div className="absolute top-16 -right-4 transform -translate-y-1/2">
-                      <ArrowRight className="w-6 h-6 text-slate/50" />
+                    <div className="absolute top-8 -right-4 transform -translate-y-1/2">
+                      <ChevronRight className="w-10 h-10 text-secondary/50" />
                     </div>
                   )}
                 </motion.div>
@@ -125,7 +125,7 @@ export default function HowItWorks() {
                 <h3 className="text-xl font-display font-bold mb-2">
                   {step.title}
                 </h3>
-                <p className="text-slate leading-relaxed">{step.description}</p>
+                <p className="text-secondary leading-relaxed">{step.description}</p>
               </div>
             </motion.div>
           ))}

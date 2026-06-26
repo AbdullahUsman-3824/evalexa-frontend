@@ -47,7 +47,7 @@ export default function ForUsers() {
               <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
                 Hire Better, Faster
               </h2>
-              <p className="text-slate text-lg">
+              <p className="text-secondary text-lg">
                 Streamline your recruitment process and focus on what matters —
                 connecting with the right candidates.
               </p>
@@ -74,7 +74,7 @@ export default function ForUsers() {
               <motion.div
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="block w-full text-center mt-8 px-6 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors duration-200 cursor-pointer"
+                className="block w-full text-center mt-8 px-6 py-4 bg-primary text-midnight font-semibold rounded-lg hover:bg-primary/90 transition-colors duration-200 cursor-pointer"
               >
                 Start Recruiting
               </motion.div>
