@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function Hero() {
@@ -69,20 +70,20 @@ export default function Hero() {
               transition={{ delay: 0.5 }}
               className="flex flex-col sm:flex-row gap-4 items-center lg:items-start"
             >
-              <Link href="/signup">
+              <Link href="/signup" className="w-full sm:w-auto">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto px-8 py-4 bg-primary text-midnight font-semibold rounded-lg hover:bg-primary/90 transition-colors duration-200 text-center cursor-pointer"
+                  className="w-full px-8 py-4 bg-primary text-midnight font-bold rounded-lg hover:bg-primary/90 transition-colors duration-200 text-center cursor-pointer"
                 >
                   Start Hiring Free
                 </motion.div>
               </Link>
-              <Link href="/jobs">
+              <Link href="/jobs" className="w-full sm:w-auto">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-midnight transition-all duration-200 text-center cursor-pointer"
+                  className="w-full px-8 py-4 border-2 border-white text-white font-medium rounded-lg hover:bg-white hover:text-midnight transition-all duration-200 text-center cursor-pointer"
                 >
                   Explore Jobs
                 </motion.div>
@@ -99,7 +100,7 @@ export default function Hero() {
             </motion.p>
           </motion.div>
 
-          {/* Right Content - Floating Candidate Card */}
+          {/* Right Content - Product Screenshot */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -115,74 +116,29 @@ export default function Hero() {
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-              className="relative w-full max-w-md"
+              className="relative w-full max-w-2xl"
             >
-              {/* Glassmorphism Card */}
-              <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 shadow-2xl">
-                {/* Card Header */}
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-cyan rounded-full flex items-center justify-center text-2xl font-bold">
-                    AK
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">
-                      Ayesha Khan
-                    </h3>
-                    <p className="text-secondary">Senior Full-Stack Developer</p>
-                  </div>
+                <div className="relative aspect-[16/10] w-full">
+                  <Image
+                    src="/preview/dashboard.png"
+                    alt="Evalexa recruiter dashboard preview"
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 42rem, 100vw"
+                    // className="object-cover"
+                  />
                 </div>
-
-                {/* AI Match Score */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-secondary">
-                      AI Match Score
-                    </span>
-                    <span className="text-2xl font-bold text-success">94%</span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "94%" }}
-                      transition={{ duration: 1.5, delay: 0.8 }}
-                      className="h-full bg-gradient-to-r from-primary to-cyan rounded-full"
-                    ></motion.div>
-                  </div>
-                </div>
-
-                {/* Skills */}
-                <div>
-                  <p className="text-sm font-medium text-secondary mb-3">
-                    Top Skills
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {["React", "TypeScript", "Node.js", "Python"].map(
-                      (skill, index) => (
-                        <motion.span
-                          key={skill}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 1 + index * 0.1 }}
-                          className="px-3 py-1.5 bg-primary/30 text-white text-sm font-medium rounded-full border border-primary/50"
-                        >
-                          {skill}
-                        </motion.span>
-                      ),
-                    )}
-                  </div>
-                </div>
-              </div>
 
               {/* Floating Elements Around Card */}
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-4 -right-4 w-8 h-8 bg-success rounded-lg shadow-lg"
+                className="absolute -top-1 -right-1 w-8 h-8 bg-success rounded-lg shadow-lg"
               ></motion.div>
               <motion.div
                 animate={{ rotate: -360 }}
                 transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                className="absolute -bottom-4 -left-4 w-6 h-6 bg-cyan rounded-full shadow-lg"
+                className="absolute -bottom-1 -left-1 w-6 h-6 bg-cyan rounded-full shadow-lg"
               ></motion.div>
             </motion.div>
           </motion.div>

@@ -45,13 +45,13 @@ export default function CTABanner() {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-stretch"
           >
             <Link href="/signup">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center space-x-2 px-8 py-4 bg-white text-midnight font-bold rounded-lg hover:bg-surface transition-colors duration-200 shadow-xl cursor-pointer"
+                className="inline-flex items-center space-x-2 px-8 py-4 bg-white text-midnight font-bold rounded-lg hover:bg-surface transition-colors duration-200 shadow-xl cursor-pointer w-full sm:w-auto justify-center"
               >
                 <span>Get Started for Free</span>
                 <ArrowRight className="w-5 h-5" />
@@ -62,7 +62,7 @@ export default function CTABanner() {
               href="#contact"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center px-8 py-4 border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-primary transition-all duration-200"
+              className="inline-flex items-center px-8 py-4 border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-primary transition-all duration-200 w-full sm:w-auto justify-center"
             >
               Schedule a Demo
             </motion.a>

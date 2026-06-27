@@ -78,7 +78,7 @@ export default function PublicDiscovery() {
             Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={index}
-                className="h-36 animate-pulse rounded-2xl border border-white/10 bg-white/5"
+                className="h-36 animate-pulse rounded-2xl border border-white/10 bg-white/5 sm:h-40"
               />
             ))
           ) : companies.length > 0 ? (
@@ -86,10 +86,10 @@ export default function PublicDiscovery() {
               <Link
                 key={company.id}
                 href={`/companies/${company.slug}`}
-                className="group rounded-2xl border border-white/10 bg-[#0f1726] p-5 transition hover:-translate-y-1 hover:border-primary/40 hover:bg-[#111a2b]"
+                className="group rounded-2xl border border-white/10 bg-[#0f1726] p-4 transition hover:-translate-y-1 hover:border-primary/40 hover:bg-[#111a2b] sm:p-5"
               >
-                <div className="mb-4 flex items-start gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-primary/15 text-sm font-bold text-primary">
+                <div className="mb-4 flex items-start gap-3 sm:gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/15 text-sm font-bold text-primary sm:h-12 sm:w-12">
                     {company.logo?.trim() ? (
                       <Image
                         src={company.logo}
@@ -99,7 +99,7 @@ export default function PublicDiscovery() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <span>
+                      <span className="text-xs sm:text-sm">
                         {getCompanyInitials(company) || (
                           <Building2 className="h-5 w-5" />
                         )}
@@ -107,17 +107,17 @@ export default function PublicDiscovery() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-base font-semibold text-white">
+                    <h3 className="truncate text-sm font-semibold text-white sm:text-base">
                       {company.name}
                     </h3>
-                    <p className="mt-1 flex items-center gap-1 text-sm text-secondary">
+                    <p className="mt-1 flex items-center gap-1 text-xs text-secondary sm:text-sm">
                       <MapPin className="h-3.5 w-3.5" />
                       {company.location}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-white/10 pt-4 text-sm text-secondary">
+                <div className="flex flex-col gap-2 border-t border-white/10 pt-4 text-xs text-secondary sm:flex-row sm:items-center sm:justify-between sm:text-sm">
                   <span>{company.openJobsCount} open positions</span>
                   <span className="font-medium text-primary transition group-hover:translate-x-1">
                     Explore →
@@ -126,7 +126,7 @@ export default function PublicDiscovery() {
               </Link>
             ))
           ) : (
-            <div className="col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-secondary">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-secondary md:col-span-3">
               Public companies will appear here once they are available.
             </div>
           )}
