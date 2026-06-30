@@ -2,11 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  // Sparkles,
-  // Bold,
-  // Italic,
-  // List,
-  // ListOrdered,
   Plus,
   PencilLine,
   Search,
@@ -65,10 +60,7 @@ const EDUCATION_LEVELS: EducationRequirement[] = [
   "Master's",
   "PhD",
 ];
-const IMPORTANCE_OPTIONS: SkillImportance[] = [
-  "REQUIRED",
-  "PREFERRED",
-];
+const IMPORTANCE_OPTIONS: SkillImportance[] = ["REQUIRED", "PREFERRED"];
 
 const EXPERIENCE_LABELS: Record<string, string> = {
   Entry: "Entry (0–2 yrs)",
@@ -77,12 +69,17 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   Lead: "Lead (8+ yrs)",
 };
 
+// Shared height class used by EVERY form control in this file so nothing drifts again.
+// !h-10  -> forces 2.5rem height, overriding any internal component defaults (py-2 etc.)
+// box-border -> border width is included in the height, so all controls measure identically
+// regardless of whether they use border vs border-2 etc.
+const FIELD_HEIGHT = "!h-10 box-border";
+
 export default function Step2Requirements({
   data,
   onChange,
 }: Step2RequirementsProps) {
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
-  // const [isGeneratingJD, setIsGeneratingJD] = useState(false);
 
   const [skillLibrary, setSkillLibrary] = useState<SkillRecord[]>([]);
   const [skillCategories, setSkillCategories] = useState<string[]>([]);
@@ -94,13 +91,14 @@ export default function Step2Requirements({
   const [librarySkillName, setLibrarySkillName] = useState("");
   const [librarySkillCategory, setLibrarySkillCategory] = useState("");
   const [editingSkillId, setEditingSkillId] = useState<string | null>(null);
-  const [editingDrafts, setEditingDrafts] = useState<Record<string, { name: string; category: string }>>({});
+  const [editingDrafts, setEditingDrafts] = useState<
+    Record<string, { name: string; category: string }>
+  >({});
   const [skillLibraryLoading, setSkillLibraryLoading] = useState(false);
   const [skillLibraryError, setSkillLibraryError] = useState<string | null>(null);
   const [skillLibraryStatus, setSkillLibraryStatus] = useState<string | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
-  // Touched state for validation
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   function touch(field: string) {
@@ -108,21 +106,22 @@ export default function Step2Requirements({
   }
 
   const selectedSkills = data.skills ?? [];
-  const responsibilitiesText = typeof data.responsibilities === "string"
-    ? data.responsibilities
-    : Array.isArray(data.responsibilities)
-      ? data.responsibilities.join("\n")
-      : "";
+  const responsibilitiesText =
+    typeof data.responsibilities === "string"
+      ? data.responsibilities
+      : Array.isArray(data.responsibilities)
+        ? data.responsibilities.join("\n")
+        : "";
 
   const filteredSkillLibrary = useMemo(() => {
     const normalizedSearch = skillSearch.trim().toLowerCase();
-
     return skillLibrary.filter((skill) => {
-      const categoryMatches = !selectedCategory || skill.category === selectedCategory;
-      const searchMatches = !normalizedSearch ||
+      const categoryMatches =
+        !selectedCategory || skill.category === selectedCategory;
+      const searchMatches =
+        !normalizedSearch ||
         skill.name.toLowerCase().includes(normalizedSearch) ||
         skill.category.toLowerCase().includes(normalizedSearch);
-
       return categoryMatches && searchMatches;
     });
   }, [skillLibrary, selectedCategory, skillSearch]);
@@ -179,8 +178,10 @@ export default function Step2Requirements({
     const categorySkills = skillLibrary.filter(
       (skill) => skill.category === selectedCategory,
     );
-
-    if (selectedSkillId && !categorySkills.some((skill) => skill.id === selectedSkillId)) {
+    if (
+      selectedSkillId &&
+      !categorySkills.some((skill) => skill.id === selectedSkillId)
+    ) {
       setSelectedSkillId("");
     }
   }, [selectedCategory, selectedSkillId, skillLibrary]);
@@ -251,7 +252,6 @@ export default function Step2Requirements({
   const createLibrarySkill = async () => {
     const name = librarySkillName.trim();
     const category = librarySkillCategory.trim();
-
     if (!name || !category) return;
 
     setSkillLibraryLoading(true);
@@ -275,7 +275,6 @@ export default function Step2Requirements({
   const saveLibrarySkill = async (skillId: string) => {
     const draft = editingDrafts[skillId];
     const original = skillLibrary.find((skill) => skill.id === skillId);
-
     if (!draft || !original) return;
 
     setSkillLibraryLoading(true);
@@ -315,7 +314,6 @@ export default function Step2Requirements({
     }
   };
 
-  // Inline errors
   const salaryMinErr =
     touched.salaryMin && !data.salaryMin
       ? "Min salary is required."
@@ -339,44 +337,17 @@ export default function Step2Requirements({
       ? "Select an experience level."
       : undefined;
 
-  // const applyTextFormat = (formatter: (sel: string) => string) => {
-  //   const target = descriptionRef.current;
-  //   if (!target) return;
-  //   const { selectionStart, selectionEnd, value } = target;
-  //   const selected = value.slice(selectionStart, selectionEnd) || "text";
-  //   const next =
-  //     value.slice(0, selectionStart) +
-  //     formatter(selected) +
-  //     value.slice(selectionEnd);
-  //   onChange("jobDescription", next);
-  // };
-
-  // const generateDescription = () => {
-  //   setIsGeneratingJD(true);
-  //   setTimeout(() => {
-  //     const template = `We are hiring a ${data.jobTitle || "professional"} to join our ${data.department} team.
-
-  // In this role, you will contribute to high-impact projects, collaborate cross-functionally, and help us ship quality outcomes faster.
-
-  // Required skills:
-  // ${selectedSkills.length ? selectedSkills.map((skill) => `- ${skill.name}`).join("\n") : "- Strong communication"}
-
-  // You should be comfortable working in a ${data.workMode?.toLowerCase()} environment and taking ownership of deliverables end-to-end.`;
-  //     onChange("jobDescription", template);
-  //     setIsGeneratingJD(false);
-  //   }, 1200);
-  // };
-
   return (
-    <div className="space-y-6 text-midnight">
+    <div className="rounded-xl bg-white p-6 shadow-sm space-y-8 text-midnight">
+
       {/* Salary Range */}
-      <div className="rounded-xl bg-white p-6 shadow-sm space-y-4">
+      <div className="space-y-4">
         <h3 className="font-syne text-lg font-semibold text-midnight">
-          Salary Range <span className="text-red-500">*</span>
+          Salary range <span className="text-red-500">*</span>
         </h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="salaryMin">Min Salary</Label>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="salaryMin">Min salary</Label>
             <Input
               id="salaryMin"
               type="number"
@@ -385,15 +356,13 @@ export default function Step2Requirements({
               onChange={(e) => onChange("salaryMin", e.target.value)}
               onBlur={() => touch("salaryMin")}
               placeholder="e.g. 50000"
-              className={
-                salaryMinErr ? "border-red-400 focus-visible:ring-red-300" : ""
-              }
+              className={`${FIELD_HEIGHT} py-0 ${salaryMinErr ? "border-red-400 focus-visible:ring-red-300" : ""}`}
             />
             <FieldError message={salaryMinErr} />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="salaryMax">Max Salary</Label>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="salaryMax">Max salary</Label>
             <Input
               id="salaryMax"
               type="number"
@@ -402,33 +371,29 @@ export default function Step2Requirements({
               onChange={(e) => onChange("salaryMax", e.target.value)}
               onBlur={() => touch("salaryMax")}
               placeholder="e.g. 100000"
-              className={
-                salaryMaxErr ? "border-red-400 focus-visible:ring-red-300" : ""
-              }
+              className={`${FIELD_HEIGHT} py-0 ${salaryMaxErr ? "border-red-400 focus-visible:ring-red-300" : ""}`}
             />
             <FieldError message={salaryMaxErr} />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="currency">Currency</Label>
             <Select
               value={data.currency}
               onValueChange={(val) => onChange("currency", val as Currency)}
             >
-              <SelectTrigger id="currency" className="w-full">
+              <SelectTrigger id="currency" className={`${FIELD_HEIGHT} w-full`}>
                 <SelectValue placeholder="Currency" />
               </SelectTrigger>
               <SelectContent>
                 {CURRENCIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="salaryPer">Period</Label>
             <Select
               value={data.salaryPer}
@@ -436,7 +401,7 @@ export default function Step2Requirements({
                 onChange("salaryPer", val as (typeof SALARY_PERIODS)[number])
               }
             >
-              <SelectTrigger id="salaryPer" className="w-full">
+              <SelectTrigger id="salaryPer" className={`${FIELD_HEIGHT} w-full`}>
                 <SelectValue placeholder="Period" />
               </SelectTrigger>
               <SelectContent>
@@ -451,11 +416,13 @@ export default function Step2Requirements({
         </div>
       </div>
 
-      {/* Experience Level + Education */}
+      <div className="border-t border-slate/10" />
+
+      {/* Experience + Education */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl bg-white p-6 shadow-sm space-y-3">
+        <div className="space-y-3">
           <h3 className="font-syne text-lg font-semibold text-midnight">
-            Experience Level <span className="text-red-500">*</span>
+            Experience level <span className="text-red-500">*</span>
           </h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {EXPERIENCE_LEVELS.map((level) => (
@@ -466,7 +433,7 @@ export default function Step2Requirements({
                   onChange("experienceLevel", level);
                   touch("experienceLevel");
                 }}
-                className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                className={`${FIELD_HEIGHT} flex items-center rounded-lg border px-3 text-sm font-medium transition ${
                   data.experienceLevel === level
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-slate/20 text-midnight hover:border-primary/40"
@@ -479,9 +446,9 @@ export default function Step2Requirements({
           <FieldError message={experienceErr} />
         </div>
 
-        <div className="rounded-xl bg-white p-6 shadow-sm space-y-3">
+        <div className="space-y-3">
           <h3 className="font-syne text-lg font-semibold text-midnight">
-            Education Requirement
+            Education requirement
           </h3>
           <Select
             value={data.educationRequirement}
@@ -489,22 +456,22 @@ export default function Step2Requirements({
               onChange("educationRequirement", val as EducationRequirement)
             }
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className={`${FIELD_HEIGHT} w-full`}>
               <SelectValue placeholder="Select education level" />
             </SelectTrigger>
             <SelectContent>
               {EDUCATION_LEVELS.map((edu) => (
-                <SelectItem key={edu} value={edu}>
-                  {edu}
-                </SelectItem>
+                <SelectItem key={edu} value={edu}>{edu}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
+      <div className="border-t border-slate/10" />
+
       {/* Skills */}
-      <div className="rounded-xl bg-white p-6 shadow-sm space-y-6">
+      <div className="space-y-6">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h3 className="font-syne text-lg font-semibold text-midnight">
@@ -514,19 +481,18 @@ export default function Step2Requirements({
               Choose a category, pick a skill, and it is added directly to the job table.
             </p>
           </div>
-
           <button
             type="button"
             onClick={() => setIsLibraryOpen(true)}
             className="inline-flex items-center gap-2 rounded-full border border-slate/20 px-3 py-1.5 text-xs font-semibold text-slate hover:border-primary/30 hover:text-midnight"
           >
-            <Library className="h-3.5 w-3.5" /> Manage Skill Library
+            <Library className="h-3.5 w-3.5" /> Manage skill library
           </button>
         </div>
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="skillCategory">Category</Label>
               <Select
                 value={selectedCategory}
@@ -535,7 +501,7 @@ export default function Step2Requirements({
                   setSelectedSkillId("");
                 }}
               >
-                <SelectTrigger id="skillCategory" className="w-full">
+                <SelectTrigger id="skillCategory" className={`${FIELD_HEIGHT} w-full`}>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -548,15 +514,19 @@ export default function Step2Requirements({
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="skillName">Skill</Label>
               <Select
                 value={selectedSkillId}
                 onValueChange={addSelectedSkill}
                 disabled={!selectedCategory || filteredSkillLibrary.length === 0}
               >
-                <SelectTrigger id="skillName" className="w-full">
-                  <SelectValue placeholder={selectedCategory ? "Select skill" : "Pick a category first"} />
+                <SelectTrigger id="skillName" className={`${FIELD_HEIGHT} w-full`}>
+                  <SelectValue
+                    placeholder={
+                      selectedCategory ? "Select skill" : "Pick a category first"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredSkillLibrary.map((skill) => (
@@ -568,13 +538,15 @@ export default function Step2Requirements({
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="skillImportance">Importance</Label>
               <Select
                 value={skillImportance}
-                onValueChange={(val) => setSkillImportance(val as SkillImportance)}
+                onValueChange={(val) =>
+                  setSkillImportance(val as SkillImportance)
+                }
               >
-                <SelectTrigger id="skillImportance" className="w-full">
+                <SelectTrigger id="skillImportance" className={`${FIELD_HEIGHT} w-full`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -587,9 +559,9 @@ export default function Step2Requirements({
               </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="skillWeight">Weight: {skillWeight}</Label>
-              <div className="flex items-center gap-3 h-11 rounded-lg border border-slate/20 px-3">
+              <div className={`${FIELD_HEIGHT} flex items-center gap-3 rounded-lg border border-slate/20 px-3`}>
                 <input
                   id="skillWeight"
                   type="range"
@@ -629,8 +601,10 @@ export default function Step2Requirements({
                   </thead>
                   <tbody className="divide-y divide-slate/10">
                     {selectedSkills.map((skill) => (
-                      <tr key={skill.skillId} className="align-top">
-                        <td className="px-4 py-3 font-medium text-midnight">{skill.name}</td>
+                      <tr key={skill.skillId} className="align-middle">
+                        <td className="px-4 py-3 font-medium text-midnight">
+                          {skill.name}
+                        </td>
                         <td className="px-4 py-3 text-slate">{skill.category}</td>
                         <td className="px-4 py-3">
                           <Select
@@ -641,7 +615,7 @@ export default function Step2Requirements({
                               })
                             }
                           >
-                            <SelectTrigger className="h-9 w-[150px]">
+                            <SelectTrigger className="!h-9 box-border w-[150px]">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -660,9 +634,9 @@ export default function Step2Requirements({
                               min={1}
                               max={100}
                               value={skill.weight}
-                              onChange={(event) =>
+                              onChange={(e) =>
                                 updateSelectedSkill(skill.skillId, {
-                                  weight: Number(event.target.value),
+                                  weight: Number(e.target.value),
                                 })
                               }
                               className="w-28 accent-primary"
@@ -691,53 +665,13 @@ export default function Step2Requirements({
         </div>
       </div>
 
+      <div className="border-t border-slate/10" />
+
       {/* Job Description */}
-      <div className="rounded-xl bg-white p-6 shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-syne text-lg font-semibold text-midnight">
-            Job Description <span className="text-red-500">*</span>
-          </h3>
-          {/* <button
-            type="button"
-            onClick={generateDescription}
-            disabled={isGeneratingJD}
-            className="inline-flex items-center gap-2 rounded-lg bg-cyan px-3 py-2 text-sm font-semibold text-white hover:bg-cyan/90 disabled:opacity-60 transition"
-          >
-            <Sparkles className="h-4 w-4" />
-            {isGeneratingJD ? "Generating..." : "Generate with AI"}
-          </button> */}
-        </div>
-
-        {/* <div className="flex flex-wrap gap-2">
-          {[
-            {
-              icon: <Bold className="h-4 w-4" />,
-              action: (s: string) => `**${s}**`,
-            },
-            {
-              icon: <Italic className="h-4 w-4" />,
-              action: (s: string) => `*${s}*`,
-            },
-            {
-              icon: <List className="h-4 w-4" />,
-              action: (s: string) => `- ${s}`,
-            },
-            {
-              icon: <ListOrdered className="h-4 w-4" />,
-              action: (s: string) => `1. ${s}`,
-            },
-          ].map((btn, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => applyTextFormat(btn.action)}
-              className="rounded-md border border-slate/20 p-2 text-slate hover:bg-surface transition"
-            >
-              {btn.icon}
-            </button>
-          ))}
-        </div> */}
-
+      <div className="space-y-3">
+        <h3 className="font-syne text-lg font-semibold text-midnight">
+          Job description <span className="text-red-500">*</span>
+        </h3>
         <textarea
           ref={descriptionRef}
           value={data.jobDescription}
@@ -753,16 +687,18 @@ export default function Step2Requirements({
               : "border-slate/25 focus:border-primary focus:ring-primary/20"
           }`}
         />
-        <div className="flex justify-between items-start">
+        <div className="flex items-start justify-between">
           <FieldError message={descriptionErr} />
-          <p className="text-xs text-muted-foreground ml-auto">
+          <p className="ml-auto text-xs text-muted-foreground">
             {data.jobDescription.length}/5000
           </p>
         </div>
       </div>
 
+      <div className="border-t border-slate/10" />
+
       {/* Responsibilities */}
-      <div className="rounded-xl bg-white p-6 shadow-sm space-y-3">
+      <div className="space-y-3">
         <h3 className="font-syne text-lg font-semibold text-midnight">
           Responsibilities
         </h3>
@@ -778,7 +714,7 @@ export default function Step2Requirements({
       <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Skill Library</DialogTitle>
+            <DialogTitle>Skill library</DialogTitle>
             <DialogDescription>
               Create, rename, or remove skills available across all job posts.
             </DialogDescription>
@@ -797,22 +733,24 @@ export default function Step2Requirements({
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="newSkillName">New skill name</Label>
                 <Input
                   id="newSkillName"
                   value={librarySkillName}
-                  onChange={(event) => setLibrarySkillName(event.target.value)}
+                  onChange={(e) => setLibrarySkillName(e.target.value)}
                   placeholder="e.g. NestJS"
+                  className={`${FIELD_HEIGHT} py-0`}
                 />
               </div>
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="newSkillCategory">Category</Label>
                 <Input
                   id="newSkillCategory"
                   value={librarySkillCategory}
-                  onChange={(event) => setLibrarySkillCategory(event.target.value)}
+                  onChange={(e) => setLibrarySkillCategory(e.target.value)}
                   placeholder="e.g. backend"
+                  className={`${FIELD_HEIGHT} py-0`}
                 />
               </div>
             </div>
@@ -820,34 +758,38 @@ export default function Step2Requirements({
             <button
               type="button"
               onClick={() => void createLibrarySkill()}
-              disabled={skillLibraryLoading || !librarySkillName.trim() || !librarySkillCategory.trim()}
+              disabled={
+                skillLibraryLoading ||
+                !librarySkillName.trim() ||
+                !librarySkillCategory.trim()
+              }
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="h-4 w-4" /> Add skill to library
             </button>
 
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="skillSearch">Search library</Label>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate" />
                 <Input
                   id="skillSearch"
                   value={skillSearch}
-                  onChange={(event) => setSkillSearch(event.target.value)}
+                  onChange={(e) => setSkillSearch(e.target.value)}
                   placeholder="Search by skill or category"
-                  className="pl-9"
+                  className={`${FIELD_HEIGHT} py-0 pl-9`}
                 />
               </div>
             </div>
 
             {(skillLibraryError || skillLibraryStatus) && (
               <div className="space-y-1 rounded-lg border border-slate/15 bg-white px-3 py-2 text-xs">
-                {skillLibraryError ? (
+                {skillLibraryError && (
                   <p className="text-danger">{skillLibraryError}</p>
-                ) : null}
-                {skillLibraryStatus ? (
+                )}
+                {skillLibraryStatus && (
                   <p className="text-success">{skillLibraryStatus}</p>
-                ) : null}
+                )}
               </div>
             )}
 
@@ -862,34 +804,42 @@ export default function Step2Requirements({
                 </div>
               ) : (
                 filteredSkillLibrary.map((skill) => {
-                  const draft =
-                    editingDrafts[skill.id] ?? { name: skill.name, category: skill.category };
+                  const draft = editingDrafts[skill.id] ?? {
+                    name: skill.name,
+                    category: skill.category,
+                  };
                   const isEditing = editingSkillId === skill.id;
 
                   return (
-                    <div key={skill.id} className="rounded-lg border border-slate/15 bg-white p-3 shadow-sm">
+                    <div
+                      key={skill.id}
+                      className="rounded-lg border border-slate/15 bg-white p-3 shadow-sm"
+                    >
                       <div className="grid gap-2 sm:grid-cols-[1fr,0.9fr]">
                         <Input
                           value={draft.name}
-                          onChange={(event) =>
+                          onChange={(e) =>
                             setEditingDrafts((prev) => ({
                               ...prev,
-                              [skill.id]: { ...draft, name: event.target.value },
+                              [skill.id]: { ...draft, name: e.target.value },
                             }))
                           }
                           onFocus={() => setEditingSkillId(skill.id)}
-                          className="h-10"
+                          className={`${FIELD_HEIGHT} py-0`}
                         />
                         <Input
                           value={draft.category}
-                          onChange={(event) =>
+                          onChange={(e) =>
                             setEditingDrafts((prev) => ({
                               ...prev,
-                              [skill.id]: { ...draft, category: event.target.value },
+                              [skill.id]: {
+                                ...draft,
+                                category: e.target.value,
+                              },
                             }))
                           }
                           onFocus={() => setEditingSkillId(skill.id)}
-                          className="h-10"
+                          className={`${FIELD_HEIGHT} py-0`}
                         />
                       </div>
                       <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate">
@@ -914,11 +864,11 @@ export default function Step2Requirements({
                           >
                             <Trash2 className="h-3.5 w-3.5" /> Delete
                           </button>
-                          {isEditing ? (
+                          {isEditing && (
                             <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
                               Editing
                             </span>
-                          ) : null}
+                          )}
                         </div>
                       </div>
                     </div>

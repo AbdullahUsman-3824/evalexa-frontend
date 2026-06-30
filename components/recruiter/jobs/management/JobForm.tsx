@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import StepIndicator from "@/components/recruiter/jobs/management/StepIndicator";
 import Step1BasicInfo from "@/components/recruiter/jobs/management/Step1BasicInfo";
 import Step2Requirements from "@/components/recruiter/jobs/management/Step2Requirements";
@@ -124,10 +125,8 @@ function mapWorkModel(
 
 function formatDateForInput(value?: string) {
   if (!value) return "";
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-
   return date.toISOString().split("T")[0];
 }
 
@@ -268,29 +267,24 @@ export default function JobForm({ mode, data }: JobFormProps) {
       setSubmitError("Job title is required.");
       return;
     }
-
     if (!formData.jobDescription.trim()) {
       setSubmitError("Job description is required.");
       return;
     }
-
     if (!formData.applicationDeadline) {
       setSubmitError("Application deadline is required.");
       return;
     }
-
     if (!formData.salaryMin || !formData.salaryMax) {
       setSubmitError("Salary range is required.");
       return;
     }
-
     if (Number(formData.salaryMin) > Number(formData.salaryMax)) {
       setSubmitError(
         "Minimum salary must be less than or equal to maximum salary.",
       );
       return;
     }
-
     if (formData.skills.length === 0) {
       setSubmitError("Add at least one skill before publishing.");
       return;
@@ -362,9 +356,11 @@ export default function JobForm({ mode, data }: JobFormProps) {
   return (
     <div className="p-6 text-midnight">
       <div className="mx-auto max-w-7xl space-y-6">
+
+        {/* Header */}
         <div>
           <h1 className="font-syne text-2xl font-bold text-midnight">
-            {mode === "edit" ? "Edit Job Post" : "Create Job Post"}
+            {mode === "edit" ? "Edit job post" : "Create job post"}
           </h1>
           <p className="text-slate">
             {mode === "edit"
@@ -373,8 +369,10 @@ export default function JobForm({ mode, data }: JobFormProps) {
           </p>
         </div>
 
+        {/* Step indicator */}
         <StepIndicator currentStep={currentStep} />
 
+        {/* Step content */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -387,35 +385,50 @@ export default function JobForm({ mode, data }: JobFormProps) {
           </motion.div>
         </AnimatePresence>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm">
+        {/* Navigation */}
+        <div className="flex items-center justify-between">
+          {/* Left: Save as draft */}
           <button
             type="button"
-            disabled={currentStep === 1}
-            onClick={() =>
-              setCurrentStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 4)
-            }
-            className="rounded-lg border border-slate/25 px-4 py-2 text-sm font-semibold text-midnight disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => void submitJob("DRAFT")}
+            disabled={isSubmitting}
+            className="rounded-lg border border-slate/25 px-4 py-2 text-sm font-semibold text-midnight hover:bg-slate/5 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Previous
+            Save as draft
           </button>
 
-          <div className="text-sm text-slate">
-            Step{" "}
-            <span className="font-semibold text-midnight">{currentStep}</span>{" "}
-            of 4
+          {/* Right: Back + Continue */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={currentStep === 1}
+              onClick={() =>
+                setCurrentStep(
+                  (prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 4,
+                )
+              }
+              className="flex w-28 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back
+            </button>
+
+            <button
+              type="button"
+              disabled={currentStep === 4}
+              onClick={() =>
+                setCurrentStep(
+                  (prev) => Math.min(4, prev + 1) as 1 | 2 | 3 | 4,
+                )
+              }
+              className="flex w-28 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Continue
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
-
-          <button
-            type="button"
-            disabled={currentStep === 4}
-            onClick={() =>
-              setCurrentStep((prev) => Math.min(4, prev + 1) as 1 | 2 | 3 | 4)
-            }
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Continue
-          </button>
         </div>
+
       </div>
     </div>
   );

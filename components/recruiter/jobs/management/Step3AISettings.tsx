@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, WandSparkles, BrainCircuit } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import type { JobPostFormData } from "./types";
 
 interface Step3AISettingsProps {
@@ -90,9 +90,6 @@ export default function Step3AISettings({
             <h2 className="font-syne text-xl font-semibold text-midnight">
               AI configuration
             </h2>
-            <p className="text-sm text-slate">
-              These options are passed to the backend as job aiConfig.
-            </p>
           </div>
         </div>
       </div>
@@ -118,32 +115,6 @@ export default function Step3AISettings({
           onCountChange={(value) => onChange("interviewSelectionCount", value)}
           accent="cyan"
         />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-xl border border-slate/15 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <WandSparkles className="h-5 w-5 text-cyan" />
-            <div>
-              <p className="font-semibold text-midnight">What gets sent</p>
-              <p className="text-sm text-slate">
-                Only the backend-supported config is included in the create payload.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-slate/15 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <BrainCircuit className="h-5 w-5 text-primary" />
-            <div>
-              <p className="font-semibold text-midnight">Suggested defaults</p>
-              <p className="text-sm text-slate">
-                Start with 20 resumes and 5 interview invites, then tune later.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

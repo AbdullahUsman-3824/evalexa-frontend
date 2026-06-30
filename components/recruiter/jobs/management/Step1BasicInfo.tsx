@@ -33,11 +33,7 @@ const DEPARTMENTS = [
   "Other",
 ];
 
-const JOB_TYPES: JobType[] = [
-  "Full-time",
-  "Part-time",
-  "Contract",
-];
+const JOB_TYPES: JobType[] = ["Full-time", "Part-time", "Contract"];
 
 const WORK_MODES: WorkMode[] = ["On-site", "Remote", "Hybrid"];
 
@@ -83,30 +79,30 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
   }
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm space-y-6 text-midnight">
+    <div className="rounded-xl bg-white p-6 shadow-sm flex flex-col gap-5 text-midnight">
 
       {/* Job Title */}
-      <div className="space-y-1.5">
-        <FieldLabel htmlFor="jobTitle">Job Title</FieldLabel>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <FieldLabel htmlFor="jobTitle">Job title</FieldLabel>
+          <span className="text-xs text-muted-foreground">
+            {data.jobTitle.length}/80
+          </span>
+        </div>
         <Input
           id="jobTitle"
           value={data.jobTitle}
           onChange={(e) => onChange("jobTitle", e.target.value.slice(0, 80))}
           onBlur={() => touch("jobTitle")}
           placeholder="e.g. Senior Frontend Developer"
-          className={err("jobTitle") ? "border-red-400 focus-visible:ring-red-300" : ""}
+          className={`h-10 ${err("jobTitle") ? "border-red-400 focus-visible:ring-red-300" : ""}`}
         />
-        <div className="flex justify-between">
-          <FieldError message={err("jobTitle")} />
-          <p className="text-xs text-muted-foreground ml-auto">
-            {data.jobTitle.length}/80
-          </p>
-        </div>
+        <FieldError message={err("jobTitle")} />
       </div>
 
       {/* Department + Location */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="flex flex-col justify-end space-y-1.5">
+        <div className="flex flex-col gap-1.5">
           <FieldLabel htmlFor="department">Department</FieldLabel>
           <Select
             value={data.department}
@@ -117,7 +113,7 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
           >
             <SelectTrigger
               id="department"
-              className={`w-full ${err("department") ? "border-red-400 focus:ring-red-300" : ""}`}
+              className={`h-10 w-full ${err("department") ? "border-red-400 focus:ring-red-300" : ""}`}
             >
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
@@ -131,7 +127,7 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
         </div>
 
         {data.workMode !== "Remote" ? (
-          <div className="flex flex-col justify-end space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="location">Location</FieldLabel>
             <Input
               id="location"
@@ -139,7 +135,7 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
               onChange={(e) => onChange("location", e.target.value)}
               onBlur={() => touch("location")}
               placeholder="City, country"
-              className={err("location") ? "border-red-400 focus-visible:ring-red-300" : ""}
+              className={`h-10 ${err("location") ? "border-red-400 focus-visible:ring-red-300" : ""}`}
             />
             <FieldError message={err("location")} />
           </div>
@@ -150,8 +146,8 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
 
       {/* Job Type + Work Mode */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="flex flex-col justify-end space-y-1.5">
-          <FieldLabel htmlFor="jobType">Job Type</FieldLabel>
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel htmlFor="jobType">Job type</FieldLabel>
           <Select
             value={data.jobType}
             onValueChange={(val) => {
@@ -161,7 +157,7 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
           >
             <SelectTrigger
               id="jobType"
-              className={`w-full ${err("jobType") ? "border-red-400 focus:ring-red-300" : ""}`}
+              className={`h-10 w-full ${err("jobType") ? "border-red-400 focus:ring-red-300" : ""}`}
             >
               <SelectValue placeholder="Select job type" />
             </SelectTrigger>
@@ -174,8 +170,8 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
           <FieldError message={err("jobType")} />
         </div>
 
-        <div className="flex flex-col justify-end space-y-1.5">
-          <FieldLabel htmlFor="workMode">Work Mode</FieldLabel>
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel htmlFor="workMode">Work mode</FieldLabel>
           <Select
             value={data.workMode}
             onValueChange={(val) => {
@@ -185,7 +181,7 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
           >
             <SelectTrigger
               id="workMode"
-              className={`w-full ${err("workMode") ? "border-red-400 focus:ring-red-300" : ""}`}
+              className={`h-10 w-full ${err("workMode") ? "border-red-400 focus:ring-red-300" : ""}`}
             >
               <SelectValue placeholder="Select work mode" />
             </SelectTrigger>
@@ -199,17 +195,17 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
         </div>
       </div>
 
-      {/* Application Deadline + Urgent toggle */}
+      {/* Application Deadline */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="flex flex-col justify-end space-y-1.5">
-          <FieldLabel htmlFor="deadline">Application Deadline</FieldLabel>
+        <div className="flex flex-col gap-1.5">
+          <FieldLabel htmlFor="deadline">Application deadline</FieldLabel>
           <Input
             id="deadline"
             type="date"
             value={data.applicationDeadline}
             onChange={(e) => onChange("applicationDeadline", e.target.value)}
             onBlur={() => touch("applicationDeadline")}
-            className={err("applicationDeadline") ? "border-red-400 focus-visible:ring-red-300" : ""}
+            className={`h-10 ${err("applicationDeadline") ? "border-red-400 focus-visible:ring-red-300" : ""}`}
           />
           <FieldError message={err("applicationDeadline")} />
         </div>
