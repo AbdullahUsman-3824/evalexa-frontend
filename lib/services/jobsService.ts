@@ -9,16 +9,24 @@ export type BackendExperienceLevel = "JUNIOR" | "MID" | "SENIOR" | "LEAD";
 export type BackendWorkModel = "ONSITE" | "REMOTE" | "HYBRID";
 export type BackendJobStatus = "OPEN" | "CLOSED" | "DRAFT";
 export type BackendSkillImportance = "REQUIRED" | "PREFERRED";
+export type BackendEducationLevel =
+  | "HIGH_SCHOOL"
+  | "BACHELOR"
+  | "MASTER"
+  | "PHD"
+  | "ANY";
+export type BackendCurrency = "PKR" | "USD" | "EUR";
+export type BackendSalaryPeriod = "MONTHLY" | "YEARLY";
 
 export type JobSortBy = "newest" | "deadline";
 
 export interface JobSkillRecord {
   jobId: string;
-  skillId: number;
+  skillId: string;
   importance: BackendSkillImportance;
   weight: number;
   skill: {
-    id: number;
+    id: string;
     name: string;
     category: string;
   };
@@ -86,37 +94,55 @@ export interface JobQuery {
   sortBy?: JobSortBy;
 }
 
-export interface CreateJobSkillPayload {
+export interface SkillRecord {
+  id: string;
   name: string;
   category: string;
+}
+
+export interface CreateJobSkillPayload {
+  skillId?: string;
+  name?: string;
+  category?: string;
   importance: BackendSkillImportance;
   weight: number;
+}
+
+export interface CreateJobAiConfigPayload {
+  enableAutoShortlist: boolean;
+  enableAiInterview: boolean;
+  resumeSelectionCount: number;
+  interviewSelectionCount: number;
+  minMatchScore?: number;
+  autoShortlistThreshold?: number;
+  aiInterviewThreshold?: number;
 }
 
 export interface CreateJobPayload {
   title: string;
   description: string;
+  department: string;
   jobType: BackendJobType;
   experienceLevel: BackendExperienceLevel;
-  salaryMin: number;
-  salaryMax: number;
+  educationLevel?: BackendEducationLevel;
+  salary: {
+    min: number;
+    max: number;
+    currency: BackendCurrency;
+    period: BackendSalaryPeriod;
+  };
   location: string;
   workModel: BackendWorkModel;
   status?: BackendJobStatus;
   applicationDeadline: string;
   skills: CreateJobSkillPayload[];
-  aiConfig: {
-    minMatchScore: number;
-    autoShortlistThreshold: number;
-    enableAutoShortlist: boolean;
-    enableAiInterview: boolean;
-    aiInterviewThreshold: number;
-  };
+  responsibilities: string;
+  aiConfig: CreateJobAiConfigPayload;
 }
 
-export interface UpdateJobPayload extends Partial<CreateJobPayload> {
+export interface UpdateJobPayload extends Omit<Partial<CreateJobPayload>, "aiConfig"> {
   skills?: CreateJobSkillPayload[];
-  aiConfig?: CreateJobPayload["aiConfig"];
+  aiConfig?: Partial<CreateJobAiConfigPayload>;
 }
 /* Application types */
 export type ApplicationStatus =
@@ -307,6 +333,58 @@ export async function getJob(id: string): Promise<JobRecord> {
 
 export async function getJobTitles(): Promise<JobTitleRecord[]> {
   return apiRequest<JobTitleRecord[]>("/jobs/titles", {}, true);
+}
+
+export async function getSkills(query?: {
+  category?: string;
+  search?: string;
+}): Promise<SkillRecord[]> {
+  const params = new URLSearchParams();
+  if (query?.category?.trim()) params.set("category", query.category.trim());
+  if (query?.search?.trim()) params.set("search", query.search.trim());
+
+  const queryString = params.toString();
+  return apiRequest<SkillRecord[]>(
+    `/skills${queryString ? `?${queryString}` : ""}`,
+    {},
+    true,
+  );
+}
+
+export async function getSkillCategories(): Promise<string[]> {
+  return apiRequest<string[]>("/skills/categories", {}, true);
+}
+
+export async function createSkill(payload: {
+  name: string;
+  category: string;
+}): Promise<SkillRecord> {
+  return apiRequest<SkillRecord>(
+    "/skills",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    true,
+  );
+}
+
+export async function updateSkill(
+  id: string,
+  payload: Partial<Pick<SkillRecord, "name" | "category">>,
+): Promise<SkillRecord> {
+  return apiRequest<SkillRecord>(
+    `/skills/${id}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+    true,
+  );
+}
+
+export async function deleteSkill(id: string): Promise<void> {
+  return apiRequest<void>(`/skills/${id}`, { method: "DELETE" }, true);
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<JobRecord> {

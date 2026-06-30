@@ -43,9 +43,7 @@ const pageTitles: Record<string, string> = {
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(
-    () => getStoredUser() ?? null,
-  );
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(null);
   const [companyName, setCompanyName] = useState<string>("Company");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -54,7 +52,11 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const hasUnreadNotifications = true; // Replace with actual logic
 
   useEffect(() => {
-    // Fetch fresh profile from API (stored user already used as initial state)
+    const rehydrateTimer = window.setTimeout(() => {
+      setAccountUser(getStoredUser());
+    }, 0);
+
+    // Fetch fresh profile from API.
     void getProfile()
       .then((profile) => {
         setAccountUser(profile);
@@ -73,6 +75,10 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
       .catch(() => {
         // Keep default company name if fetch fails
       });
+
+    return () => {
+      window.clearTimeout(rehydrateTimer);
+    };
   }, []);
 
   const accountName = useMemo(() => {

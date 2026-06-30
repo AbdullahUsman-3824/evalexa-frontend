@@ -13,6 +13,13 @@ interface Step4ReviewProps {
   error?: string | null;
 }
 
+function capitalize(value: string) {
+  return value
+    .split(/\s+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export default function Step4Review({
   data,
   onEditStep,
@@ -21,6 +28,18 @@ export default function Step4Review({
   isSubmitting = false,
   error = null,
 }: Step4ReviewProps) {
+  const selectedSkills = data.skills ?? [];
+  const legacySkills = data.requiredSkills ?? [];
+  const responsibilitiesText = typeof data.responsibilities === "string"
+    ? data.responsibilities
+    : Array.isArray(data.responsibilities)
+      ? data.responsibilities.join("\n")
+      : "";
+  const enableAutoShortlist = data.enableAutoShortlist ?? data.autoShortlistEnabled ?? false;
+  const enableAiInterview = data.enableAiInterview ?? data.aiInterviewEnabled ?? false;
+  const resumeSelectionCount = data.resumeSelectionCount ?? 20;
+  const interviewSelectionCount = data.interviewSelectionCount ?? 5;
+
   const formattedSalary =
     data.salaryMin && data.salaryMax
       ? `${data.currency} ${data.salaryMin} - ${data.salaryMax} / ${data.salaryPer}`
@@ -85,70 +104,100 @@ export default function Step4Review({
             <Edit3 className="h-4 w-4" /> Edit
           </button>
         </div>
-        <div className="grid gap-2 text-sm text-midnight sm:grid-cols-2">
+        <div className="grid gap-2 text-sm text-midnight sm:grid-cols-2 lg:grid-cols-3">
           <p>
             <span className="text-slate">Salary:</span> {formattedSalary}
           </p>
           <p>
-            <span className="text-slate">Experience:</span>{" "}
-            {data.experienceLevel}
+            <span className="text-slate">Experience:</span> {data.experienceLevel}
           </p>
           <p>
-            <span className="text-slate">Education:</span>{" "}
-            {data.educationRequirement}
+            <span className="text-slate">Education:</span> {data.educationRequirement}
           </p>
           <p>
-            <span className="text-slate">Openings:</span> {data.openings}
+            <span className="text-slate">Skills selected:</span> {selectedSkills.length}
           </p>
         </div>
-        <div className="mt-4">
-          <p className="mb-1 text-sm font-medium text-midnight">
-            Required skills
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {data.requiredSkills.map((skill) => (
-              <span
-                key={skill}
-                className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
-              >
-                {skill}
-              </span>
-            ))}
+
+        <div className="mt-5 space-y-3">
+          <div>
+            <p className="mb-2 text-sm font-medium text-midnight">Selected skills</p>
+            {selectedSkills.length > 0 ? (
+              <div className="overflow-hidden rounded-lg border border-slate/15">
+                <table className="min-w-full divide-y divide-slate/10 text-sm">
+                  <thead className="bg-surface text-left text-xs uppercase tracking-[0.14em] text-slate">
+                    <tr>
+                      <th className="px-4 py-3">Skill</th>
+                      <th className="px-4 py-3">Category</th>
+                      <th className="px-4 py-3">Importance</th>
+                      <th className="px-4 py-3">Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate/10 bg-white">
+                    {selectedSkills.map((skill) => (
+                      <tr key={skill.skillId}>
+                        <td className="px-4 py-3 font-medium text-midnight">{skill.name}</td>
+                        <td className="px-4 py-3 text-slate">{capitalize(skill.category)}</td>
+                        <td className="px-4 py-3">
+                          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                            {skill.importance.toLowerCase()}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate">{skill.weight}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : legacySkills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {legacySkills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate">No skills selected yet.</p>
+            )}
           </div>
-        </div>
-        <div className="mt-3">
-          <p className="mb-1 text-sm font-medium text-midnight">
-            Nice-to-have skills
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {data.niceToHaveSkills.map((skill) => (
-              <span
-                key={skill}
-                className="rounded-full bg-slate/15 px-3 py-1 text-xs font-semibold text-slate"
-              >
-                {skill}
-              </span>
-            ))}
+
+          <div>
+            <p className="mb-1 text-sm font-medium text-midnight">Responsibilities</p>
+            {responsibilitiesText.trim() ? (
+              <ul className="list-disc space-y-1 pl-5 text-sm text-midnight">
+                {responsibilitiesText
+                  .split("\n")
+                  .filter((line) => line.trim())
+                  .map((line, index) => (
+                    <li key={`${line}-${index}`}>{line.replace(/^[-*]\s*/, "")}</li>
+                  ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate">No responsibilities provided.</p>
+            )}
           </div>
         </div>
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h3 className="mb-3 font-syne text-lg font-semibold text-midnight">
-          Description
-        </h3>
-        <div className="max-h-50 overflow-auto rounded-lg border border-slate/15 bg-surface p-3 text-sm text-midnight whitespace-pre-wrap">
-          {data.jobDescription || "No description provided."}
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-syne text-lg font-semibold text-midnight">
+            Description
+          </h3>
+          <button
+            type="button"
+            onClick={() => onEditStep(2)}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
+          >
+            <Edit3 className="h-4 w-4" /> Edit
+          </button>
         </div>
-        <div className="mt-4">
-          <p className="mb-2 text-sm font-medium text-midnight">
-            Responsibilities
-          </p>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-midnight">
-            {data.responsibilities.map((responsibility, idx) => (
-              <li key={`${responsibility}-${idx}`}>{responsibility}</li>
-            ))}
-          </ul>
+        <div className="max-h-56 overflow-auto rounded-lg border border-slate/15 bg-surface p-3 text-sm text-midnight whitespace-pre-wrap">
+          {data.jobDescription || "No description provided."}
         </div>
       </div>
 
@@ -165,25 +214,24 @@ export default function Step4Review({
             <Edit3 className="h-4 w-4" /> Edit
           </button>
         </div>
-        <div className="grid gap-2 text-sm text-midnight sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm text-midnight">
           <p>
-            <span className="text-slate">AI Screening:</span>{" "}
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-semibold ${data.aiScreeningEnabled ? "bg-success/10 text-success" : "bg-slate/15 text-slate"}`}
-            >
-              {data.aiScreeningEnabled ? "On" : "Off"}
+            <span className="text-slate">Auto-shortlist:</span>{" "}
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${enableAutoShortlist ? "bg-success/10 text-success" : "bg-slate/15 text-slate"}`}>
+              {enableAutoShortlist ? "On" : "Off"}
             </span>
           </p>
           <p>
-            <span className="text-slate">Min match:</span> {data.minMatchScore}%
+            <span className="text-slate">Resume selection:</span> {resumeSelectionCount}
           </p>
           <p>
-            <span className="text-slate">Auto-shortlist:</span>{" "}
-            {data.autoShortlistEnabled ? "On" : "Off"}
+            <span className="text-slate">AI interview:</span>{" "}
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${enableAiInterview ? "bg-success/10 text-success" : "bg-slate/15 text-slate"}`}>
+              {enableAiInterview ? "On" : "Off"}
+            </span>
           </p>
           <p>
-            <span className="text-slate">Screening questions:</span>{" "}
-            {data.screeningQuestions.length}
+            <span className="text-slate">Interview selection:</span> {interviewSelectionCount}
           </p>
         </div>
       </div>
