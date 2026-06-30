@@ -8,6 +8,9 @@ import {
   RefreshCw,
   Trash2,
   Library,
+  Check,
+  X,
+  ChevronDown,
 } from "lucide-react";
 import type {
   Currency,
@@ -69,10 +72,6 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   Lead: "Lead (8+ yrs)",
 };
 
-// Shared height class used by EVERY form control in this file so nothing drifts again.
-// !h-10  -> forces 2.5rem height, overriding any internal component defaults (py-2 etc.)
-// box-border -> border width is included in the height, so all controls measure identically
-// regardless of whether they use border vs border-2 etc.
 const FIELD_HEIGHT = "!h-10 box-border";
 
 export default function Step2Requirements({
@@ -98,6 +97,10 @@ export default function Step2Requirements({
   const [skillLibraryError, setSkillLibraryError] = useState<string | null>(null);
   const [skillLibraryStatus, setSkillLibraryStatus] = useState<string | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+
+  // Dialog-specific state
+  const [libraryFilterCategory, setLibraryFilterCategory] = useState<string>("__all__");
+  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -125,6 +128,31 @@ export default function Step2Requirements({
       return categoryMatches && searchMatches;
     });
   }, [skillLibrary, selectedCategory, skillSearch]);
+
+  // Skills visible in the dialog list (filtered by tab + search)
+  const dialogFilteredSkills = useMemo(() => {
+    const normalizedSearch = skillSearch.trim().toLowerCase();
+    return skillLibrary.filter((skill) => {
+      const categoryMatches =
+        libraryFilterCategory === "__all__" ||
+        skill.category === libraryFilterCategory;
+      const searchMatches =
+        !normalizedSearch ||
+        skill.name.toLowerCase().includes(normalizedSearch) ||
+        skill.category.toLowerCase().includes(normalizedSearch);
+      return categoryMatches && searchMatches;
+    });
+  }, [skillLibrary, libraryFilterCategory, skillSearch]);
+
+  // Group dialog skills by category
+  const groupedDialogSkills = useMemo(() => {
+    const groups: Record<string, SkillRecord[]> = {};
+    for (const skill of dialogFilteredSkills) {
+      if (!groups[skill.category]) groups[skill.category] = [];
+      groups[skill.category].push(skill);
+    }
+    return groups;
+  }, [dialogFilteredSkills]);
 
   useEffect(() => {
     let isActive = true;
@@ -313,6 +341,17 @@ export default function Step2Requirements({
       setSkillLibraryLoading(false);
     }
   };
+
+  const cancelEdit = (skillId: string) => {
+    setEditingSkillId(null);
+    setEditingDrafts((prev) => {
+      const next = { ...prev };
+      delete next[skillId];
+      return next;
+    });
+  };
+
+  const canAddSkill = librarySkillName.trim() && librarySkillCategory.trim();
 
   const salaryMinErr =
     touched.salaryMin && !data.salaryMin
@@ -542,9 +581,7 @@ export default function Step2Requirements({
               <Label htmlFor="skillImportance">Importance</Label>
               <Select
                 value={skillImportance}
-                onValueChange={(val) =>
-                  setSkillImportance(val as SkillImportance)
-                }
+                onValueChange={(val) => setSkillImportance(val as SkillImportance)}
               >
                 <SelectTrigger id="skillImportance" className={`${FIELD_HEIGHT} w-full`}>
                   <SelectValue />
@@ -710,171 +747,322 @@ export default function Step2Requirements({
         />
       </div>
 
-      {/* Skill Library Dialog */}
-      <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Skill library</DialogTitle>
-            <DialogDescription>
-              Create, rename, or remove skills available across all job posts.
-            </DialogDescription>
+      {/* ── Skill Library Dialog ─────────────────────────────────────── */}
+      <Dialog
+        open={isLibraryOpen}
+        onOpenChange={(open) => {
+          setIsLibraryOpen(open);
+          if (!open) {
+            setSkillSearch("");
+            setLibraryFilterCategory("__all__");
+            setEditingSkillId(null);
+            setIsAddFormOpen(false);
+            setSkillLibraryStatus(null);
+            setSkillLibraryError(null);
+          }
+        }}
+      >
+        {/*
+          Key fixes vs. the previous version:
+          - DialogContent is capped at 85vh and laid out as a column
+            (header / scroll body), so it can never grow taller than
+            the viewport regardless of how many skills are loaded.
+          - There is exactly ONE scroll container (the body), instead
+            of an inner max-h-[360px] list nested inside a dialog that
+            could also overflow — that's what produced the stray
+            scrollbar floating in the middle of the screen.
+          - The search bar + category tabs are sticky to the top of
+            that scroll area, so they stay visible while scrolling
+            through a long skill list.
+          - "Add new skill" is now a collapsible row instead of an
+            always-expanded card, which saves a good chunk of vertical
+            space for the actual list.
+        */}
+        <DialogContent className="flex max-h-[85vh] w-full max-w-2xl flex-col gap-0 overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b border-slate/10 px-6 py-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <DialogTitle>Skill library</DialogTitle>
+                <DialogDescription>
+                  Create, rename, or remove skills available across all job posts.
+                </DialogDescription>
+              </div>
+              <span className="shrink-0 rounded-full bg-slate/10 px-2.5 py-1 text-xs font-semibold text-slate">
+                {skillLibrary.length} skills
+              </span>
+            </div>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-end">
-              <button
-                type="button"
-                onClick={() => void refreshSkillLibrary()}
-                disabled={skillLibraryLoading}
-                className="inline-flex items-center gap-2 rounded-full border border-slate/20 px-3 py-1.5 text-xs font-semibold text-slate hover:border-primary/30 hover:text-midnight disabled:opacity-50"
-              >
-                <RefreshCw className="h-3.5 w-3.5" /> Refresh
-              </button>
-            </div>
+          {/* Single scrollable body — everything below lives in here */}
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+            <div className="space-y-4">
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="newSkillName">New skill name</Label>
-                <Input
-                  id="newSkillName"
-                  value={librarySkillName}
-                  onChange={(e) => setLibrarySkillName(e.target.value)}
-                  placeholder="e.g. NestJS"
-                  className={`${FIELD_HEIGHT} py-0`}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="newSkillCategory">Category</Label>
-                <Input
-                  id="newSkillCategory"
-                  value={librarySkillCategory}
-                  onChange={(e) => setLibrarySkillCategory(e.target.value)}
-                  placeholder="e.g. backend"
-                  className={`${FIELD_HEIGHT} py-0`}
-                />
-              </div>
-            </div>
+              {/* ── Add new skill (collapsible) ── */}
+              <div className="rounded-lg border border-slate/15">
+                <button
+                  type="button"
+                  onClick={() => setIsAddFormOpen((prev) => !prev)}
+                  className="flex w-full items-center justify-between px-4 py-3 text-left"
+                >
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-midnight">
+                    <Plus className="h-4 w-4 text-primary" /> Add new skill
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-slate transition-transform ${
+                      isAddFormOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-            <button
-              type="button"
-              onClick={() => void createLibrarySkill()}
-              disabled={
-                skillLibraryLoading ||
-                !librarySkillName.trim() ||
-                !librarySkillCategory.trim()
-              }
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Plus className="h-4 w-4" /> Add skill to library
-            </button>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="skillSearch">Search library</Label>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate" />
-                <Input
-                  id="skillSearch"
-                  value={skillSearch}
-                  onChange={(e) => setSkillSearch(e.target.value)}
-                  placeholder="Search by skill or category"
-                  className={`${FIELD_HEIGHT} py-0 pl-9`}
-                />
-              </div>
-            </div>
-
-            {(skillLibraryError || skillLibraryStatus) && (
-              <div className="space-y-1 rounded-lg border border-slate/15 bg-white px-3 py-2 text-xs">
-                {skillLibraryError && (
-                  <p className="text-danger">{skillLibraryError}</p>
-                )}
-                {skillLibraryStatus && (
-                  <p className="text-success">{skillLibraryStatus}</p>
-                )}
-              </div>
-            )}
-
-            <div className="max-h-[420px] space-y-2 overflow-auto pr-1">
-              {skillLibraryLoading && skillLibrary.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-slate/20 bg-white px-4 py-6 text-sm text-slate">
-                  Loading skills...
-                </div>
-              ) : filteredSkillLibrary.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-slate/20 bg-white px-4 py-6 text-sm text-slate">
-                  No skills found for this filter.
-                </div>
-              ) : (
-                filteredSkillLibrary.map((skill) => {
-                  const draft = editingDrafts[skill.id] ?? {
-                    name: skill.name,
-                    category: skill.category,
-                  };
-                  const isEditing = editingSkillId === skill.id;
-
-                  return (
-                    <div
-                      key={skill.id}
-                      className="rounded-lg border border-slate/15 bg-white p-3 shadow-sm"
-                    >
-                      <div className="grid gap-2 sm:grid-cols-[1fr,0.9fr]">
+                {isAddFormOpen && (
+                  <div className="space-y-3 border-t border-slate/10 bg-slate/5 p-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="newSkillName">Skill name</Label>
                         <Input
-                          value={draft.name}
-                          onChange={(e) =>
-                            setEditingDrafts((prev) => ({
-                              ...prev,
-                              [skill.id]: { ...draft, name: e.target.value },
-                            }))
-                          }
-                          onFocus={() => setEditingSkillId(skill.id)}
+                          id="newSkillName"
+                          value={librarySkillName}
+                          onChange={(e) => setLibrarySkillName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && canAddSkill) void createLibrarySkill();
+                          }}
+                          placeholder="e.g. NestJS"
                           className={`${FIELD_HEIGHT} py-0`}
-                        />
-                        <Input
-                          value={draft.category}
-                          onChange={(e) =>
-                            setEditingDrafts((prev) => ({
-                              ...prev,
-                              [skill.id]: {
-                                ...draft,
-                                category: e.target.value,
-                              },
-                            }))
-                          }
-                          onFocus={() => setEditingSkillId(skill.id)}
-                          className={`${FIELD_HEIGHT} py-0`}
+                          autoFocus
                         />
                       </div>
-                      <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate">
-                        <span>{skill.id}</span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingSkillId(skill.id);
-                              void saveLibrarySkill(skill.id);
-                            }}
-                            disabled={skillLibraryLoading}
-                            className="inline-flex items-center gap-1 rounded-full border border-primary/20 px-3 py-1.5 font-semibold text-primary hover:bg-primary/5 disabled:opacity-50"
-                          >
-                            <PencilLine className="h-3.5 w-3.5" /> Save
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void deleteLibrarySkill(skill.id)}
-                            disabled={skillLibraryLoading}
-                            className="inline-flex items-center gap-1 rounded-full border border-danger/20 px-3 py-1.5 font-semibold text-danger hover:bg-danger/5 disabled:opacity-50"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" /> Delete
-                          </button>
-                          {isEditing && (
-                            <span className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
-                              Editing
-                            </span>
-                          )}
-                        </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="newSkillCategory">Category</Label>
+                        <Input
+                          id="newSkillCategory"
+                          value={librarySkillCategory}
+                          onChange={(e) => setLibrarySkillCategory(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && canAddSkill) void createLibrarySkill();
+                          }}
+                          placeholder="e.g. Backend"
+                          className={`${FIELD_HEIGHT} py-0`}
+                        />
                       </div>
                     </div>
-                  );
-                })
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => void createLibrarySkill()}
+                        disabled={skillLibraryLoading || !canAddSkill}
+                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Plus className="h-4 w-4" /> Add skill
+                      </button>
+                      {!canAddSkill && (
+                        <p className="text-xs text-slate">
+                          Fill in both fields to add a skill.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Status / error banner ── */}
+              {(skillLibraryError ?? skillLibraryStatus) && (
+                <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium ${
+                  skillLibraryError
+                    ? "border-danger/20 bg-danger/5 text-danger"
+                    : "border-success/20 bg-success/5 text-success"
+                }`}>
+                  {skillLibraryError
+                    ? <X className="h-3.5 w-3.5 flex-shrink-0" />
+                    : <Check className="h-3.5 w-3.5 flex-shrink-0" />}
+                  {skillLibraryError ?? skillLibraryStatus}
+                </div>
               )}
+
+              {/* ── Sticky search + filter + refresh ── */}
+              <div className="sticky -top-5 z-10 -mx-6 space-y-3 bg-white px-6 pb-3 pt-1">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate" />
+                    <Input
+                      value={skillSearch}
+                      onChange={(e) => setSkillSearch(e.target.value)}
+                      placeholder="Search skills..."
+                      className={`${FIELD_HEIGHT} py-0 pl-9`}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void refreshSkillLibrary()}
+                    disabled={skillLibraryLoading}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate/20 px-3 py-2 text-xs font-semibold text-slate hover:border-primary/30 hover:text-midnight disabled:opacity-50"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${skillLibraryLoading ? "animate-spin" : ""}`} />
+                    Refresh
+                  </button>
+                </div>
+
+                {skillCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setLibraryFilterCategory("__all__")}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                        libraryFilterCategory === "__all__"
+                          ? "bg-primary text-white"
+                          : "border border-slate/20 text-slate hover:border-primary/30 hover:text-midnight"
+                      }`}
+                    >
+                      All
+                      <span className="ml-1 opacity-70">({skillLibrary.length})</span>
+                    </button>
+                    {skillCategories.map((cat) => {
+                      const count = skillLibrary.filter((s) => s.category === cat).length;
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setLibraryFilterCategory(cat)}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                            libraryFilterCategory === cat
+                              ? "bg-primary text-white"
+                              : "border border-slate/20 text-slate hover:border-primary/30 hover:text-midnight"
+                          }`}
+                        >
+                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          <span className="ml-1 opacity-70">({count})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* ── Skills list grouped by category ── */}
+              <div className="space-y-4">
+                {skillLibraryLoading && skillLibrary.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-slate/20 px-4 py-8 text-center text-sm text-slate">
+                    Loading skills...
+                  </div>
+                ) : Object.keys(groupedDialogSkills).length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-slate/20 px-4 py-8 text-center text-sm text-slate">
+                    No skills found.
+                  </div>
+                ) : (
+                  Object.entries(groupedDialogSkills).map(([category, skills]) => (
+                    <div key={category}>
+                      <div className="mb-1.5 flex items-center gap-2">
+                        <span className="text-xs font-semibold uppercase tracking-widest text-slate">
+                          {category.charAt(0).toUpperCase() + category.slice(1)}
+                        </span>
+                        <span className="rounded-full bg-slate/10 px-1.5 py-0.5 text-[10px] font-semibold text-slate">
+                          {skills.length}
+                        </span>
+                        <div className="h-px flex-1 bg-slate/10" />
+                      </div>
+
+                      <div className="space-y-1">
+                        {skills.map((skill) => {
+                          const isEditing = editingSkillId === skill.id;
+                          const draft = editingDrafts[skill.id] ?? {
+                            name: skill.name,
+                            category: skill.category,
+                          };
+
+                          return (
+                            <div
+                              key={skill.id}
+                              className={`group rounded-lg border transition ${
+                                isEditing
+                                  ? "border-primary/30 bg-primary/5"
+                                  : "border-slate/15 bg-white hover:border-slate/30"
+                              }`}
+                            >
+                              {isEditing ? (
+                                <div className="p-3 space-y-3">
+                                  <div className="grid gap-2 sm:grid-cols-[1fr,0.9fr]">
+                                    <Input
+                                      value={draft.name}
+                                      onChange={(e) =>
+                                        setEditingDrafts((prev) => ({
+                                          ...prev,
+                                          [skill.id]: { ...draft, name: e.target.value },
+                                        }))
+                                      }
+                                      placeholder="Skill name"
+                                      className={`${FIELD_HEIGHT} py-0`}
+                                      autoFocus
+                                    />
+                                    <Input
+                                      value={draft.category}
+                                      onChange={(e) =>
+                                        setEditingDrafts((prev) => ({
+                                          ...prev,
+                                          [skill.id]: { ...draft, category: e.target.value },
+                                        }))
+                                      }
+                                      placeholder="Category"
+                                      className={`${FIELD_HEIGHT} py-0`}
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => void saveLibrarySkill(skill.id)}
+                                      disabled={skillLibraryLoading}
+                                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+                                    >
+                                      <Check className="h-3.5 w-3.5" /> Save
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => cancelEdit(skill.id)}
+                                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate/20 px-3 py-1.5 text-xs font-semibold text-slate hover:bg-slate/5"
+                                    >
+                                      <X className="h-3.5 w-3.5" /> Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-between px-3 py-2.5">
+                                  <span className="text-sm font-medium text-midnight">
+                                    {skill.name}
+                                  </span>
+                                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingSkillId(skill.id);
+                                        setEditingDrafts((prev) => ({
+                                          ...prev,
+                                          [skill.id]: {
+                                            name: skill.name,
+                                            category: skill.category,
+                                          },
+                                        }));
+                                      }}
+                                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-slate hover:bg-slate/10 hover:text-midnight"
+                                    >
+                                      <PencilLine className="h-3.5 w-3.5" /> Edit
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => void deleteLibrarySkill(skill.id)}
+                                      disabled={skillLibraryLoading}
+                                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-danger hover:bg-danger/5 disabled:opacity-50"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </DialogContent>
