@@ -16,7 +16,7 @@ import {
   uploadPublicResume,
   type ResumeUploadResponse,
   type PublicJobApplicationPayload,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 
 export type JobDetailData = {
   jobId: string;

@@ -12,7 +12,7 @@ import {
   loginUser,
   resendVerificationOtp,
   verifyEmailOtp,
-} from "@/lib/services/authService";
+} from "@/lib/services/auth-service";
 
 const PENDING_SIGNUP_KEY = "pending_signup";
 const OTP_REGEX = /^\d{6}$/;

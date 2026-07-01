@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getStoredUser, getProfile } from "@/lib/services/authService";
-import { createCompany } from "@/lib/services/companyService";
+import { getStoredUser, getProfile } from "@/lib/services/auth-service";
+import { createCompany } from "@/lib/services/company-service";
 import FormInput from "@/components/ui/FormInput";
 import Toast from "@/components/ui/Toast";
 

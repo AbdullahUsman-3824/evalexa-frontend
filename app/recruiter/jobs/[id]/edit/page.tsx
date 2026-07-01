@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, TriangleAlert } from "lucide-react";
 import JobForm from "@/components/recruiter/jobs/management/JobForm";
-import { getJob, type JobRecord } from "@/lib/services/jobsService";
+import { getJob, type JobRecord } from "@/lib/services/jobs-service";
 
 export default function EditJobPage() {
   const params = useParams<{ id: string }>();

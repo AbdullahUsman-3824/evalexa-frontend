@@ -21,7 +21,7 @@ import {
   getJob,
   getJobs,
   type JobRecord,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 
 export function JobPreviewContent() {
   const searchParams = useSearchParams();

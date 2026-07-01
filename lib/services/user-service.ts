@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/services/apiClient";
+import { apiRequest } from "@/lib/services/api-client";
 
 export type UserProfile = {
   id: number;
@@ -38,21 +38,13 @@ export async function updateUser(
   id: number,
   payload: UpdateUserPayload,
 ): Promise<UserProfile> {
-  return apiRequest<UserProfile>(
-    `/users/${id}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    },
-    true, // withAuth
-  );
+  return apiRequest<UserProfile>(`/users/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
 
 /** Delete a user — requires JWT auth. */
 export async function deleteUser(id: number): Promise<UserProfile> {
-  return apiRequest<UserProfile>(
-    `/users/${id}`,
-    { method: "DELETE" },
-    true, // withAuth
-  );
+  return apiRequest<UserProfile>(`/users/${id}`, { method: "DELETE" });
 }

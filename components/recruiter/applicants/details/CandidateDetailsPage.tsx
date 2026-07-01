@@ -12,7 +12,7 @@ import BottomActionBar from "@/components/recruiter/applicants/details/BottomAct
 import {
   getCandidateDetails,
   type CandidateDetails,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 
 function statusTone(status: string) {
   if (status === "Rejected") return "bg-danger/10 text-danger";

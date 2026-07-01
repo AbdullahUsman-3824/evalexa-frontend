@@ -6,7 +6,7 @@ import { MapPin, Briefcase, Users, Zap } from "lucide-react";
 import {
   getPublicCompany,
   type PublicCompanyDetails,
-} from "@/lib/services/companyService";
+} from "@/lib/services/company-service";
 
 type PublicCompanyDetailsSectionProps = {
   companySlug: string;

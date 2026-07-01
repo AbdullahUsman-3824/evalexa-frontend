@@ -7,8 +7,8 @@ import {
   getProfile,
   getStoredUser,
   type AuthUser,
-} from "@/lib/services/authService";
-import { updateUser } from "@/lib/services/userService";
+} from "@/lib/services/auth-service";
+import { updateUser } from "@/lib/services/user-service";
 import Toast from "@/components/ui/Toast";
 
 type ToastState = {

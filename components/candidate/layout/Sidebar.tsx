@@ -18,7 +18,7 @@ import {
   LogOut,
   X,
 } from "lucide-react";
-import { logoutUser } from "@/lib/services/authService";
+import { logoutUser } from "@/lib/services/auth-service";
 
 interface SidebarProps {
   isOpen: boolean;

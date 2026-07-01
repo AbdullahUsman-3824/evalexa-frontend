@@ -8,7 +8,7 @@ import Link from "next/link";
 import FormInput from "@/components/ui/FormInput";
 import SocialLogin from "@/components/auth/SocialLogin";
 import Toast from "@/components/ui/Toast";
-import { loginUser } from "@/lib/services/authService";
+import { loginUser } from "@/lib/services/auth-service";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

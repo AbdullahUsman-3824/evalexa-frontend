@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import DangerCard from "@/components/candidate/settings/DangerCard";
-import { updateUser, deleteUser } from "@/lib/services/userService";
-import { getStoredUser, clearAuthSession } from "@/lib/services/authService";
+import { updateUser, deleteUser } from "@/lib/services/user-service";
+import { getStoredUser, clearAuthSession } from "@/lib/services/auth-service";
 import { useRouter } from "next/navigation";
 import Toast from "@/components/ui/Toast";
 
-type ToastState = { message: string; type: "success" | "error" | "info" } | null;
+type ToastState = {
+  message: string;
+  type: "success" | "error" | "info";
+} | null;
 
 export default function DangerZoneTab() {
   const [deleteText, setDeleteText] = useState("");
@@ -27,9 +30,13 @@ export default function DangerZoneTab() {
     setLoading(true);
     try {
       await updateUser(user.id, { isActive: false });
-      setToast({ message: "Account deactivated successfully.", type: "success" });
+      setToast({
+        message: "Account deactivated successfully.",
+        type: "success",
+      });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to deactivate account.";
+      const message =
+        err instanceof Error ? err.message : "Failed to deactivate account.";
       setToast({ message, type: "error" });
     } finally {
       setLoading(false);
@@ -45,7 +52,8 @@ export default function DangerZoneTab() {
       clearAuthSession();
       router.push("/");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to delete account.";
+      const message =
+        err instanceof Error ? err.message : "Failed to delete account.";
       setToast({ message, type: "error" });
       setConfirmAccountDelete(false);
     } finally {
@@ -143,9 +151,12 @@ export default function DangerZoneTab() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
             >
-              <h3 className="text-lg font-semibold text-danger">Final warning</h3>
+              <h3 className="text-lg font-semibold text-danger">
+                Final warning
+              </h3>
               <p className="mt-2 text-sm text-slate">
-                This will permanently delete your recruiter account and everything linked to it.
+                This will permanently delete your recruiter account and
+                everything linked to it.
               </p>
               <div className="mt-6 flex justify-end gap-2">
                 <button
@@ -171,4 +182,3 @@ export default function DangerZoneTab() {
     </div>
   );
 }
-

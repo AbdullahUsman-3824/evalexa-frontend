@@ -7,7 +7,7 @@ import { ArrowRight, Building2, MapPin } from "lucide-react";
 import {
   getPublicCompanies,
   type PublicCompany,
-} from "@/lib/services/companyService";
+} from "@/lib/services/company-service";
 
 function getCompanyInitials(company: PublicCompany): string {
   return company.name

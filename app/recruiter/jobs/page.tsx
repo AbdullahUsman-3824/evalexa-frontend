@@ -18,7 +18,7 @@ import {
   formatJobStatus,
   getJobs,
   type JobRecord,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 
 function getStatusCounts(jobs: JobRecord[]) {
   return {

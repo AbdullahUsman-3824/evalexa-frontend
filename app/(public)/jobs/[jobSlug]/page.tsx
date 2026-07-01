@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import JobOverviewSection from "@/components/public/jobs/apply/JobOverviewSection";
-import { getPublicJobBySlug } from "@/lib/services/jobsService";
+import { getPublicJobBySlug } from "@/lib/services/jobs-service";
 import JobApplicationForm, { type JobDetailData } from "./JobApplicationForm";
 
 export default function JobDetailPage() {

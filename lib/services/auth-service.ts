@@ -1,4 +1,4 @@
-import { AUTH_TOKEN_KEY, apiRequest } from "@/lib/services/apiClient";
+import { apiRequest } from "@/lib/services/api-client";
 
 const AUTH_USER_KEY = "user";
 
@@ -28,7 +28,6 @@ export type RegisterPayload = {
 };
 
 export type LoginResponse = {
-  access_token: string;
   user: AuthUser;
 };
 
@@ -51,6 +50,44 @@ type MessageResponse = {
   message?: string;
 };
 
+type AuthSession = {
+  user: AuthUser | null;
+  loading: boolean;
+};
+
+type AuthSessionListener = () => void;
+
+let authSession: AuthSession = {
+  user: getStoredUser(),
+  loading: true,
+};
+
+const authSessionListeners = new Set<AuthSessionListener>();
+
+function emitAuthSessionChange(): void {
+  for (const listener of authSessionListeners) {
+    listener();
+  }
+}
+
+function updateAuthSession(nextSession: Partial<AuthSession>): void {
+  authSession = { ...authSession, ...nextSession };
+  emitAuthSessionChange();
+}
+
+export function getAuthSessionSnapshot(): AuthSession {
+  return authSession;
+}
+
+export function subscribeAuthSession(
+  listener: AuthSessionListener,
+): () => void {
+  authSessionListeners.add(listener);
+  return () => {
+    authSessionListeners.delete(listener);
+  };
+}
+
 function normalizeAuthUser(user: AuthUser): AuthUser {
   const normalizedName = user.name?.trim();
   const normalizedFullName = user.fullName?.trim();
@@ -58,7 +95,6 @@ function normalizeAuthUser(user: AuthUser): AuthUser {
   if (normalizedFullName) {
     return {
       ...user,
-      // Keep UI display consistent by treating fullName as source of truth.
       name: normalizedFullName,
       fullName: normalizedFullName,
     };
@@ -75,13 +111,12 @@ function normalizeAuthUser(user: AuthUser): AuthUser {
   return user;
 }
 
-export function persistAuthSession(data: LoginResponse): void {
+export function persistAuthUser(user: AuthUser): void {
   if (typeof window === "undefined") {
     return;
   }
 
-  const normalizedUser = normalizeAuthUser(data.user);
-  localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+  const normalizedUser = normalizeAuthUser(user);
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(normalizedUser));
 }
 
@@ -90,8 +125,21 @@ export function clearAuthSession(): void {
     return;
   }
 
-  localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
+}
+
+export function setAuthSessionUser(user: AuthUser | null): void {
+  if (user) {
+    persistAuthUser(user);
+  } else {
+    clearAuthSession();
+  }
+
+  updateAuthSession({ user, loading: false });
+}
+
+export function setAuthSessionLoading(loading: boolean): void {
+  updateAuthSession({ loading });
 }
 
 export function getStoredUser(): AuthUser | null {
@@ -112,45 +160,9 @@ export function getStoredUser(): AuthUser | null {
   }
 }
 
-export function getAuthToken(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  return localStorage.getItem(AUTH_TOKEN_KEY);
-}
-
-function decodeJwtPayload(token: string): { sub?: number } | null {
-  const parts = token.split(".");
-  if (parts.length < 2) {
-    return null;
-  }
-
-  try {
-    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const paddedBase64 = base64.padEnd(
-      base64.length + ((4 - (base64.length % 4)) % 4),
-      "=",
-    );
-    return JSON.parse(atob(paddedBase64)) as { sub?: number };
-  } catch {
-    return null;
-  }
-}
-
 export function getStoredUserId(): number | null {
   const storedUser = getStoredUser();
-  if (storedUser?.id) {
-    return storedUser.id;
-  }
-
-  const token = getAuthToken();
-  if (!token) {
-    return null;
-  }
-
-  const payload = decodeJwtPayload(token);
-  return typeof payload?.sub === "number" ? payload.sub : null;
+  return storedUser?.id ?? null;
 }
 
 export async function registerUser(
@@ -162,14 +174,16 @@ export async function registerUser(
   });
 }
 
-export async function loginUser(payload: LoginPayload): Promise<LoginResponse> {
+export async function loginUser(payload: LoginPayload): Promise<AuthUser> {
   const data = await apiRequest<LoginResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 
-  persistAuthSession(data);
-  return data;
+  const normalizedUser = normalizeAuthUser(data.user);
+  persistAuthUser(normalizedUser);
+  updateAuthSession({ user: normalizedUser, loading: false });
+  return normalizedUser;
 }
 
 export async function verifyEmailOtp(
@@ -216,24 +230,19 @@ export async function resetPassword(
 }
 
 export async function logoutUser(): Promise<void> {
-  // Current backend has no /auth/logout endpoint; clear local auth state.
-  clearAuthSession();
+  try {
+    await apiRequest<MessageResponse>("/auth/logout", { method: "POST" });
+  } finally {
+    clearAuthSession();
+    updateAuthSession({ user: null, loading: false });
+  }
 }
 
 export async function getProfile(): Promise<AuthUser> {
-  const profile = await apiRequest<AuthUser>(
-    "/auth/session",
-    { method: "GET" },
-    true,
-  );
+  const profile = await apiRequest<AuthUser>("/auth/session", {
+    method: "GET",
+  });
   const normalizedProfile = normalizeAuthUser(profile);
-  const token = getAuthToken();
-  if (token) {
-    persistAuthSession({
-      access_token: token,
-      user: normalizedProfile,
-    });
-  }
-
+  persistAuthUser(normalizedProfile);
   return normalizedProfile;
 }

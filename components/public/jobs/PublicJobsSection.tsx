@@ -8,7 +8,7 @@ import {
   type PublicJob,
   type PublicJobsPagination,
   type PublicJobsQuery,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 
 const DEFAULT_LIMIT = 12;
 

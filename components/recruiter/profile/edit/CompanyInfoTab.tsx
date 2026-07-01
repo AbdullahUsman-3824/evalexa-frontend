@@ -3,21 +3,23 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { X, Plus, Upload } from "lucide-react";
-import { Company } from "@/lib/services/companyService";
+import { Company } from "@/lib/services/company-service";
 
 interface CompanyInfoTabProps {
   data: Partial<Company>;
   onChange: (newData: Partial<Company>) => void;
 }
 
-export default function CompanyInfoTab({ data, onChange }: CompanyInfoTabProps) {
+export default function CompanyInfoTab({
+  data,
+  onChange,
+}: CompanyInfoTabProps) {
   const [cultureTags, setCultureTags] = useState([
     "Remote Friendly",
     "Fast Growth",
     "Work-Life Balance",
   ]);
   const [newTag, setNewTag] = useState("");
-
 
   const handleAddTag = () => {
     if (newTag.trim() && cultureTags.length < 10) {
@@ -180,7 +182,9 @@ export default function CompanyInfoTab({ data, onChange }: CompanyInfoTabProps) 
           <p className="text-xs text-slate">
             Help candidates understand what makes your company unique
           </p>
-          <p className="text-xs text-slate">{(data.description || "").length}/500</p>
+          <p className="text-xs text-slate">
+            {(data.description || "").length}/500
+          </p>
         </div>
       </div>
 

@@ -18,7 +18,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import { logoutUser } from "@/lib/services/authService";
+import { logoutUser } from "@/lib/services/auth-service";
 
 interface NavItem {
   label: string;

@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
-import { getCompanies, Company } from "@/lib/services/companyService";
+import { getCompanies, Company } from "@/lib/services/company-service";
 
 export default function AboutSection() {
   const router = useRouter();

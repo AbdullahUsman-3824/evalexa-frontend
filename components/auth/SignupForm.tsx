@@ -19,7 +19,7 @@ import SocialLogin from "@/components/auth/SocialLogin";
 import Toast from "@/components/ui/Toast";
 import PasswordStrength from "@/components/auth/forgot-password/PasswordStrength";
 import PasswordRequirements from "@/components/auth/forgot-password/PasswordRequirements";
-import { registerUser } from "@/lib/services/authService";
+import { registerUser } from "@/lib/services/auth-service";
 
 type SignupErrors = {
   fullName: string;

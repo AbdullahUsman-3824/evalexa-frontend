@@ -20,7 +20,7 @@ import {
   formatJobType,
   formatRelativeDays,
   formatWorkModel,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 
 interface JobPostCardProps {
   job: JobRecord;

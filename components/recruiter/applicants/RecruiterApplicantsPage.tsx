@@ -16,7 +16,7 @@ import {
   getJobTitles,
   type Application,
   type JobTitleRecord,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 import type { ApplicantSortOption } from "@/components/recruiter/applicants/ApplicantFilters";
 
 function formatAppliedLabel(daysAgo: number): string {

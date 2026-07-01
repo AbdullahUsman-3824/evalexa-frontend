@@ -3,18 +3,11 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://evalexa-backend.vercel.app";
 
-export const AUTH_TOKEN_KEY = "access_token";
-
 type ApiErrorShape = {
   message?: string | string[];
   error?: string;
   statusCode?: number;
 };
-
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(AUTH_TOKEN_KEY);
-}
 
 export async function parseApiResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type") ?? "";
@@ -43,21 +36,14 @@ export async function parseApiResponse<T>(response: Response): Promise<T> {
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
-  withAuth = false,
 ): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
 
-  if (withAuth) {
-    const token = getAuthToken();
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-  }
-
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
+    credentials: "include", // cookie automatically attach/receive karega
   });
 
   return parseApiResponse<T>(response);

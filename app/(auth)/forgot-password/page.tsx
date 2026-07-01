@@ -10,7 +10,7 @@ import StepCheckEmail from "@/components/auth/forgot-password/StepCheckEmail";
 import StepResetPassword from "@/components/auth/forgot-password/StepResetPassword";
 import StepSuccess from "@/components/auth/forgot-password/StepSuccess";
 import Toast from "@/components/ui/Toast";
-import { forgotPassword, resetPassword } from "@/lib/services/authService";
+import { forgotPassword, resetPassword } from "@/lib/services/auth-service";
 
 function ForgotPasswordContent() {
   const searchParams = useSearchParams();

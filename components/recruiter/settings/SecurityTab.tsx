@@ -3,8 +3,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { MonitorSmartphone } from "lucide-react";
 import ToggleSwitch from "@/components/candidate/settings/ToggleSwitch";
-import { getStoredUser } from "@/lib/services/authService";
-import { updateUser } from "@/lib/services/userService";
+import { getStoredUser } from "@/lib/services/auth-service";
+import { updateUser } from "@/lib/services/user-service";
 import Toast from "@/components/ui/Toast";
 
 type Session = {
@@ -33,14 +33,47 @@ const initialSessions: Session[] = [
 ];
 
 const loginHistory = [
-  { id: "l1", date: "Apr 17, 10:21 AM", device: "MacBook Pro", ip: "192.168.0.4", location: "Lagos, NG" },
-  { id: "l2", date: "Apr 16, 4:03 PM", device: "iPhone 15", ip: "10.0.1.22", location: "Abuja, NG" },
-  { id: "l3", date: "Apr 14, 8:42 AM", device: "Windows PC", ip: "172.16.2.11", location: "Accra, GH" },
-  { id: "l4", date: "Apr 13, 9:15 PM", device: "MacBook Pro", ip: "192.168.0.5", location: "Lagos, NG" },
-  { id: "l5", date: "Apr 11, 11:27 AM", device: "iPad Pro", ip: "10.0.1.44", location: "Ibadan, NG" },
+  {
+    id: "l1",
+    date: "Apr 17, 10:21 AM",
+    device: "MacBook Pro",
+    ip: "192.168.0.4",
+    location: "Lagos, NG",
+  },
+  {
+    id: "l2",
+    date: "Apr 16, 4:03 PM",
+    device: "iPhone 15",
+    ip: "10.0.1.22",
+    location: "Abuja, NG",
+  },
+  {
+    id: "l3",
+    date: "Apr 14, 8:42 AM",
+    device: "Windows PC",
+    ip: "172.16.2.11",
+    location: "Accra, GH",
+  },
+  {
+    id: "l4",
+    date: "Apr 13, 9:15 PM",
+    device: "MacBook Pro",
+    ip: "192.168.0.5",
+    location: "Lagos, NG",
+  },
+  {
+    id: "l5",
+    date: "Apr 11, 11:27 AM",
+    device: "iPad Pro",
+    ip: "10.0.1.44",
+    location: "Ibadan, NG",
+  },
 ];
 
-type ToastState = { message: string; type: "success" | "error" | "info" } | null;
+type ToastState = {
+  message: string;
+  type: "success" | "error" | "info";
+} | null;
 
 export default function SecurityTab() {
   const [passwords, setPasswords] = useState({
@@ -57,7 +90,10 @@ export default function SecurityTab() {
 
   const handleChangePassword = async () => {
     if (passwords.next.length < 8) {
-      setToast({ message: "New password must be at least 8 characters.", type: "error" });
+      setToast({
+        message: "New password must be at least 8 characters.",
+        type: "error",
+      });
       return;
     }
     if (passwords.next !== passwords.confirm) {
@@ -66,7 +102,10 @@ export default function SecurityTab() {
     }
     const user = getStoredUser();
     if (!user?.id) {
-      setToast({ message: "Session expired. Please log in again.", type: "error" });
+      setToast({
+        message: "Session expired. Please log in again.",
+        type: "error",
+      });
       return;
     }
     setSaving(true);
@@ -75,7 +114,8 @@ export default function SecurityTab() {
       setToast({ message: "Password updated successfully!", type: "success" });
       setPasswords({ current: "", next: "", confirm: "" });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to update password.";
+      const message =
+        err instanceof Error ? err.message : "Failed to update password.";
       setToast({ message, type: "error" });
     } finally {
       setSaving(false);
@@ -92,7 +132,9 @@ export default function SecurityTab() {
     return score;
   }, [passwords.next]);
 
-  const strengthLabel = ["Weak", "Weak", "Fair", "Strong", "Excellent"][passwordStrength];
+  const strengthLabel = ["Weak", "Weak", "Fair", "Strong", "Excellent"][
+    passwordStrength
+  ];
 
   return (
     <div className="space-y-6">
@@ -114,7 +156,9 @@ export default function SecurityTab() {
             { key: "confirm", label: "Confirm new password" },
           ].map((field) => (
             <div key={field.key} className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-midnight">{field.label}</label>
+              <label className="text-sm font-medium text-midnight">
+                {field.label}
+              </label>
               <input
                 type="password"
                 value={passwords[field.key as keyof typeof passwords]}
@@ -140,7 +184,9 @@ export default function SecurityTab() {
                 key={segment}
                 className={`h-2 flex-1 rounded-full ${
                   passwordStrength > segment
-                    ? ["bg-danger", "bg-warning", "bg-primary", "bg-success"][segment]
+                    ? ["bg-danger", "bg-warning", "bg-primary", "bg-success"][
+                        segment
+                      ]
                     : "bg-slate/20"
                 }`}
               />
@@ -151,7 +197,12 @@ export default function SecurityTab() {
           <button
             type="button"
             onClick={() => void handleChangePassword()}
-            disabled={saving || !passwords.current || !passwords.next || !passwords.confirm}
+            disabled={
+              saving ||
+              !passwords.current ||
+              !passwords.next ||
+              !passwords.confirm
+            }
             className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "Updating…" : "Update Password"}
@@ -162,22 +213,32 @@ export default function SecurityTab() {
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-midnight">Two-Factor Authentication</h3>
-            <p className="text-sm text-slate">Enable OTP verification for additional account security.</p>
+            <h3 className="text-lg font-semibold text-midnight">
+              Two-Factor Authentication
+            </h3>
+            <p className="text-sm text-slate">
+              Enable OTP verification for additional account security.
+            </p>
           </div>
           <ToggleSwitch checked={is2FAEnabled} onChange={setIs2FAEnabled} />
         </div>
         {is2FAEnabled && (
           <div className="mt-4 rounded-xl border border-slate/20 bg-surface p-4 text-sm text-slate">
-            Authenticator setup is enabled. Backup codes are available for recovery.
+            Authenticator setup is enabled. Backup codes are available for
+            recovery.
           </div>
         )}
       </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-midnight">Active Sessions</h3>
-          <button type="button" className="text-sm font-semibold text-danger hover:text-danger/80">
+          <h3 className="text-lg font-semibold text-midnight">
+            Active Sessions
+          </h3>
+          <button
+            type="button"
+            className="text-sm font-semibold text-danger hover:text-danger/80"
+          >
             Sign out all devices
           </button>
         </div>
@@ -190,7 +251,9 @@ export default function SecurityTab() {
               <div className="flex items-center gap-3">
                 <MonitorSmartphone className="h-10 w-10 rounded-full bg-surface p-2 text-primary" />
                 <div>
-                  <p className="font-semibold text-midnight">{session.device}</p>
+                  <p className="font-semibold text-midnight">
+                    {session.device}
+                  </p>
                   <p className="text-sm text-slate">
                     {session.browser} • {session.location}
                   </p>
@@ -199,7 +262,11 @@ export default function SecurityTab() {
               </div>
               <button
                 type="button"
-                onClick={() => setSessions((prev) => prev.filter((item) => item.id !== session.id))}
+                onClick={() =>
+                  setSessions((prev) =>
+                    prev.filter((item) => item.id !== session.id),
+                  )
+                }
                 className="rounded-full border border-danger/40 px-4 py-1 text-sm font-semibold text-danger hover:bg-danger/10"
               >
                 Revoke
@@ -210,7 +277,9 @@ export default function SecurityTab() {
       </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm shadow-midnight/5">
-        <h3 className="text-lg font-semibold text-midnight">Login History (last 5)</h3>
+        <h3 className="text-lg font-semibold text-midnight">
+          Login History (last 5)
+        </h3>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm text-midnight">
             <thead className="text-xs uppercase tracking-[0.14em] text-slate">
@@ -237,4 +306,3 @@ export default function SecurityTab() {
     </div>
   );
 }
-

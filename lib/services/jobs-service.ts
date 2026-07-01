@@ -2,7 +2,7 @@ import {
   apiRequest,
   API_BASE_URL,
   parseApiResponse,
-} from "@/lib/services/apiClient";
+} from "@/lib/services/api-client";
 
 export type BackendJobType = "FULL_TIME" | "PART_TIME" | "CONTRACT";
 export type BackendExperienceLevel = "JUNIOR" | "MID" | "SENIOR" | "LEAD";
@@ -140,7 +140,10 @@ export interface CreateJobPayload {
   aiConfig: CreateJobAiConfigPayload;
 }
 
-export interface UpdateJobPayload extends Omit<Partial<CreateJobPayload>, "aiConfig"> {
+export interface UpdateJobPayload extends Omit<
+  Partial<CreateJobPayload>,
+  "aiConfig"
+> {
   skills?: CreateJobSkillPayload[];
   aiConfig?: Partial<CreateJobAiConfigPayload>;
 }
@@ -324,15 +327,15 @@ function buildQueryString(query?: JobQuery) {
 }
 
 export async function getJobs(query?: JobQuery): Promise<JobRecord[]> {
-  return apiRequest<JobRecord[]>(`/jobs${buildQueryString(query)}`, {}, true);
+  return apiRequest<JobRecord[]>(`/jobs${buildQueryString(query)}`, {});
 }
 
 export async function getJob(id: string): Promise<JobRecord> {
-  return apiRequest<JobRecord>(`/jobs/${id}`, {}, true);
+  return apiRequest<JobRecord>(`/jobs/${id}`, {});
 }
 
 export async function getJobTitles(): Promise<JobTitleRecord[]> {
-  return apiRequest<JobTitleRecord[]>("/jobs/titles", {}, true);
+  return apiRequest<JobTitleRecord[]>("/jobs/titles", {});
 }
 
 export async function getSkills(query?: {
@@ -347,89 +350,68 @@ export async function getSkills(query?: {
   return apiRequest<SkillRecord[]>(
     `/skills${queryString ? `?${queryString}` : ""}`,
     {},
-    true,
   );
 }
 
 export async function getSkillCategories(): Promise<string[]> {
-  return apiRequest<string[]>("/skills/categories", {}, true);
+  return apiRequest<string[]>("/skills/categories", {});
 }
 
 export async function createSkill(payload: {
   name: string;
   category: string;
 }): Promise<SkillRecord> {
-  return apiRequest<SkillRecord>(
-    "/skills",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-    true,
-  );
+  return apiRequest<SkillRecord>("/skills", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function updateSkill(
   id: string,
   payload: Partial<Pick<SkillRecord, "name" | "category">>,
 ): Promise<SkillRecord> {
-  return apiRequest<SkillRecord>(
-    `/skills/${id}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    },
-    true,
-  );
+  return apiRequest<SkillRecord>(`/skills/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function deleteSkill(id: string): Promise<void> {
-  return apiRequest<void>(`/skills/${id}`, { method: "DELETE" }, true);
+  return apiRequest<void>(`/skills/${id}`, { method: "DELETE" });
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<JobRecord> {
-  return apiRequest<JobRecord>(
-    "/jobs",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-    true,
-  );
+  return apiRequest<JobRecord>("/jobs", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function updateJob(
   id: string,
   payload: UpdateJobPayload,
 ): Promise<JobRecord> {
-  return apiRequest<JobRecord>(
-    `/jobs/${id}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    },
-    true,
-  );
+  return apiRequest<JobRecord>(`/jobs/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getApplicationsForJob(
   jobId: string,
 ): Promise<Application[]> {
-  return apiRequest<Application[]>(
-    `/application/job/${jobId}`,
-    { method: "GET" },
-    true,
-  );
+  return apiRequest<Application[]>(`/application/job/${jobId}`, {
+    method: "GET",
+  });
 }
 
 export async function getCandidateDetails(
   candidateId: string,
 ): Promise<CandidateDetails> {
-  return apiRequest<CandidateDetails>(
-    `/candidate/${candidateId}`,
-    { method: "GET" },
-    true,
-  );
+  return apiRequest<CandidateDetails>(`/candidate/${candidateId}`, {
+    method: "GET",
+  });
 }
 
 function labelFromSegment(segment: string) {

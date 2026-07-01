@@ -16,7 +16,7 @@ import {
   type PublicCompanyJob,
   type PublicCompanyJobsQuery,
   type PublicJobsPagination,
-} from "@/lib/services/companyService";
+} from "@/lib/services/company-service";
 
 const DEFAULT_LIMIT = 10;
 

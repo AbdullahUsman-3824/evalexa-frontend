@@ -9,7 +9,7 @@ import {
   formatWorkModel,
   getJobs,
   type JobRecord,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 
 export default function ActiveJobsOverview() {
   const router = useRouter();

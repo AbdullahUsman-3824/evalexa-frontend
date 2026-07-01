@@ -8,7 +8,7 @@ import {
   getProfile,
   getStoredUser,
   type AuthUser,
-} from "@/lib/services/authService";
+} from "@/lib/services/auth-service";
 
 export default function WelcomeBanner() {
   const router = useRouter();

@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/services/apiClient";
+import { apiRequest } from "@/lib/services/api-client";
 
 export type PublicCompany = {
   id: string;
@@ -106,25 +106,17 @@ export type CreateCompanyPayload = {
 export async function createCompany(
   payload: CreateCompanyPayload,
 ): Promise<Company> {
-  return apiRequest<Company>(
-    "/companies",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-    true,
-  );
+  return apiRequest<Company>("/companies", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 /** Fetch all companies created by the authenticated recruiter — requires JWT auth. */
 export async function getCompanies(): Promise<Company[]> {
-  return apiRequest<Company[]>(
-    "/companies",
-    {
-      method: "GET",
-    },
-    true,
-  );
+  return apiRequest<Company[]>("/companies", {
+    method: "GET",
+  });
 }
 
 /** Fetch public companies with open job counts. */
@@ -217,13 +209,9 @@ export async function getPublicCompanyJobs(
 
 /** Fetch a company by ID — requires JWT auth. */
 export async function getCompany(id: number): Promise<Company> {
-  return apiRequest<Company>(
-    `/companies/${id}`,
-    {
-      method: "GET",
-    },
-    true,
-  );
+  return apiRequest<Company>(`/companies/${id}`, {
+    method: "GET",
+  });
 }
 
 /** Update a company by ID — requires JWT auth. */
@@ -231,23 +219,15 @@ export async function updateCompany(
   id: number,
   payload: Partial<CreateCompanyPayload>,
 ): Promise<Company> {
-  return apiRequest<Company>(
-    `/companies/${id}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    },
-    true,
-  );
+  return apiRequest<Company>(`/companies/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
 
 /** Delete a company by ID — requires JWT auth. */
 export async function deleteCompany(id: number): Promise<Company> {
-  return apiRequest<Company>(
-    `/companies/${id}`,
-    {
-      method: "DELETE",
-    },
-    true,
-  );
+  return apiRequest<Company>(`/companies/${id}`, {
+    method: "DELETE",
+  });
 }

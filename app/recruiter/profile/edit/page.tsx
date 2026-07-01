@@ -12,9 +12,9 @@ import {
   updateCompany,
   Company,
   getCompanies,
-} from "@/lib/services/companyService";
-import { getProfile, getStoredUserId } from "@/lib/services/authService";
-import { updateUser } from "@/lib/services/userService";
+} from "@/lib/services/company-service";
+import { getProfile, getStoredUserId } from "@/lib/services/auth-service";
+import { updateUser } from "@/lib/services/user-service";
 import Toast from "@/components/ui/Toast";
 
 type TabId = "company" | "recruiter" | "branding" | "social";

@@ -16,8 +16,8 @@ import {
   getStoredUser,
   type AuthUser,
   logoutUser,
-} from "@/lib/services/authService";
-import { getCompanies } from "@/lib/services/companyService";
+} from "@/lib/services/auth-service";
+import { getCompanies } from "@/lib/services/company-service";
 
 interface RecruiterTopNavProps {
   onMenuClick: () => void;

@@ -9,7 +9,7 @@ import {
   formatRelativeDays,
   getJobs,
   type JobRecord,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 
 export default function ActiveJobsPreview() {
   const [jobs, setJobs] = useState<JobRecord[]>([]);

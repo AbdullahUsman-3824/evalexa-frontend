@@ -7,7 +7,7 @@ import {
   getProfile,
   getStoredUser,
   type AuthUser,
-} from "@/lib/services/authService";
+} from "@/lib/services/auth-service";
 
 export default function RecruiterDetails() {
   const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>

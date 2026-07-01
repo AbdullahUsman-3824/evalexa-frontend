@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getCompanies, Company } from "@/lib/services/companyService";
-import { getJobs } from "@/lib/services/jobsService";
+import { getCompanies, Company } from "@/lib/services/company-service";
+import { getJobs } from "@/lib/services/jobs-service";
 
 export default function CompanyHeader() {
   const router = useRouter();

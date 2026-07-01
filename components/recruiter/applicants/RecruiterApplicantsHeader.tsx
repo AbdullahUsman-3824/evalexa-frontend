@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Download, Sparkles } from "lucide-react";
-import type { JobTitleRecord } from "@/lib/services/jobsService";
+import type { JobTitleRecord } from "@/lib/services/jobs-service";
 
 interface RecruiterApplicantsHeaderProps {
   jobTitles: JobTitleRecord[];

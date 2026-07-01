@@ -10,14 +10,14 @@ import Step2Requirements from "@/components/recruiter/jobs/management/Step2Requi
 import Step3AISettings from "@/components/recruiter/jobs/management/Step3AISettings";
 import Step4Review from "@/components/recruiter/jobs/management/Step4Review";
 import type { JobPostFormData } from "@/components/recruiter/jobs/management/types";
-import { getProfile } from "@/lib/services/authService";
+import { getProfile } from "@/lib/services/auth-service";
 import {
   createJob,
   updateJob,
   type CreateJobPayload,
   type CreateJobSkillPayload,
   type JobRecord,
-} from "@/lib/services/jobsService";
+} from "@/lib/services/jobs-service";
 
 type JobFormMode = "create" | "edit";
 
@@ -356,7 +356,6 @@ export default function JobForm({ mode, data }: JobFormProps) {
   return (
     <div className="p-6 text-midnight">
       <div className="mx-auto max-w-7xl space-y-6">
-
         {/* Header */}
         <div>
           <h1 className="font-syne text-2xl font-bold text-midnight">
@@ -403,9 +402,7 @@ export default function JobForm({ mode, data }: JobFormProps) {
               type="button"
               disabled={currentStep === 1}
               onClick={() =>
-                setCurrentStep(
-                  (prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 4,
-                )
+                setCurrentStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 4)
               }
               className="flex w-28 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -417,9 +414,7 @@ export default function JobForm({ mode, data }: JobFormProps) {
               type="button"
               disabled={currentStep === 4}
               onClick={() =>
-                setCurrentStep(
-                  (prev) => Math.min(4, prev + 1) as 1 | 2 | 3 | 4,
-                )
+                setCurrentStep((prev) => Math.min(4, prev + 1) as 1 | 2 | 3 | 4)
               }
               className="flex w-28 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -428,7 +423,6 @@ export default function JobForm({ mode, data }: JobFormProps) {
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
