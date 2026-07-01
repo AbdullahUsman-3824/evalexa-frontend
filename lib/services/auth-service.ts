@@ -239,6 +239,12 @@ export async function logoutUser(): Promise<void> {
 }
 
 export async function getProfile(): Promise<AuthUser> {
+  const storedUser = getStoredUser();
+  if (storedUser) {
+    persistAuthUser(storedUser);
+    return storedUser;
+  }
+
   const profile = await apiRequest<AuthUser>("/auth/session", {
     method: "GET",
   });

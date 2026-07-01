@@ -82,7 +82,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const data = await loginUser({
+      const user = await loginUser({
         email: trimmedEmail,
         password: formData.password,
       });
@@ -91,9 +91,9 @@ export default function LoginForm() {
       await wait(500);
 
       let dashboardPath = "/candidate/dashboard";
-      if (data.user.role === "recruiter") {
+      if (user.role === "recruiter") {
         dashboardPath =
-          data.user.companyId === null
+          user.companyId === null
             ? "/company-setup"
             : "/recruiter/dashboard";
       }

@@ -14,8 +14,6 @@ import {
   CalendarCheck,
   MessageSquare,
   PieChart,
-  Building2,
-  Settings,
   LogOut,
 } from "lucide-react";
 import { logoutUser } from "@/lib/services/auth-service";
@@ -91,14 +89,7 @@ const navSections: NavSection[] = [
         icon: PieChart,
       },
     ],
-  },
-  {
-    label: "ACCOUNT",
-    items: [
-      { label: "Company Profile", href: "/recruiter/profile", icon: Building2 },
-      { label: "Settings", href: "/recruiter/settings", icon: Settings },
-    ],
-  },
+  }
 ];
 
 interface RecruiterSidebarProps {

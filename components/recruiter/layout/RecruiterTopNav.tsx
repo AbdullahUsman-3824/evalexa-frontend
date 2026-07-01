@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Menu,
   Bell,
@@ -10,6 +11,7 @@ import {
   Building2,
   Settings,
   LogOut,
+  Plus,
 } from "lucide-react";
 import {
   getProfile,
@@ -17,13 +19,12 @@ import {
   type AuthUser,
   logoutUser,
 } from "@/lib/services/auth-service";
-import { getCompanies } from "@/lib/services/company-service";
+import { getCompanies, type Company } from "@/lib/services/company-service";
 
 interface RecruiterTopNavProps {
   onMenuClick: () => void;
 }
 
-// Page title mapping
 const pageTitles: Record<string, string> = {
   "/recruiter/dashboard": "Dashboard",
   "/recruiter/analytics": "Analytics",
@@ -43,42 +44,29 @@ const pageTitles: Record<string, string> = {
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(null);
-  const [companyName, setCompanyName] = useState<string>("Company");
+  const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
+    getStoredUser(),
+  );
+  const [company, setCompany] = useState<Company | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [logoErrorSrc, setLogoErrorSrc] = useState<string | null>(null);
 
-  const pageTitle = pageTitles[pathname] || "Recruiter Portal";
-  const hasUnreadNotifications = true; // Replace with actual logic
+  const pageTitle = pageTitles[pathname] ?? "Recruiter Portal";
+  const hasUnreadNotifications = true;
 
   useEffect(() => {
-    const rehydrateTimer = window.setTimeout(() => {
-      setAccountUser(getStoredUser());
-    }, 0);
-
-    // Fetch fresh profile from API.
     void getProfile()
-      .then((profile) => {
-        setAccountUser(profile);
-      })
-      .catch(() => {
-        // Keep stored session user as fallback if profile request fails.
-      });
+      .then((profile) => setAccountUser(profile))
+      .catch(() => {});
 
-    // Fetch company name
     void getCompanies()
       .then((companies) => {
         if (companies.length > 0) {
-          setCompanyName(companies[0].name);
+          setCompany(companies[0] ?? null);
         }
       })
-      .catch(() => {
-        // Keep default company name if fetch fails
-      });
-
-    return () => {
-      window.clearTimeout(rehydrateTimer);
-    };
+      .catch(() => {});
   }, []);
 
   const accountName = useMemo(() => {
@@ -91,31 +79,27 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const accountInitials = useMemo(() => {
     const words = accountName
       .split(" ")
-      .map((value) => value.trim())
+      .map((v) => v.trim())
       .filter(Boolean);
-
-    if (words.length === 0) {
-      return "U";
-    }
-
-    if (words.length === 1) {
-      return (words[0]?.slice(0, 2) ?? "U").toUpperCase();
-    }
-
+    if (words.length === 0) return "U";
+    if (words.length === 1) return (words[0]?.slice(0, 2) ?? "U").toUpperCase();
     return `${words[0]?.charAt(0) ?? ""}${words[1]?.charAt(0) ?? ""}`.toUpperCase();
   }, [accountName]);
+
   const handleSignOut = async () => {
     await logoutUser();
     setShowProfileDropdown(false);
     router.push("/login");
   };
 
+  const logoSrc = company?.logo ?? null;
+  const showLogo = !!logoSrc && logoErrorSrc !== logoSrc;
+
   return (
     <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200">
       <div className="h-full flex items-center justify-between px-6">
-        {/* Left Section */}
+        {/* Left */}
         <div className="flex items-center gap-4">
-          {/* Mobile Menu Button */}
           <button
             onClick={onMenuClick}
             className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -123,16 +107,14 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
           >
             <Menu className="w-5 h-5 text-gray-700" />
           </button>
-
-          {/* Page Title */}
-          <h2 className="font-syne text-lg font-semibold text-[#0D1B2A]">
+          <h2 className="font-syne text-lg font-semibold text-midnight">
             {pageTitle}
           </h2>
         </div>
 
-        {/* Right Section */}
+        {/* Right */}
         <div className="flex items-center gap-3">
-          {/* Notification Bell */}
+          {/* Notifications */}
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
@@ -141,86 +123,80 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
             >
               <Bell className="w-5 h-5 text-gray-700" />
               {hasUnreadNotifications && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#E63946] rounded-full" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
               )}
             </button>
 
-            {/* Notifications Dropdown */}
             {showNotifications && (
               <>
-                {/* Backdrop */}
                 <div
                   className="fixed inset-0 z-40"
                   onClick={() => setShowNotifications(false)}
                 />
-
-                {/* Dropdown */}
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                  <div className="p-4 border-b border-gray-200">
-                    <h3 className="font-semibold text-[#0D1B2A]">
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+                  <div className="p-4 border-b border-gray-100">
+                    <h3 className="font-syne font-semibold text-midnight text-sm">
                       Notifications
                     </h3>
                   </div>
-                  {/* TODO: Implement dynamic notification loading */}
-                  <div className="max-h-96 overflow-y-auto">
-                    {/* Sample notifications */}
-                    <div className="p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#1E6FFF]/10 flex items-center justify-center flex-shrink-0">
-                          <Bell className="w-4 h-4 text-[#1E6FFF]" />
+                  <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
+                    {[
+                      {
+                        color: "primary",
+                        title: "New application received",
+                        body: "John Doe applied for Senior Developer",
+                        time: "2 hours ago",
+                      },
+                      {
+                        color: "cyan",
+                        title: "AI ranking completed",
+                        body: "15 candidates ranked for Product Manager",
+                        time: "5 hours ago",
+                      },
+                      {
+                        color: "green",
+                        title: "Interview scheduled",
+                        body: "Sarah Johnson — tomorrow at 2 PM",
+                        time: "1 day ago",
+                      },
+                    ].map(({ color, title, body, time }) => (
+                      <div
+                        key={title}
+                        className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            color === "primary"
+                              ? "bg-primary/10"
+                              : color === "cyan"
+                                ? "bg-cyan/10"
+                                : "bg-green-500/10"
+                          }`}
+                        >
+                          <Bell
+                            className={`w-4 h-4 ${
+                              color === "primary"
+                                ? "text-primary"
+                                : color === "cyan"
+                                  ? "text-cyan"
+                                  : "text-green-500"
+                            }`}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-[#0D1B2A] font-medium">
-                            New application received
+                          <p className="text-sm font-medium text-midnight truncate">
+                            {title}
                           </p>
-                          <p className="text-xs text-[#6B7A99] mt-1">
-                            John Doe applied for Senior Developer position
+                          <p className="text-xs text-slate mt-0.5 truncate">
+                            {body}
                           </p>
-                          <p className="text-xs text-[#6B7A99] mt-1">
-                            2 hours ago
-                          </p>
+                          <p className="text-xs text-slate/60 mt-0.5">{time}</p>
                         </div>
                       </div>
-                    </div>
-                    <div className="p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#00C2D1]/10 flex items-center justify-center flex-shrink-0">
-                          <Bell className="w-4 h-4 text-[#00C2D1]" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-[#0D1B2A] font-medium">
-                            AI ranking completed
-                          </p>
-                          <p className="text-xs text-[#6B7A99] mt-1">
-                            15 candidates ranked for Product Manager role
-                          </p>
-                          <p className="text-xs text-[#6B7A99] mt-1">
-                            5 hours ago
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 hover:bg-gray-50 cursor-pointer">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#00B37E]/10 flex items-center justify-center flex-shrink-0">
-                          <Bell className="w-4 h-4 text-[#00B37E]" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-[#0D1B2A] font-medium">
-                            Interview scheduled
-                          </p>
-                          <p className="text-xs text-[#6B7A99] mt-1">
-                            Interview with Sarah Johnson tomorrow at 2 PM
-                          </p>
-                          <p className="text-xs text-[#6B7A99] mt-1">
-                            1 day ago
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                  <div className="p-3 border-t border-gray-200">
-                    <button className="w-full text-center text-sm text-[#1E6FFF] hover:text-[#1557D8] font-medium">
+                  <div className="p-3 border-t border-gray-100 text-center">
+                    <button className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">
                       View all notifications
                     </button>
                   </div>
@@ -229,68 +205,170 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
             )}
           </div>
 
-          {/* Avatar Dropdown */}
+          {/* Avatar + company dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
             >
-              {/* Avatar */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E6FFF] to-[#00C2D1] flex items-center justify-center">
-                <span className="text-white font-semibold text-xs">
-                  {accountInitials}
-                </span>
+              {/* Avatar: company logo or initials */}
+              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                {showLogo ? (
+                  <Image
+                    src={logoSrc!}
+                    alt={company!.name}
+                    width={32}
+                    height={32}
+                    unoptimized
+                    className="w-full h-full object-cover"
+                    onError={() => setLogoErrorSrc(logoSrc)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
+                    <span className="text-white font-semibold text-xs">
+                      {company
+                        ? company.name.slice(0, 2).toUpperCase()
+                        : accountInitials}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* Company Name (hidden on small screens) */}
-              <span className="hidden md:block text-sm font-medium text-[#0D1B2A]">
-                {companyName}
-              </span>
+              {/* Name area */}
+              <div className="hidden md:flex flex-col items-start leading-tight">
+                {company ? (
+                  <>
+                    <span className="text-sm font-semibold text-midnight">
+                      {company.name}
+                    </span>
+                    {company.industry && (
+                      <span className="text-xs text-slate">
+                        {company.industry}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm font-semibold text-midnight">
+                      {accountName.split(" ")[0]}
+                    </span>
+                    <span className="text-xs text-slate/60">
+                      No company yet
+                    </span>
+                  </>
+                )}
+              </div>
 
-              {/* Dropdown Icon */}
               <ChevronDown
-                className={`hidden md:block w-4 h-4 text-gray-500 transition-transform ${
+                className={`hidden md:block w-4 h-4 text-slate/60 transition-transform ${
                   showProfileDropdown ? "rotate-180" : ""
                 }`}
               />
             </button>
 
-            {/* Profile Dropdown */}
+            {/* Dropdown */}
             {showProfileDropdown && (
               <>
-                {/* Backdrop */}
                 <div
                   className="fixed inset-0 z-40"
                   onClick={() => setShowProfileDropdown(false)}
                 />
+                <div className="absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-lg border border-gray-200 z-50 py-1 overflow-hidden">
+                  {/* Company header */}
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    {company ? (
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100">
+                          {showLogo ? (
+                            <Image
+                              src={logoSrc!}
+                              alt={company.name}
+                              width={36}
+                              height={36}
+                              unoptimized
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
+                              <span className="text-white font-bold text-xs">
+                                {company.name.slice(0, 2).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-midnight truncate">
+                            {company.name}
+                          </p>
+                          <p className="text-xs text-slate truncate">
+                            {company.location}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-4 h-4 text-slate/40" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-midnight">
+                            {accountName}
+                          </p>
+                          <p
+                            className="truncate text-xs text-slate/60"
+                            title={accountUser?.email}
+                          >
+                            {accountUser?.email}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Dropdown */}
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
-                  <Link
-                    href="/recruiter/profile"
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
-                    onClick={() => setShowProfileDropdown(false)}
-                  >
-                    <Building2 className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-[#0D1B2A]">
-                      Company Profile
-                    </span>
-                  </Link>
+                  {/* Menu items */}
+                  {company ? (
+                    <Link
+                      href="/recruiter/profile"
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
+                      <Building2 className="w-4 h-4 text-slate" />
+                      <span className="text-sm text-midnight">
+                        Company Profile
+                      </span>
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/company-setup"
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 transition-colors group"
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
+                      <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <Plus className="w-2.5 h-2.5 text-primary" />
+                      </div>
+                      <span className="text-sm text-primary font-medium">
+                        Set up company
+                      </span>
+                    </Link>
+                  )}
+
                   <Link
                     href="/recruiter/settings"
                     className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
                     onClick={() => setShowProfileDropdown(false)}
                   >
-                    <Settings className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-[#0D1B2A]">Settings</span>
+                    <Settings className="w-4 h-4 text-slate" />
+                    <span className="text-sm text-midnight">Settings</span>
                   </Link>
-                  <div className="border-t border-gray-200 my-1" />
+
+                  <div className="border-t border-gray-100 my-1" />
+
                   <button
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors text-left"
                   >
-                    <LogOut className="w-4 h-4 text-[#E63946]" />
-                    <span className="text-sm text-[#E63946]">Sign Out</span>
+                    <LogOut className="w-4 h-4 text-red-500" />
+                    <span className="text-sm text-red-500">Sign out</span>
                   </button>
                 </div>
               </>
