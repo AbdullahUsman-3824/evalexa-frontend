@@ -39,7 +39,7 @@ export default function CompanyHeader() {
         if (companies[0]) {
           const jobs = await getJobs({ status: "OPEN" });
           const activeJobsCount = jobs.filter(
-            (job) => job.companyId === companies[0].id,
+            (job) => String(job.companyId) === String(companies[0].id),
           ).length;
           setStats((prev) => ({ ...prev, activeJobs: activeJobsCount }));
         }
@@ -122,17 +122,21 @@ export default function CompanyHeader() {
                   {company.industry}
                 </span>
 
-                {/* Assume verified for now or add to company model */}
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-success/20 border border-success/40 text-success text-xs font-medium rounded-full">
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  Verified Company
-                </div>
+                {company.verificationStatus === "VERIFIED" && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-success/20 border border-success/40 text-success text-xs font-medium rounded-full">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>Verified Company</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2 text-sm">
                 <p className="text-slate">
-                  Established {new Date(company.createdAt).getFullYear()} ·{" "}
-                  {company.companySize} employees
+                  {company.foundedYear && `Established ${company.foundedYear}`}
+
+                  {company.foundedYear && company.size && " · "}
+
+                  {company.size && `${company.size} employees`}
                 </p>
 
                 <div className="flex items-center gap-4">
@@ -151,11 +155,12 @@ export default function CompanyHeader() {
                       {company.website.replace(/^https?:\/\//, "")}
                     </a>
                   )}
-
-                  <span className="flex items-center gap-1.5 text-slate">
-                    <MapPin className="w-4 h-4" />
-                    {company.location}
-                  </span>
+                  {company.location && (
+                    <span className="flex items-center gap-1.5 text-slate">
+                      <MapPin className="w-4 h-4" />
+                      {company.location}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -165,7 +170,7 @@ export default function CompanyHeader() {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => router.push("/recruiter/profile/edit")}
-              className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-lg font-medium text-sm transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/80 text-white rounded-lg font-medium text-sm transition-colors"
             >
               <Edit className="w-4 h-4" />
               Edit Profile

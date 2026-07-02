@@ -53,7 +53,7 @@ export default function CompanySetupPage() {
   const [toast, setToast] = useState<ToastState>(null);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
+  // const bannerInputRef = useRef<HTMLInputElement>(null);
   const docsInputRef = useRef<HTMLInputElement>(null);
 
   const [fields, setFields] = useState({
@@ -69,7 +69,7 @@ export default function CompanySetupPage() {
   });
 
   const [logo, setLogo] = useState<File | null>(null);
-  const [banner, setBanner] = useState<File | null>(null);
+  // const [banner, setBanner] = useState<File | null>(null);
   const [verificationDocuments, setVerificationDocuments] = useState<File[]>([]);
 
   useEffect(() => {
@@ -96,10 +96,10 @@ export default function CompanySetupPage() {
     setLogo(file);
   };
 
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    setBanner(file);
-  };
+  // const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0] ?? null;
+  //   setBanner(file);
+  // };
 
   const handleDocsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const incoming = Array.from(e.target.files ?? []);
@@ -155,7 +155,7 @@ export default function CompanySetupPage() {
         website: fields.website || undefined,
         email: fields.email || undefined,
         logo: logo ?? undefined,
-        banner: banner ?? undefined,
+        // banner: banner ?? undefined,
         verificationDocuments: verificationDocuments.length
           ? verificationDocuments
           : undefined,
@@ -347,7 +347,7 @@ export default function CompanySetupPage() {
             </div>
 
             {/* Banner */}
-            <div className="flex flex-col gap-2">
+            {/* <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-midnight">Banner</label>
               <input
                 ref={bannerInputRef}
@@ -363,7 +363,7 @@ export default function CompanySetupPage() {
               >
                 {banner ? banner.name : "Choose banner image…"}
               </button>
-            </div>
+            </div> */}
           </div>
 
           {/* ── Verification documents ── */}
