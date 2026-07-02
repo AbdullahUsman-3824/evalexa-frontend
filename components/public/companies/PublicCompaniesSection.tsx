@@ -278,7 +278,7 @@ export default function PublicCompaniesSection() {
                     </p>
                     <p className="flex items-center gap-2">
                       <Users className="h-3.5 w-3.5" />
-                      {company.companySize}
+                      {company.size}
                     </p>
                     <div className="flex items-center justify-between pt-2">
                       <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">

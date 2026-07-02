@@ -4,25 +4,38 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import CompanyInfoTab from "@/components/recruiter/profile/edit/CompanyInfoTab";
+import CompanyInfoTab, {
+  type CompanyFormData,
+} from "@/components/recruiter/profile/edit/CompanyInfoTab";
 import RecruiterTab from "@/components/recruiter/profile/edit/RecruiterTab";
 import BrandingTab from "@/components/recruiter/profile/edit/BrandingTab";
-import SocialLinksTab from "@/components/recruiter/profile/edit/SocialLinksTab";
 import {
   updateCompany,
-  Company,
   getCompanies,
+  type Company,
 } from "@/lib/services/company-service";
 import { getProfile, getStoredUserId } from "@/lib/services/auth-service";
 import { updateUser } from "@/lib/services/user-service";
 import Toast from "@/components/ui/Toast";
 
-type TabId = "company" | "recruiter" | "branding" | "social";
+type TabId = "company" | "recruiter" | "branding";
 
 interface Tab {
   id: TabId;
   label: string;
-  hasChanges: boolean;
+}
+
+const TABS: Tab[] = [
+  { id: "company", label: "Company Info" },
+  { id: "recruiter", label: "Recruiter Details" },
+  { id: "branding", label: "Branding" },
+];
+
+interface RecruiterFormData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
 }
 
 export default function EditProfilePage() {
@@ -33,34 +46,42 @@ export default function EditProfilePage() {
     message: string;
     type: "success" | "error" | "info";
   } | null>(null);
-  const [companyId, setCompanyId] = useState<number | null>(null);
-  const [userId, setUserId] = useState<number | null>(null);
 
-  const [companyData, setCompanyData] = useState<Partial<Company>>({
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const [companyData, setCompanyData] = useState<CompanyFormData>({
     name: "",
     industry: "",
-    companySize: "",
+    size: null,
+    foundedYear: null,
+    type: null,
     location: "",
-    website: "",
-    description: "",
+    website: null,
+    email: null,
+    description: null,
   });
 
-  const [recruiterData, setRecruiterData] = useState({
+  const [recruiterData, setRecruiterData] = useState<RecruiterFormData>({
     firstName: "",
     lastName: "",
     phone: "",
     email: "",
   });
 
-  useEffect(() => {
-    const storedUserId = getStoredUserId();
-    if (storedUserId) {
-      setUserId(storedUserId);
-    }
-  }, []);
+  // File state — lifted here so handleSave can include them all in one call
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [verificationDocuments, setVerificationDocuments] = useState<File[]>(
+    [],
+  );
+
+  // Existing URLs from DB — passed to BrandingTab for preview
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
+  const [currentBannerUrl, setCurrentBannerUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCompany = async () => {
+    const fetchData = async () => {
       try {
         const [companies, profile] = await Promise.all([
           getCompanies(),
@@ -71,51 +92,80 @@ export default function EditProfilePage() {
           .trim()
           .split(/\s+/)
           .filter(Boolean);
-        const [firstName = "", ...otherNames] = nameParts;
+        const [firstName = "", ...otherParts] = nameParts;
 
-        setUserId(profile.id);
+        setUserId(String(profile.id));
         setRecruiterData({
           firstName,
-          lastName: otherNames.join(" "),
+          lastName: otherParts.join(" "),
           phone: profile.phone ?? "",
           email: profile.email ?? "",
         });
 
         if (companies.length === 0) {
-          router.push("/company-setup");
+          router.push("/recruiter/company/setup");
           return;
         }
 
-        const [primaryCompany] = companies;
-        setCompanyId(primaryCompany.id);
-        setCompanyData(primaryCompany);
+        const primary = companies[0] as Company;
+        setCompanyId(primary.id);
+        setCurrentLogoUrl(primary.logo);
+        setCurrentBannerUrl(primary.banner);
+        setCompanyData({
+          name: primary.name ?? "",
+          industry: primary.industry ?? "",
+          size: primary.size ?? null,
+          foundedYear: primary.foundedYear ?? null,
+          type: primary.type ?? null,
+          location: primary.location ?? "",
+          website: primary.website ?? null,
+          email: primary.email ?? null,
+          description: primary.description ?? null,
+        });
       } catch (error) {
-        console.error("Failed to fetch company", error);
-        setToast({ message: "Failed to load company data.", type: "error" });
+        console.error("Failed to fetch data:", error);
+        setToast({ message: "Failed to load profile data.", type: "error" });
       }
     };
-    fetchCompany();
+
+    void fetchData();
   }, [router]);
-  const tabs: Tab[] = [
-    { id: "company", label: "Company Info", hasChanges: false },
-    { id: "recruiter", label: "Recruiter Details", hasChanges: false },
-    { id: "branding", label: "Branding", hasChanges: false },
-    { id: "social", label: "Social Links", hasChanges: false },
-  ];
 
   const handleSave = async () => {
     if (!companyId) {
       setToast({
-        message: "Company not found. Please set up your company profile first.",
+        message: "Company not found. Please set up your company first.",
         type: "error",
       });
       return;
     }
 
-    const effectiveUserId = userId ?? getStoredUserId();
+    const rawUserId = userId ?? getStoredUserId();
+    const effectiveUserId = rawUserId !== null ? Number(rawUserId) : null;
     if (!effectiveUserId) {
       setToast({
-        message: "User session not found. Please log in again.",
+        message: "Session expired. Please log in again.",
+        type: "error",
+      });
+      return;
+    }
+
+    const firstName = recruiterData.firstName.trim();
+    const lastName = recruiterData.lastName.trim();
+    const phone = recruiterData.phone.trim().replace(/[\s()-]/g, "");
+    const fullName = `${firstName} ${lastName}`.trim();
+
+    if (!firstName || !lastName) {
+      setToast({
+        message: "First name and last name are required.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (phone && !/^(\+92|0)[0-9]{10}$/.test(phone)) {
+      setToast({
+        message: "Phone must be +92XXXXXXXXXX or 0XXXXXXXXXX format.",
         type: "error",
       });
       return;
@@ -123,95 +173,107 @@ export default function EditProfilePage() {
 
     setIsSaving(true);
     try {
-      const firstName = recruiterData.firstName.trim();
-      const lastName = recruiterData.lastName.trim();
-      const phoneRaw = recruiterData.phone.trim();
-      const phone = phoneRaw.replace(/[\s()-]/g, "");
-      const fullName = `${firstName} ${lastName}`.trim();
-
-      if (!firstName || !lastName) {
-        setToast({
-          message: "First name and last name are required.",
-          type: "error",
-        });
-        setIsSaving(false);
-        return;
-      }
-
-      if (phone && !/^(\+92|0)[0-9]{10}$/.test(phone)) {
-        setToast({
-          message: "Phone must be in +92XXXXXXXXXX or 0XXXXXXXXXX format.",
-          type: "error",
-        });
-        setIsSaving(false);
-        return;
-      }
-
       const [updatedCompany] = await Promise.all([
         updateCompany(companyId, {
-          name: companyData.name,
-          industry: companyData.industry,
-          companySize: companyData.companySize,
-          location: companyData.location,
-          website: companyData.website || undefined,
+          name: companyData.name || undefined,
+          industry: companyData.industry || undefined,
+          location: companyData.location || undefined,
           description: companyData.description || undefined,
+          size: companyData.size ?? undefined,
+          foundedYear: companyData.foundedYear ?? undefined,
+          type: companyData.type ?? undefined,
+          website: companyData.website || undefined,
+          email: companyData.email || undefined,
+          logo: logoFile ?? undefined,
+          banner: bannerFile ?? undefined,
+          verificationDocuments: verificationDocuments.length
+            ? verificationDocuments
+            : undefined,
         }),
-        updateUser(effectiveUserId, {
+        updateUser(Number(effectiveUserId), {
           fullName,
           phone: phone || undefined,
         }),
       ]);
 
-      setRecruiterData((prev) => ({ ...prev, phone }));
+      // Sync state with server response
+      setCurrentLogoUrl(updatedCompany.logo);
+      setCurrentBannerUrl(updatedCompany.banner);
+      setLogoFile(null);
+      setBannerFile(null);
+      setVerificationDocuments([]);
 
-      setCompanyData(updatedCompany);
-      // Refresh persisted auth session so top nav/dashboard pick up updated fullName.
+      setCompanyData({
+        name: updatedCompany.name ?? "",
+        industry: updatedCompany.industry ?? "",
+        size: updatedCompany.size ?? null,
+        foundedYear: updatedCompany.foundedYear ?? null,
+        type: updatedCompany.type ?? null,
+        location: updatedCompany.location ?? "",
+        website: updatedCompany.website ?? null,
+        email: updatedCompany.email ?? null,
+        description: updatedCompany.description ?? null,
+      });
+
+      // Refresh session so top nav picks up updated name
       await getProfile();
+
       setToast({ message: "Profile updated successfully!", type: "success" });
       setTimeout(() => {
         router.push("/recruiter/profile");
         router.refresh();
       }, 1200);
     } catch (error) {
-      console.error("Failed to update company", error);
-      const message =
-        error instanceof Error ? error.message : "Failed to update profile.";
-      setToast({ message, type: "error" });
+      console.error("Failed to update profile:", error);
+      setToast({
+        message:
+          error instanceof Error ? error.message : "Failed to update profile.",
+        type: "error",
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDiscard = () => {
-    if (confirm("Are you sure you want to discard all changes?")) {
+    if (confirm("Discard all unsaved changes?")) {
       router.push("/recruiter/profile");
     }
   };
 
-  const renderTabContent = () => {
+  const renderTab = () => {
     switch (activeTab) {
       case "company":
         return (
           <CompanyInfoTab
             data={companyData}
-            onChange={(newData) =>
-              setCompanyData({ ...companyData, ...newData })
+            onChange={(patch) =>
+              setCompanyData((prev) => ({ ...prev, ...patch }))
             }
+            verificationDocuments={verificationDocuments}
+            onVerificationDocumentsChange={setVerificationDocuments}
           />
         );
       case "recruiter":
         return (
           <RecruiterTab
             data={recruiterData}
-            onChange={(newData) =>
-              setRecruiterData((prev) => ({ ...prev, ...newData }))
+            onChange={(patch) =>
+              setRecruiterData((prev) => ({ ...prev, ...patch }))
             }
           />
         );
       case "branding":
-        return <BrandingTab />;
-      case "social":
-        return <SocialLinksTab />;
+        return (
+          <BrandingTab
+            currentLogoUrl={currentLogoUrl}
+            currentBannerUrl={currentBannerUrl}
+            logoFile={logoFile}
+            bannerFile={bannerFile}
+            onLogoChange={setLogoFile}
+            onBannerChange={setBannerFile}
+          />
+        );
       default:
         return null;
     }
@@ -219,7 +281,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="max-w-300 mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-6">
           <button
@@ -229,36 +291,30 @@ export default function EditProfilePage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Profile
           </button>
-
-          <h1 className="font-syne text-2xl font-semibold text-midnight mb-2">
+          <h1 className="font-syne text-2xl font-semibold text-midnight mb-1">
             Edit Company Profile
           </h1>
           <p className="text-slate text-sm">
-            Update your company information and branding to attract top talent
+            Update your company information and branding to attract top talent.
           </p>
         </div>
 
         {/* Tabs */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          {/* Tab Navigation */}
+          {/* Tab Nav */}
           <div className="border-b border-gray-200 bg-surface/50">
             <div className="flex overflow-x-auto">
-              {tabs.map((tab) => (
+              {TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center gap-2 px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                  className={`relative px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
                     activeTab === tab.id
                       ? "text-primary"
                       : "text-slate hover:text-midnight"
                   }`}
                 >
                   {tab.label}
-                  {tab.hasChanges && (
-                    <span className="w-2 h-2 rounded-full bg-warning" />
-                  )}
-
-                  {/* Active Indicator */}
                   {activeTab === tab.id && (
                     <motion.div
                       layoutId="activeTab"
@@ -285,30 +341,27 @@ export default function EditProfilePage() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
               >
-                {renderTabContent()}
+                {renderTab()}
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
       </div>
 
-      {/* End-of-page Action Bar */}
-      <div className="mx-auto mt-6 mb-6 max-w-300 px-6">
+      {/* Action Bar */}
+      <div className="max-w-4xl mx-auto mt-6 mb-6 px-6">
         <div className="rounded-2xl border border-gray-200 bg-white px-6 py-4 shadow-lg">
           <div className="flex items-center justify-between">
-            {/* Left - Discard */}
             <button
               onClick={handleDiscard}
-              className="flex items-center gap-2 px-5 py-2.5 text-danger hover:bg-danger/10 rounded-lg font-medium text-sm transition-colors"
+              className="px-5 py-2.5 text-red-500 hover:bg-red-50 rounded-lg font-medium text-sm transition-colors"
             >
               Discard Changes
             </button>
-
-            {/* Right - Save */}
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-colors min-w-35 justify-center"
+              className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-colors min-w-[130px] justify-center"
             >
               {isSaving ? (
                 <>
@@ -325,12 +378,12 @@ export default function EditProfilePage() {
                       r="10"
                       stroke="currentColor"
                       strokeWidth="4"
-                    ></circle>
+                    />
                     <path
                       className="opacity-75"
                       fill="currentColor"
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
+                    />
                   </svg>
                   Saving...
                 </>
@@ -342,7 +395,6 @@ export default function EditProfilePage() {
         </div>
       </div>
 
-      {/* Toast */}
       {toast && (
         <Toast
           message={toast.message}

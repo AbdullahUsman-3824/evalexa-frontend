@@ -115,7 +115,7 @@ function VerifyEmailContent() {
         return;
       }
 
-      const loginData = await loginUser({
+      const user = await loginUser({
         email: pending.email,
         password: pending.password,
       });
@@ -123,9 +123,9 @@ function VerifyEmailContent() {
       sessionStorage.removeItem(PENDING_SIGNUP_KEY);
 
       let dashboardPath = "/candidate/dashboard";
-      if (loginData.user.role === "recruiter") {
+      if (user.role === "recruiter") {
         dashboardPath =
-          loginData.user.companyId === null
+          user.companyId === null
             ? "/company-setup"
             : "/recruiter/dashboard";
       }

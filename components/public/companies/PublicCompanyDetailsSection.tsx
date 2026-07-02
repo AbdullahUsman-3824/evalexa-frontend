@@ -156,7 +156,7 @@ export default function PublicCompanyDetailsSection({
                 </p>
               </div>
               <p className="mt-2 font-semibold text-midnight">
-                {company.companySize}
+                {company.size}
               </p>
             </div>
             <div className="rounded-xl border border-slate/10 bg-surface p-4">
