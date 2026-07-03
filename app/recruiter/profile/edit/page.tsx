@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -40,7 +41,11 @@ interface RecruiterFormData {
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabId>("company");
+
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as TabId) ?? "company";
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+  
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -139,9 +144,8 @@ export default function EditProfilePage() {
       });
       return;
     }
+    const effectiveUserId = userId ?? getStoredUserId();
 
-    const rawUserId = userId ?? getStoredUserId();
-    const effectiveUserId = rawUserId !== null ? Number(rawUserId) : null;
     if (!effectiveUserId) {
       setToast({
         message: "Session expired. Please log in again.",
@@ -152,8 +156,8 @@ export default function EditProfilePage() {
 
     const firstName = recruiterData.firstName.trim();
     const lastName = recruiterData.lastName.trim();
-    const phone = recruiterData.phone.trim().replace(/[\s()-]/g, "");
     const fullName = `${firstName} ${lastName}`.trim();
+    const phone = recruiterData.phone.trim().replace(/[\s()-]/g, "");
 
     if (!firstName || !lastName) {
       setToast({
@@ -165,7 +169,7 @@ export default function EditProfilePage() {
 
     if (phone && !/^(\+92|0)[0-9]{10}$/.test(phone)) {
       setToast({
-        message: "Phone must be +92XXXXXXXXXX or 0XXXXXXXXXX format.",
+        message: "Invalid phone number format",
         type: "error",
       });
       return;
@@ -190,7 +194,7 @@ export default function EditProfilePage() {
             ? verificationDocuments
             : undefined,
         }),
-        updateUser(Number(effectiveUserId), {
+        updateUser(String(effectiveUserId), {
           fullName,
           phone: phone || undefined,
         }),
@@ -361,7 +365,7 @@ export default function EditProfilePage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-colors min-w-[130px] justify-center"
+              className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/80 disabled:bg-gray-300 disabled:cursor-not-allowed text-midnight rounded-lg font-medium text-sm transition-colors min-w-[130px] justify-center"
             >
               {isSaving ? (
                 <>

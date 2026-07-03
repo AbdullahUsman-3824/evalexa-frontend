@@ -35,7 +35,7 @@ export async function getAllUsers(): Promise<UserProfile[]> {
 
 /** Partially update a user — requires JWT auth. */
 export async function updateUser(
-  id: number,
+  id: string,
   payload: UpdateUserPayload,
 ): Promise<UserProfile> {
   return apiRequest<UserProfile>(`/users/${id}`, {

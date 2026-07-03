@@ -2,14 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, Link, Award } from "lucide-react";
+import { Mail, Phone, User } from "lucide-react";
 import {
   getProfile,
   getStoredUser,
   type AuthUser,
 } from "@/lib/services/auth-service";
+import { useRouter } from "next/navigation";
 
 export default function RecruiterDetails() {
+  const router = useRouter();
   const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
     getStoredUser(),
   );
@@ -48,15 +50,13 @@ export default function RecruiterDetails() {
     return `${words[0]?.charAt(0) ?? ""}${words[1]?.charAt(0) ?? ""}`.toUpperCase();
   }, [recruiterName]);
 
+  // avatarUrl is a placeholder for a future recruiter profile image field
   const recruiterData = {
     name: recruiterName,
-    designation: "Senior Talent Acquisition Manager",
     email: accountUser?.email ?? "No email available",
     phone: accountUser?.phone?.trim() || "No phone number",
-    linkedin: "",
-    yearsExperience: 0,
-    avatar: recruiterInitials,
-    avatarColor: "bg-gradient-to-br from-primary to-cyan",
+    avatarUrl: null as string | null,
+    avatarInitials: recruiterInitials,
   };
 
   return (
@@ -66,34 +66,34 @@ export default function RecruiterDetails() {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="bg-white rounded-xl border border-gray-200 p-6"
     >
-      <h2 className="font-syne text-lg font-semibold text-midnight mb-6">
-        Recruiter Information
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-syne text-lg font-semibold text-midnight">
+          Recruiter Information
+        </h2>
+        <button
+          onClick={() => router.push("/recruiter/profile/edit?tab=recruiter")}
+          className="text-primary hover:text-blue-600 text-sm font-medium transition-colors"
+        >
+          Edit
+        </button>
+      </div>
 
       <div className="space-y-6">
         {/* Recruiter Profile */}
-        <div className="flex items-start gap-4">
-          <div
-            className={`shrink-0 w-11 h-11 ${recruiterData.avatarColor} rounded-full flex items-center justify-center text-white font-semibold text-base`}
-          >
-            {recruiterData.avatar}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-midnight text-base mb-1">
-              {recruiterData.name}
-            </h3>
-            <p className="text-slate text-sm">{recruiterData.designation}</p>
-          </div>
-
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
-            <Award className="w-3.5 h-3.5" />
-            {recruiterData.yearsExperience} years
-          </div>
-        </div>
 
         {/* Contact Information */}
-        <div className="space-y-3 pt-4 border-t border-gray-200">
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center">
+              <User className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-slate mb-0.5">Name</p>
+              <p className="text-sm text-midnight hover:text-primary font-medium transition-colors">
+                {recruiterData.name}
+              </p>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center">
               <Mail className="w-4 h-4 text-primary" />
@@ -127,25 +127,6 @@ export default function RecruiterDetails() {
               )}
             </div>
           </div>
-
-          {recruiterData.linkedin && (
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center">
-                <Link className="w-4 h-4 text-cyan" />
-              </div>
-              <div>
-                <p className="text-xs text-slate mb-0.5">LinkedIn</p>
-                <a
-                  href={recruiterData.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-midnight hover:text-cyan font-medium transition-colors"
-                >
-                  View Profile
-                </a>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </motion.div>

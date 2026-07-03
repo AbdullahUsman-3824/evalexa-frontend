@@ -13,44 +13,26 @@ import {
   Star,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getCompanies, Company } from "@/lib/services/company-service";
-import { getJobs } from "@/lib/services/jobs-service";
+import { useState } from "react";
+import { Company } from "@/lib/services/company-service";
+import Image from "next/image";
 
-export default function CompanyHeader() {
+export default function CompanyHeader({
+  isLoading,
+  company,
+  stats,
+}: {
+  isLoading: boolean;
+  company: Company | null;
+  stats: {
+    activeJobs: number;
+    totalHires: number;
+    avgResponseTime: string;
+    rating: number;
+  };
+}) {
   const router = useRouter();
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
-  const [company, setCompany] = useState<Company | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    activeJobs: 0,
-    totalHires: 0,
-    avgResponseTime: "N/A",
-    rating: 0,
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const companies = await getCompanies();
-        setCompany(companies[0] ?? null);
-
-        // Fetch active jobs count
-        if (companies[0]) {
-          const jobs = await getJobs({ status: "OPEN" });
-          const activeJobsCount = jobs.filter(
-            (job) => String(job.companyId) === String(companies[0].id),
-          ).length;
-          setStats((prev) => ({ ...prev, activeJobs: activeJobsCount }));
-        }
-      } catch (error) {
-        console.error("Failed to fetch company data", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
 
   if (isLoading) {
     return <div className="h-64 rounded-2xl bg-midnight/5 animate-pulse"></div>;
@@ -75,6 +57,15 @@ export default function CompanyHeader() {
     );
   }
 
+  const getCompanySize = (size?: string) =>
+    ({
+      STARTUP_1_10: "1-10",
+      SMALL_11_50: "11-50",
+      MEDIUM_51_200: "51-200",
+      LARGE_201_500: "201-500",
+      ENTERPRISE_500_PLUS: "500+",
+    })[size ?? ""] ?? "";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -90,14 +81,27 @@ export default function CompanyHeader() {
             {/* Company Logo */}
             <div
               className="relative cursor-pointer"
+              onClick={() =>
+                router.push("/recruiter/profile/edit?tab=branding")
+              }
               onMouseEnter={() => setIsHoveringLogo(true)}
               onMouseLeave={() => setIsHoveringLogo(false)}
             >
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
-                <span className="text-white font-syne font-bold text-2xl uppercase">
-                  {company.name.substring(0, 2)}
-                </span>
-              </div>
+              {company.logo ? (
+                <Image
+                  src={company.logo}
+                  alt={`${company.name} Logo`}
+                  width={80}
+                  height={80}
+                  className="w-20 h-20 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
+                  <span className="text-white font-syne font-bold text-2xl uppercase">
+                    {company.name.substring(0, 2)}
+                  </span>
+                </div>
+              )}
 
               {/* Upload Overlay */}
               {isHoveringLogo && (
@@ -136,7 +140,7 @@ export default function CompanyHeader() {
 
                   {company.foundedYear && company.size && " · "}
 
-                  {company.size && `${company.size} employees`}
+                  {company.size && `${getCompanySize(company.size)} employees`}
                 </p>
 
                 <div className="flex items-center gap-4">
@@ -170,13 +174,15 @@ export default function CompanyHeader() {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => router.push("/recruiter/profile/edit")}
-              className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/80 text-white rounded-lg font-medium text-sm transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/80 text-midnight rounded-lg font-medium text-sm transition-colors"
             >
               <Edit className="w-4 h-4" />
               Edit Profile
             </button>
             <button
-              onClick={() => window.open("/company/preview", "_blank")}
+              onClick={() =>
+                window.open(`/companies/${company.slug}`, "_blank")
+              }
               className="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg font-medium text-sm transition-colors"
             >
               <Eye className="w-4 h-4" />

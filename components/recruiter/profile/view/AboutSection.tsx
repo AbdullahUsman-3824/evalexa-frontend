@@ -1,46 +1,53 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Building2, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Company } from "@/lib/services/company-service";
 
-import { useEffect, useState } from "react";
-import { getCompanies, Company } from "@/lib/services/company-service";
-
-export default function AboutSection() {
+export default function AboutSection({
+  isLoading,
+  company,
+}: {
+  isLoading: boolean;
+  company: Company | null;
+}) {
   const router = useRouter();
-  const [company, setCompany] = useState<Company | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCompany = async () => {
-      try {
-        const companies = await getCompanies();
-        setCompany(companies[0] ?? null);
-      } catch (error) {
-        console.error("Failed to fetch company", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchCompany();
-  }, []);
-  const cultureTags = [
-    "Remote Friendly",
-    "Fast Growth",
-    "Work-Life Balance",
-    "Innovative Culture",
-    "Diverse Team",
-    "Competitive Benefits",
-  ];
 
   if (isLoading) {
     return (
       <div className="h-48 rounded-xl bg-white border border-gray-200 animate-pulse"></div>
     );
   }
+  const getCompanyType = (type?: string) =>
+    ({
+      STARTUP: "Startup",
+      AGENCY: "Agency",
+      ENTERPRISE: "Enterprise",
+      NON_PROFIT: "Non-Profit",
+      GOVERNMENT: "Government",
+    })[type ?? ""] ?? "";
 
-  const isEmpty = !company?.description;
+  const details = [
+    company?.type && {
+      icon: Building2,
+      label: "Company Type",
+      value: getCompanyType(company.type),
+    },
+    company?.email && {
+      icon: Mail,
+      label: "Email",
+      value: company.email,
+    },
+  ].filter(Boolean) as {
+    icon: typeof Building2;
+    label: string;
+    value: string;
+  }[];
+
+  const hasDescription = !!company?.description;
+  const hasDetails = details.length > 0;
+  const isFullyEmpty = !hasDescription && !hasDetails;
 
   return (
     <motion.div
@@ -61,7 +68,7 @@ export default function AboutSection() {
         </button>
       </div>
 
-      {isEmpty ? (
+      {isFullyEmpty ? (
         <button
           onClick={() => router.push("/recruiter/profile/edit")}
           className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-primary hover:bg-surface/50 transition-all group"
@@ -83,32 +90,47 @@ export default function AboutSection() {
       ) : (
         <div className="space-y-6">
           {/* Description */}
-          <p
-            className="text-midnight leading-relaxed"
-            style={{ lineHeight: 1.8 }}
-          >
-            {company?.description}
-          </p>
-
-          {/* Culture Tags */}
-          {cultureTags.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-midnight text-sm mb-3">
-                Company Culture
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {cultureTags.map((tag, index) => (
-                  <motion.span
-                    key={index}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="px-3 py-1.5 bg-gray-100 text-slate text-sm font-medium rounded-full hover:bg-gray-200 transition-colors"
-                  >
-                    {tag}
-                  </motion.span>
-                ))}
+          {hasDescription ? (
+            <p
+              className="text-midnight leading-relaxed"
+              style={{ lineHeight: 1.8 }}
+            >
+              {company?.description}
+            </p>
+          ) : (
+            <button
+              onClick={() => router.push("/recruiter/profile/edit")}
+              className="w-full flex items-center gap-3 border border-dashed border-gray-300 rounded-lg p-4 hover:border-primary hover:bg-surface/50 transition-all group text-left"
+            >
+              <div className="w-8 h-8 rounded-full bg-surface group-hover:bg-primary/10 flex items-center justify-center shrink-0 transition-colors">
+                <Plus className="w-4 h-4 text-slate group-hover:text-primary transition-colors" />
               </div>
+              <p className="text-sm text-slate">
+                Add a description to tell candidates about your mission
+              </p>
+            </button>
+          )}
+
+          {/* Remaining fields (type, email) */}
+          {hasDetails && (
+            <div
+              className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${
+                hasDescription ? "pt-4 border-t border-gray-100" : ""
+              }`}
+            >
+              {details.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4 text-slate" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate mb-0.5">{label}</p>
+                    <p className="text-sm font-medium text-midnight">
+                      {value}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

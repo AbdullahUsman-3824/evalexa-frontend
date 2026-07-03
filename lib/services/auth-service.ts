@@ -252,3 +252,11 @@ export async function getProfile(): Promise<AuthUser> {
   persistAuthUser(normalizedProfile);
   return normalizedProfile;
 }
+
+if (typeof window !== "undefined") {
+  window.addEventListener("auth:unauthorized", () => {
+    if (authSession.user) {
+      setAuthSessionUser(null);
+    }
+  });
+}

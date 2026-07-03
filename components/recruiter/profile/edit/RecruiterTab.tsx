@@ -1,14 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Camera, ExternalLink } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ExternalLink } from "lucide-react";
+// import { useMemo, useRef, useState } from "react";
+// import Image from "next/image";
 
 type RecruiterFormData = {
   firstName: string;
   lastName: string;
   phone: string;
   email: string;
+  photo?: File | null;
 };
 
 interface RecruiterTabProps {
@@ -17,31 +19,40 @@ interface RecruiterTabProps {
 }
 
 export default function RecruiterTab({ data, onChange }: RecruiterTabProps) {
-  const [bio, setBio] = useState("");
-  const [isHoveringPhoto, setIsHoveringPhoto] = useState(false);
+  // const [isHoveringPhoto, setIsHoveringPhoto] = useState(false);
+  // const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const recruiterName = useMemo(() => {
-    const fullName = `${data.firstName} ${data.lastName}`.trim();
-    const nameFromEmail = data.email?.split("@")[0] ?? "";
-    return fullName || nameFromEmail;
-  }, [data.firstName, data.lastName, data.email]);
+  // const recruiterName = useMemo(() => {
+  //   const fullName = `${data.firstName} ${data.lastName}`.trim();
+  //   const nameFromEmail = data.email?.split("@")[0] ?? "";
+  //   return fullName || nameFromEmail;
+  // }, [data.firstName, data.lastName, data.email]);
 
-  const recruiterInitials = useMemo(() => {
-    const words = recruiterName
-      .split(" ")
-      .map((value) => value.trim())
-      .filter(Boolean);
+  // const recruiterInitials = useMemo(() => {
+  //   const words = recruiterName
+  //     .split(" ")
+  //     .map((value) => value.trim())
+  //     .filter(Boolean);
 
-    if (words.length === 0) {
-      return "U";
-    }
+  //   if (words.length === 0) {
+  //     return "U";
+  //   }
 
-    if (words.length === 1) {
-      return (words[0]?.slice(0, 2) ?? "U").toUpperCase();
-    }
+  //   if (words.length === 1) {
+  //     return (words[0]?.slice(0, 2) ?? "U").toUpperCase();
+  //   }
 
-    return `${words[0]?.charAt(0) ?? ""}${words[1]?.charAt(0) ?? ""}`.toUpperCase();
-  }, [recruiterName]);
+  //   return `${words[0]?.charAt(0) ?? ""}${words[1]?.charAt(0) ?? ""}`.toUpperCase();
+  // }, [recruiterName]);
+
+  // const handlePhotoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0];
+  //   if (!file) return;
+
+  //   onChange({ photo: file });
+  //   setPhotoPreview(URL.createObjectURL(file));
+  // };
 
   return (
     <motion.div
@@ -51,7 +62,8 @@ export default function RecruiterTab({ data, onChange }: RecruiterTabProps) {
       className="space-y-6"
     >
       {/* Profile Photo */}
-      <div>
+
+      {/* <div>
         <label className="block text-sm font-medium text-midnight mb-3">
           Profile Photo
         </label>
@@ -60,14 +72,25 @@ export default function RecruiterTab({ data, onChange }: RecruiterTabProps) {
             className="relative cursor-pointer"
             onMouseEnter={() => setIsHoveringPhoto(true)}
             onMouseLeave={() => setIsHoveringPhoto(false)}
+            onClick={() => fileInputRef.current?.click()}
           >
-            <div className="w-24 h-24 rounded-full bg-linear-to-br from-primary to-cyan flex items-center justify-center">
-              <span className="text-white font-syne font-bold text-2xl">
-                {recruiterInitials}
-              </span>
-            </div>
+            {photoPreview ? (
+              <Image
+                src={photoPreview}
+                alt={recruiterName || "Profile photo"}
+                width={96}
+                height={96}
+                className="w-24 h-24 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-linear-to-br from-primary to-cyan flex items-center justify-center">
+                <span className="text-white font-syne font-bold text-2xl">
+                  {recruiterInitials}
+                </span>
+              </div>
+            )}
 
-            {/* Upload Overlay */}
+
             {isHoveringPhoto && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -80,13 +103,24 @@ export default function RecruiterTab({ data, onChange }: RecruiterTabProps) {
           </div>
 
           <div>
-            <button className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors mb-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif"
+              className="hidden"
+              onChange={handlePhotoSelect}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors mb-2"
+            >
               Upload New Photo
             </button>
             <p className="text-xs text-slate">JPG, PNG or GIF (Max 2MB)</p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Name Fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -115,19 +149,6 @@ export default function RecruiterTab({ data, onChange }: RecruiterTabProps) {
             placeholder="Enter last name"
           />
         </div>
-      </div>
-
-      {/* Job Title / Designation */}
-      <div>
-        <label className="block text-sm font-medium text-midnight mb-2">
-          Job Title / Designation <span className="text-danger">*</span>
-        </label>
-        <input
-          type="text"
-          defaultValue="Senior Talent Acquisition Manager"
-          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-          placeholder="e.g., HR Manager, Talent Acquisition Specialist"
-        />
       </div>
 
       {/* Email */}
@@ -164,55 +185,6 @@ export default function RecruiterTab({ data, onChange }: RecruiterTabProps) {
           className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           placeholder="+923001234567"
         />
-      </div>
-
-      {/* LinkedIn Profile URL */}
-      <div>
-        <label className="block text-sm font-medium text-midnight mb-2">
-          LinkedIn Profile URL
-        </label>
-        <input
-          type="url"
-          defaultValue="https://linkedin.com/in/ahmedhassan"
-          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-          placeholder="https://linkedin.com/in/yourprofile"
-        />
-      </div>
-
-      {/* Years of Experience */}
-      <div>
-        <label className="block text-sm font-medium text-midnight mb-2">
-          Years of Experience in Recruiting
-        </label>
-        <input
-          type="number"
-          defaultValue="7"
-          min="0"
-          max="50"
-          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-          placeholder="Enter years"
-        />
-      </div>
-
-      {/* Bio */}
-      <div>
-        <label className="block text-sm font-medium text-midnight mb-2">
-          Professional Bio
-        </label>
-        <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          rows={4}
-          maxLength={200}
-          className="w-full px-4 bg-white text-midnight py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
-          placeholder="Brief description about your role and experience..."
-        />
-        <div className="flex justify-between items-center mt-2">
-          <p className="text-xs text-slate">
-            This will be visible to candidates
-          </p>
-          <p className="text-xs text-slate">{bio.length}/200</p>
-        </div>
       </div>
     </motion.div>
   );

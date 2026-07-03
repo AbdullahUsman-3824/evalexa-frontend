@@ -16,6 +16,10 @@ export async function parseApiResponse<T>(response: Response): Promise<T> {
     : await response.text();
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("auth:unauthorized"));
+    }
+
     if (typeof body === "string") {
       throw new Error(body || `Request failed (${response.status})`);
     }

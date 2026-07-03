@@ -63,9 +63,17 @@ const candidatesSeed: ShortlistedCandidate[] = [
   },
 ];
 
-const allJobs = ["All Jobs", "Frontend Developer", "Product Designer", "Data Engineer"];
+const allJobs = [
+  "All Jobs",
+  "Frontend Developer",
+  "Product Designer",
+  "Data Engineer",
+];
 
-function sortCandidates(candidates: ShortlistedCandidate[], sortBy: SortOption) {
+function sortCandidates(
+  candidates: ShortlistedCandidate[],
+  sortBy: SortOption,
+) {
   return [...candidates].sort((a, b) => {
     if (sortBy === "Match Score") return b.matchScore - a.matchScore;
     if (sortBy === "Name") return a.name.localeCompare(b.name);
@@ -74,18 +82,22 @@ function sortCandidates(candidates: ShortlistedCandidate[], sortBy: SortOption) 
 }
 
 export default function ShortlistedPage() {
-  const [candidates, setCandidates] = useState<ShortlistedCandidate[]>(candidatesSeed);
+  const [candidates, setCandidates] =
+    useState<ShortlistedCandidate[]>(candidatesSeed);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [jobFilter, setJobFilter] = useState("All Jobs");
   const [sortBy, setSortBy] = useState<SortOption>("Match Score");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
-  const [removeTarget, setRemoveTarget] = useState<ShortlistedCandidate | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<ShortlistedCandidate | null>(
+    null,
+  );
 
   const filtered = useMemo(() => {
     const normalized = search.trim().toLowerCase();
     const searched = candidates.filter((candidate) => {
-      const haystack = `${candidate.name} ${candidate.role} ${candidate.job}`.toLowerCase();
+      const haystack =
+        `${candidate.name} ${candidate.role} ${candidate.job}`.toLowerCase();
       return haystack.includes(normalized);
     });
     const byJob =
@@ -95,7 +107,9 @@ export default function ShortlistedPage() {
     return sortCandidates(byJob, sortBy);
   }, [candidates, jobFilter, search, sortBy]);
 
-  const allSelected = filtered.length > 0 && filtered.every((candidate) => selectedIds.includes(candidate.id));
+  const allSelected =
+    filtered.length > 0 &&
+    filtered.every((candidate) => selectedIds.includes(candidate.id));
 
   const activeJobs = useMemo(
     () => Array.from(new Set(candidates.map((candidate) => candidate.job))),
@@ -109,7 +123,9 @@ export default function ShortlistedPage() {
 
   const handleSelect = (id: string, selected: boolean) => {
     setSelectedIds((prev) =>
-      selected ? Array.from(new Set([...prev, id])) : prev.filter((item) => item !== id),
+      selected
+        ? Array.from(new Set([...prev, id]))
+        : prev.filter((item) => item !== id),
     );
   };
 
@@ -128,7 +144,9 @@ export default function ShortlistedPage() {
 
   const confirmRemove = () => {
     if (!removeTarget) return;
-    setCandidates((prev) => prev.filter((candidate) => candidate.id !== removeTarget.id));
+    setCandidates((prev) =>
+      prev.filter((candidate) => candidate.id !== removeTarget.id),
+    );
     setSelectedIds((prev) => prev.filter((id) => id !== removeTarget.id));
     setRemoveTarget(null);
   };
@@ -138,7 +156,9 @@ export default function ShortlistedPage() {
       <div className="mx-auto max-w-7xl space-y-5">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="font-syne text-2xl font-bold text-midnight">Shortlisted Candidates</h1>
+            <h1 className="font-syne text-2xl font-bold text-midnight">
+              Shortlisted Candidates
+            </h1>
             <p className="mt-1 text-slate">{subtitle}</p>
           </div>
           <button
@@ -164,14 +184,19 @@ export default function ShortlistedPage() {
               onChange={(event) => setJobFilter(event.target.value)}
               className="h-10 rounded-lg border border-slate/25 px-3 text-sm text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             >
-              {[...allJobs, ...activeJobs.filter((job) => !allJobs.includes(job))].map((job) => (
+              {[
+                ...allJobs,
+                ...activeJobs.filter((job) => !allJobs.includes(job)),
+              ].map((job) => (
                 <option key={job}>{job}</option>
               ))}
             </select>
             <div className="flex gap-2">
               <select
                 value={sortBy}
-                onChange={(event) => setSortBy(event.target.value as SortOption)}
+                onChange={(event) =>
+                  setSortBy(event.target.value as SortOption)
+                }
                 className="h-10 w-full rounded-lg border border-slate/25 px-3 text-sm text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 <option>Match Score</option>
@@ -220,8 +245,13 @@ export default function ShortlistedPage() {
                 <div className="absolute right-1 top-1 h-2 w-2 rounded-full bg-warning" />
               </div>
             </div>
-            <h3 className="font-syne text-lg font-semibold text-midnight">No shortlisted candidates yet</h3>
-            <Link href="/recruiter/applicants" className="mt-2 inline-block text-sm font-medium text-primary">
+            <h3 className="font-syne text-lg font-semibold text-midnight">
+              No shortlisted candidates yet
+            </h3>
+            <Link
+              href="/recruiter/applicants"
+              className="mt-2 inline-block text-sm font-medium text-primary"
+            >
               Go to Applicants →
             </Link>
           </section>
@@ -249,7 +279,9 @@ export default function ShortlistedPage() {
                     <input
                       type="checkbox"
                       checked={allSelected}
-                      onChange={(event) => handleToggleAll(event.target.checked)}
+                      onChange={(event) =>
+                        handleToggleAll(event.target.checked)
+                      }
                       aria-label="Select all shortlisted"
                     />
                   </th>
@@ -270,16 +302,22 @@ export default function ShortlistedPage() {
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(candidate.id)}
-                        onChange={(event) => handleSelect(candidate.id, event.target.checked)}
+                        onChange={(event) =>
+                          handleSelect(candidate.id, event.target.checked)
+                        }
                         aria-label={`Select ${candidate.name}`}
                       />
                     </td>
                     <td className="px-3 py-3">
-                      <p className="font-medium text-midnight">{candidate.name}</p>
+                      <p className="font-medium text-midnight">
+                        {candidate.name}
+                      </p>
                       <p className="text-xs text-slate">{candidate.role}</p>
                     </td>
                     <td className="px-3 py-3 text-midnight">{candidate.job}</td>
-                    <td className="px-3 py-3 text-slate">{candidate.shortlistedDate}</td>
+                    <td className="px-3 py-3 text-slate">
+                      {candidate.shortlistedDate}
+                    </td>
                     <td className="px-3 py-3">
                       <span className="rounded-full bg-success px-2.5 py-1 text-xs font-semibold text-white">
                         {candidate.matchScore}%
@@ -296,9 +334,15 @@ export default function ShortlistedPage() {
         {removeTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-midnight/50 p-4">
             <div className="w-full max-w-md rounded-xl bg-white p-5">
-              <h3 className="font-syne text-lg font-semibold text-midnight">Remove from shortlist?</h3>
+              <h3 className="font-syne text-lg font-semibold text-midnight">
+                Remove from shortlist?
+              </h3>
               <p className="mt-2 text-sm text-slate">
-                This will move <span className="font-semibold text-midnight">{removeTarget.name}</span> to rejected.
+                This will move{" "}
+                <span className="font-semibold text-midnight">
+                  {removeTarget.name}
+                </span>{" "}
+                to rejected.
               </p>
               <div className="mt-4 flex justify-end gap-2">
                 <button

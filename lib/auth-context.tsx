@@ -49,6 +49,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refetchUser().finally(() => setAuthSessionLoading(false));
   }, []);
 
+  useEffect(() => {
+    function handleUnauthorized() {
+      setAuthSessionUser(null);
+    }
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    return () =>
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+  }, []);
+
   async function login(payload: LoginPayload) {
     const loggedInUser = await loginUser(payload);
     setAuthSessionUser(loggedInUser);

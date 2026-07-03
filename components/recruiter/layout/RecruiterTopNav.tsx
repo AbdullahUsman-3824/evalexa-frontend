@@ -276,53 +276,24 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                 <div className="absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-lg border border-gray-200 z-50 py-1 overflow-hidden">
                   {/* Company header */}
                   <div className="px-4 py-3 border-b border-gray-100">
-                    {company ? (
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100">
-                          {showLogo ? (
-                            <Image
-                              src={logoSrc!}
-                              alt={company.name}
-                              width={36}
-                              height={36}
-                              unoptimized
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
-                              <span className="text-white font-bold text-xs">
-                                {company.name.slice(0, 2).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-midnight truncate">
-                            {company.name}
-                          </p>
-                          <p className="text-xs text-slate truncate">
-                            {company.location}
-                          </p>
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-cyan flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-semibold text-xs">
+                          {accountInitials}
+                        </span>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-4 h-4 text-slate/40" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-midnight">
-                            {accountName}
-                          </p>
-                          <p
-                            className="truncate text-xs text-slate/60"
-                            title={accountUser?.email}
-                          >
-                            {accountUser?.email}
-                          </p>
-                        </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-midnight">
+                          {accountName}
+                        </p>
+                        <p
+                          className="truncate text-xs text-slate/60"
+                          title={accountUser?.email}
+                        >
+                          {accountUser?.email}
+                        </p>
                       </div>
-                    )}
+                    </div>
                   </div>
 
                   {/* Menu items */}
