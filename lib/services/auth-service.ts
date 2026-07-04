@@ -3,13 +3,13 @@ import { apiRequest } from "@/lib/services/api-client";
 const AUTH_USER_KEY = "user";
 
 export type AuthUser = {
-  id: number;
+  id: string;
   name?: string;
   fullName: string;
   email: string;
   phone?: string;
   role: string;
-  companyId: number | null;
+  companyId: string | null;
   isVerified: boolean;
   isActive: boolean;
 };
@@ -160,7 +160,7 @@ export function getStoredUser(): AuthUser | null {
   }
 }
 
-export function getStoredUserId(): number | null {
+export function getStoredUserId(): string | null {
   const storedUser = getStoredUser();
   return storedUser?.id ?? null;
 }

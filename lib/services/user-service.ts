@@ -45,6 +45,6 @@ export async function updateUser(
 }
 
 /** Delete a user — requires JWT auth. */
-export async function deleteUser(id: number): Promise<UserProfile> {
+export async function deleteUser(id: string): Promise<UserProfile> {
   return apiRequest<UserProfile>(`/users/${id}`, { method: "DELETE" });
 }
