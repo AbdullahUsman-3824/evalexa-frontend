@@ -8,7 +8,7 @@ interface JobOverviewSectionProps {
   jobData: {
     description: string;
     responsibilities: string[];
-    requirements: string[];
+    // requirements: string[];
   };
 }
 
@@ -51,7 +51,7 @@ export default function JobOverviewSection({
           ))}
         </ul>
 
-        <h3 className="mt-6 border-l-3 border-[#1E6FFF] pl-4 text-[15px] font-semibold text-[#0D1B2A]">
+        {/* <h3 className="mt-6 border-l-3 border-[#1E6FFF] pl-4 text-[15px] font-semibold text-[#0D1B2A]">
           Requirements:
         </h3>
         <ul className="mt-3 space-y-3 pl-4">
@@ -64,11 +64,10 @@ export default function JobOverviewSection({
               <span className="flex-1">{item}</span>
             </li>
           ))}
-        </ul>
+        </ul> */}
 
         <p className="mt-6 text-[15px] italic leading-7 text-[#4A5568]">
-          We encourage all motivated candidates to apply and start their
-          engineering journey with us.
+          We encourage all motivated candidates to apply and start their journey with us.
         </p>
       </div>
     </section>

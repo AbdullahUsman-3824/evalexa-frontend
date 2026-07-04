@@ -507,6 +507,7 @@ export type PublicJob = {
   title: string;
   slug: string;
   description: string;
+  responsibilities?: string | string[];
   jobType: BackendJobType;
   experienceLevel: BackendExperienceLevel;
   salaryMin: number | null;

@@ -6,6 +6,21 @@ import JobOverviewSection from "@/components/public/jobs/apply/JobOverviewSectio
 import { getPublicJobBySlug } from "@/lib/services/jobs-service";
 import JobApplicationForm, { type JobDetailData } from "./JobApplicationForm";
 
+function normalizeResponsibilities(responsibilities?: string | string[]) {
+  if (Array.isArray(responsibilities)) {
+    return responsibilities.map((item) => item.trim()).filter(Boolean);
+  }
+
+  if (typeof responsibilities === "string") {
+    return responsibilities
+      .split(/\r?\n/)
+      .map((item) => item.replace(/^[-*\u2022]\s*/, "").trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 export default function JobDetailPage() {
   const params = useParams<{ jobSlug: string }>();
   const jobSlug =
@@ -31,7 +46,7 @@ export default function JobDetailPage() {
           jobId: job?.id ?? "",
           companyId: job?.company?.id ?? "",
           description: job?.description ?? "",
-          responsibilities: [],
+          responsibilities: normalizeResponsibilities(job?.responsibilities),
           requirements: [],
         });
       } catch (err: unknown) {
