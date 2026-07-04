@@ -15,7 +15,7 @@ import {
   getCompanies,
   type Company,
 } from "@/lib/services/company-service";
-import { getProfile, getStoredUserId } from "@/lib/services/auth-service";
+import { getProfile, getStoredUserId } from "@/store/auth-session";
 import { updateUser } from "@/lib/services/user-service";
 import Toast from "@/components/ui/Toast";
 

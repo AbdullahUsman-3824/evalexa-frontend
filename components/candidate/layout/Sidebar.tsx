@@ -18,7 +18,7 @@ import {
   LogOut,
   X,
 } from "lucide-react";
-import { logoutUser } from "@/lib/services/auth-service";
+import { logout } from "@/store/auth-session";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -132,7 +132,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await logoutUser();
+    await logout();
     onClose();
     router.push("/login");
   };

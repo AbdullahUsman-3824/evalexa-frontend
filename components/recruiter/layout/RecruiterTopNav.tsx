@@ -16,9 +16,9 @@ import {
 import {
   getProfile,
   getStoredUser,
-  type AuthUser,
-  logoutUser,
-} from "@/lib/services/auth-service";
+  logout as logoutUser,
+} from "@/store/auth-session";
+import type { AuthUser,  } from "@/types/auth.types";
 import { getCompanies, type Company } from "@/lib/services/company-service";
 
 interface RecruiterTopNavProps {

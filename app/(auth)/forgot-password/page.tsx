@@ -10,7 +10,7 @@ import StepCheckEmail from "@/components/auth/forgot-password/StepCheckEmail";
 import StepResetPassword from "@/components/auth/forgot-password/StepResetPassword";
 import StepSuccess from "@/components/auth/forgot-password/StepSuccess";
 import Toast from "@/components/ui/Toast";
-import { forgotPassword, resetPassword } from "@/lib/services/auth-service";
+import { authService } from "@/services/auth.service";
 
 function ForgotPasswordContent() {
   const searchParams = useSearchParams();
@@ -42,7 +42,7 @@ function ForgotPasswordContent() {
   };
 
   const handleEmailSubmit = async (submittedEmail: string) => {
-    await forgotPassword({ email: submittedEmail });
+    await authService.forgotPassword({ email: submittedEmail });
     setEmail(submittedEmail);
     setCurrentStep(2);
     showToast("OTP sent to your email.", "success");
@@ -54,7 +54,7 @@ function ForgotPasswordContent() {
       return;
     }
 
-    await forgotPassword({ email });
+    await authService.forgotPassword({ email });
     showToast("OTP resent successfully.", "success");
   };
 
@@ -67,7 +67,7 @@ function ForgotPasswordContent() {
     otp: string;
     newPassword: string;
   }) => {
-    await resetPassword(payload);
+    await authService.resetPassword(payload);
     showToast("Password reset successful.", "success");
   };
 

@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { MonitorSmartphone } from "lucide-react";
 import ToggleSwitch from "@/components/candidate/settings/ToggleSwitch";
-import { getStoredUser } from "@/lib/services/auth-service";
+import { getStoredUser } from "@/store/auth-session";
 import { updateUser } from "@/lib/services/user-service";
 import Toast from "@/components/ui/Toast";
 

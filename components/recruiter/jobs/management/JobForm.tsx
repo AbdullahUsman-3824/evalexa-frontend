@@ -10,7 +10,7 @@ import Step2Requirements from "@/components/recruiter/jobs/management/Step2Requi
 import Step3AISettings from "@/components/recruiter/jobs/management/Step3AISettings";
 import Step4Review from "@/components/recruiter/jobs/management/Step4Review";
 import type { JobPostFormData } from "@/components/recruiter/jobs/management/types";
-import { getProfile } from "@/lib/services/auth-service";
+import { getProfile } from "@/store/auth-session";
 import {
   createJob,
   updateJob,

@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import {
   getProfile,
   getStoredUser,
-  type AuthUser,
-} from "@/lib/services/auth-service";
+} from "@/store/auth-session";
+import type { AuthUser } from "@/types/auth.types";
 
 export default function WelcomeBanner() {
   const router = useRouter();

@@ -8,24 +8,15 @@ import {
   ReactNode,
 } from "react";
 import {
-  AuthUser,
   getAuthSessionSnapshot,
   getProfile,
-  loginUser,
-  logoutUser,
+  login as loginSession,
+  logout as logoutSession,
   setAuthSessionLoading,
   setAuthSessionUser,
   subscribeAuthSession,
-  LoginPayload,
-} from "@/lib/services/auth-service";
-
-type AuthContextType = {
-  user: AuthUser | null;
-  loading: boolean;
-  login: (payload: LoginPayload) => Promise<AuthUser>;
-  logout: () => Promise<void>;
-  refetchUser: () => Promise<void>;
-};
+} from "@/store/auth-session";
+import type { AuthContextType, LoginPayload } from "@/types/auth.types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -49,25 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refetchUser().finally(() => setAuthSessionLoading(false));
   }, []);
 
-  useEffect(() => {
-    function handleUnauthorized() {
-      setAuthSessionUser(null);
-    }
-
-    window.addEventListener("auth:unauthorized", handleUnauthorized);
-    return () =>
-      window.removeEventListener("auth:unauthorized", handleUnauthorized);
-  }, []);
-
   async function login(payload: LoginPayload) {
-    const loggedInUser = await loginUser(payload);
-    setAuthSessionUser(loggedInUser);
-    return loggedInUser;
+    return loginSession(payload);
   }
 
   async function logout() {
-    await logoutUser();
-    setAuthSessionUser(null);
+    await logoutSession();
   }
 
   return (

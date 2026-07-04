@@ -6,8 +6,8 @@ import SettingRow from "@/components/candidate/settings/SettingRow";
 import {
   getProfile,
   getStoredUser,
-  type AuthUser,
-} from "@/lib/services/auth-service";
+} from "@/store/auth-session";
+import type { AuthUser } from "@/types/auth.types";
 import { updateUser } from "@/lib/services/user-service";
 import Toast from "@/components/ui/Toast";
 

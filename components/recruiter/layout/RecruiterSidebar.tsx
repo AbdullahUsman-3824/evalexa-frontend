@@ -16,7 +16,7 @@ import {
   PieChart,
   LogOut,
 } from "lucide-react";
-import { logoutUser } from "@/lib/services/auth-service";
+import { logout as logoutUser } from "@/store/auth-session";
 
 interface NavItem {
   label: string;
@@ -89,7 +89,7 @@ const navSections: NavSection[] = [
         icon: PieChart,
       },
     ],
-  }
+  },
 ];
 
 interface RecruiterSidebarProps {

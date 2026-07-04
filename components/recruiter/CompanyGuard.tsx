@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Building2, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getStoredUser, getProfile } from "@/lib/services/auth-service";
+import { getStoredUser, getProfile } from "@/store/auth-session";
 
 interface CompanyGuardProps {
   children: React.ReactNode;

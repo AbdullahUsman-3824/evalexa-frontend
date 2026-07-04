@@ -6,8 +6,8 @@ import { Mail, Phone, User } from "lucide-react";
 import {
   getProfile,
   getStoredUser,
-  type AuthUser,
-} from "@/lib/services/auth-service";
+} from "@/store/auth-session";
+import type { AuthUser } from "@/types/auth.types";
 import { useRouter } from "next/navigation";
 
 export default function RecruiterDetails() {

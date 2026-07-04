@@ -19,7 +19,7 @@ import SocialLogin from "@/components/auth/SocialLogin";
 import Toast from "@/components/ui/Toast";
 import PasswordStrength from "@/components/auth/forgot-password/PasswordStrength";
 import PasswordRequirements from "@/components/auth/forgot-password/PasswordRequirements";
-import { registerUser } from "@/lib/services/auth-service";
+import { authService } from "@/services/auth.service";
 
 type SignupErrors = {
   fullName: string;
@@ -159,7 +159,7 @@ export default function SignupForm() {
     setIsLoading(true);
 
     try {
-      const response = await registerUser({
+      const response = await authService.register({
         fullName: trimmedFullName,
         email: trimmedEmail,
         password: formData.password,

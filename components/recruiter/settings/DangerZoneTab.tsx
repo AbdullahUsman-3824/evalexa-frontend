@@ -4,7 +4,8 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import DangerCard from "@/components/candidate/settings/DangerCard";
 import { updateUser, deleteUser } from "@/lib/services/user-service";
-import { getStoredUser, clearAuthSession } from "@/lib/services/auth-service";
+import { getStoredUser } from "@/store/auth-session";
+import { logout } from "@/store/auth-session";
 import { useRouter } from "next/navigation";
 import Toast from "@/components/ui/Toast";
 
@@ -49,7 +50,7 @@ export default function DangerZoneTab() {
     setLoading(true);
     try {
       await deleteUser(user.id);
-      clearAuthSession();
+      logout();
       router.push("/");
     } catch (err) {
       const message =

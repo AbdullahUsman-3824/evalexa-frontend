@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getStoredUser, getProfile } from "@/lib/services/auth-service";
+import { getStoredUser, getProfile } from "@/store/auth-session";
 import {
   createCompany,
   type CompanySize,
