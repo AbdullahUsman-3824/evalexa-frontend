@@ -8,7 +8,7 @@ import Link from "next/link";
 import FormInput from "@/components/ui/FormInput";
 import SocialLogin from "@/components/auth/SocialLogin";
 import Toast from "@/components/ui/Toast";
-import { login } from "@/store/auth-session";
+import { login } from "@/repositories/auth.repository";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -82,7 +82,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const user  = await login({
+      const user = await login({
         email: trimmedEmail,
         password: formData.password,
       });

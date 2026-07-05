@@ -18,7 +18,7 @@ import {
   LogOut,
   X,
 } from "lucide-react";
-import { logout } from "@/store/auth-session";
+import { logout } from "@/repositories/auth.repository";
 
 interface SidebarProps {
   isOpen: boolean;

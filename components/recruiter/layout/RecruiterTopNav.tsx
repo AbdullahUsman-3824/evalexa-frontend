@@ -13,12 +13,8 @@ import {
   LogOut,
   Plus,
 } from "lucide-react";
-import {
-  getProfile,
-  getStoredUser,
-  logout as logoutUser,
-} from "@/store/auth-session";
-import type { AuthUser,  } from "@/types/auth.types";
+import { authRepository } from "@/repositories/auth.repository";
+import { useAppSelector } from "@/store/hooks";
 import { getCompanies, type Company } from "@/lib/services/company-service";
 
 interface RecruiterTopNavProps {
@@ -44,9 +40,7 @@ const pageTitles: Record<string, string> = {
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
-    getStoredUser(),
-  );
+  const { user: accountUser } = useAppSelector((state) => state.auth);
   const [company, setCompany] = useState<Company | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -56,10 +50,6 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const hasUnreadNotifications = true;
 
   useEffect(() => {
-    void getProfile()
-      .then((profile) => setAccountUser(profile))
-      .catch(() => {});
-
     void getCompanies()
       .then((companies) => {
         if (companies.length > 0) {
@@ -87,7 +77,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   }, [accountName]);
 
   const handleSignOut = async () => {
-    await logoutUser();
+    await authRepository.logout();
     setShowProfileDropdown(false);
     router.push("/login");
   };

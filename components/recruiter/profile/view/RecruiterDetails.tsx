@@ -1,30 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo} from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, User } from "lucide-react";
-import {
-  getProfile,
-  getStoredUser,
-} from "@/store/auth-session";
-import type { AuthUser } from "@/types/auth.types";
+import { useAppSelector } from "@/store/hooks";
 import { useRouter } from "next/navigation";
 
 export default function RecruiterDetails() {
   const router = useRouter();
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
-    getStoredUser(),
-  );
 
-  useEffect(() => {
-    void getProfile()
-      .then((profile) => {
-        setAccountUser(profile);
-      })
-      .catch(() => {
-        // Keep stored session user as fallback if profile request fails.
-      });
-  }, []);
+  const { user: accountUser } = useAppSelector((state) => state.auth);
 
   const recruiterName = useMemo(() => {
     const nameFromEmail = accountUser?.email?.split("@")[0];

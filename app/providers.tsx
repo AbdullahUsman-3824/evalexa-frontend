@@ -1,8 +1,14 @@
 "use client";
 
-import { AuthProvider } from "@/lib/auth-context";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import { Provider as ReduxProvider } from "react-redux";
+import { authRepository } from "@/repositories/auth.repository";
+import { store } from "@/store";
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  useEffect(() => {
+    authRepository.hydrateFromStorage();
+  }, []);
+
+  return <ReduxProvider store={store}>{children}</ReduxProvider>;
 }

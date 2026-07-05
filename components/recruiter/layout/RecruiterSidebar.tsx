@@ -16,7 +16,7 @@ import {
   PieChart,
   LogOut,
 } from "lucide-react";
-import { logout as logoutUser } from "@/store/auth-session";
+import {logout} from "@/repositories/auth.repository";
 
 interface NavItem {
   label: string;
@@ -115,7 +115,7 @@ export default function RecruiterSidebar({
   };
 
   const handleSignOut = async () => {
-    await logoutUser();
+    await logout();
     if (onClose) onClose();
     router.push("/login");
   };

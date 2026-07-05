@@ -15,7 +15,8 @@ import {
   getCompanies,
   type Company,
 } from "@/lib/services/company-service";
-import { getProfile, getStoredUserId } from "@/store/auth-session";
+import { authRepository } from "@/repositories/auth.repository";
+import { useAppSelector } from "@/store/hooks";
 import { updateUser } from "@/lib/services/user-service";
 import Toast from "@/components/ui/Toast";
 
@@ -41,11 +42,11 @@ interface RecruiterFormData {
 
 export default function EditProfilePage() {
   const router = useRouter();
-
+  const { user } = useAppSelector((state) => state.auth);
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabId) ?? "company";
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
-  
+
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -53,7 +54,7 @@ export default function EditProfilePage() {
   } | null>(null);
 
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  // const [userId, setUserId] = useState<string | null>(null);
 
   const [companyData, setCompanyData] = useState<CompanyFormData>({
     name: "",
@@ -90,7 +91,7 @@ export default function EditProfilePage() {
       try {
         const [companies, profile] = await Promise.all([
           getCompanies(),
-          getProfile(),
+          authRepository.getProfile(),
         ]);
 
         const nameParts = (profile.fullName ?? "")
@@ -98,8 +99,6 @@ export default function EditProfilePage() {
           .split(/\s+/)
           .filter(Boolean);
         const [firstName = "", ...otherParts] = nameParts;
-
-        setUserId(String(profile.id));
         setRecruiterData({
           firstName,
           lastName: otherParts.join(" "),
@@ -144,9 +143,9 @@ export default function EditProfilePage() {
       });
       return;
     }
-    const effectiveUserId = userId ?? getStoredUserId();
+    const userId = user?.id;
 
-    if (!effectiveUserId) {
+    if (!userId) {
       setToast({
         message: "Session expired. Please log in again.",
         type: "error",
@@ -194,7 +193,7 @@ export default function EditProfilePage() {
             ? verificationDocuments
             : undefined,
         }),
-        updateUser(String(effectiveUserId), {
+        updateUser(String(userId), {
           fullName,
           phone: phone || undefined,
         }),
@@ -220,7 +219,7 @@ export default function EditProfilePage() {
       });
 
       // Refresh session so top nav picks up updated name
-      await getProfile();
+      await authRepository.refreshProfile();
 
       setToast({ message: "Profile updated successfully!", type: "success" });
       setTimeout(() => {
