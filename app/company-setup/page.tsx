@@ -2,14 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getStoredUser, getProfile } from "@/lib/services/auth-service";
-import {
-  createCompany,
-  type CompanySize,
-  type CompanyType,
-} from "@/lib/services/company-service";
+import { useCreateCompanyMutation } from "@/store/api/companyApi";
+import type { CompanySize, CompanyType } from "@/types/company.types";
 import FormInput from "@/components/ui/FormInput";
 import Toast from "@/components/ui/Toast";
+import { useAppSelector } from "@/store/hooks";
+import { authRepository } from "@/repositories/auth.repository";
 
 type ToastState = {
   message: string;
@@ -49,11 +47,11 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function CompanySetupPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
+  const { user } = useAppSelector((state) => state.auth);
+  const [createCompany, { isLoading: loading }] = useCreateCompanyMutation();
 
   const logoInputRef = useRef<HTMLInputElement>(null);
-  // const bannerInputRef = useRef<HTMLInputElement>(null);
   const docsInputRef = useRef<HTMLInputElement>(null);
 
   const [fields, setFields] = useState({
@@ -69,24 +67,26 @@ export default function CompanySetupPage() {
   });
 
   const [logo, setLogo] = useState<File | null>(null);
-  // const [banner, setBanner] = useState<File | null>(null);
-  const [verificationDocuments, setVerificationDocuments] = useState<File[]>([]);
+  const [verificationDocuments, setVerificationDocuments] = useState<File[]>(
+    [],
+  );
 
   useEffect(() => {
-    const user = getStoredUser();
     if (!user) {
       router.push("/login");
     } else if (user.companyId) {
       router.push("/recruiter/dashboard");
     }
-  }, [router]);
+  }, [user, router]);
 
   const handleField = (name: keyof typeof fields, value: string) => {
     setFields((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     handleField(e.target.name as keyof typeof fields, e.target.value);
   };
@@ -96,23 +96,19 @@ export default function CompanySetupPage() {
     setLogo(file);
   };
 
-  // const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0] ?? null;
-  //   setBanner(file);
-  // };
-
   const handleDocsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const incoming = Array.from(e.target.files ?? []);
     setVerificationDocuments((prev) => {
       const combined = [...prev, ...incoming];
-      // max 5 files enforced by backend; surface it early
       if (combined.length > 5) {
-        setToast({ message: "Maximum 5 verification documents allowed.", type: "error" });
+        setToast({
+          message: "Maximum 5 verification documents allowed.",
+          type: "error",
+        });
         return prev;
       }
       return combined;
     });
-    // reset input so the same file can be re-selected if removed
     e.target.value = "";
   };
 
@@ -125,51 +121,65 @@ export default function CompanySetupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const user = getStoredUser();
     if (!user?.id) {
-      setToast({ message: "Session expired. Please log in again.", type: "error" });
+      setToast({
+        message: "Session expired. Please log in again.",
+        type: "error",
+      });
       return;
     }
 
     if (!fields.name || !fields.industry || !fields.location) {
-      setToast({ message: "Please fill in all required fields.", type: "error" });
-      return;
-    }
-
-    const parsedYear = fields.foundedYear ? parseInt(fields.foundedYear, 10) : undefined;
-    if (parsedYear !== undefined && (isNaN(parsedYear) || parsedYear > CURRENT_YEAR)) {
-      setToast({ message: `Founded year must be ${CURRENT_YEAR} or earlier.`, type: "error" });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await createCompany({
-        name: fields.name,
-        industry: fields.industry,
-        location: fields.location,
-        description: fields.description || undefined,
-        size: (fields.size as CompanySize) || undefined,
-        type: (fields.type as CompanyType) || undefined,
-        foundedYear: parsedYear,
-        website: fields.website || undefined,
-        email: fields.email || undefined,
-        logo: logo ?? undefined,
-        // banner: banner ?? undefined,
-        verificationDocuments: verificationDocuments.length
-          ? verificationDocuments
-          : undefined,
+      setToast({
+        message: "Please fill in all required fields.",
+        type: "error",
       });
+      return;
+    }
 
-      await getProfile();
+    const parsedYear = fields.foundedYear
+      ? parseInt(fields.foundedYear, 10)
+      : undefined;
+    if (
+      parsedYear !== undefined &&
+      (isNaN(parsedYear) || parsedYear > CURRENT_YEAR)
+    ) {
+      setToast({
+        message: `Founded year must be ${CURRENT_YEAR} or earlier.`,
+        type: "error",
+      });
+      return;
+    }
+    const companyPayload = {
+      name: fields.name,
+      industry: fields.industry,
+      location: fields.location,
+      description: fields.description || undefined,
+      size: (fields.size as CompanySize) || undefined,
+      type: (fields.type as CompanyType) || undefined,
+      foundedYear: parsedYear,
+      website: fields.website || undefined,
+      email: fields.email || undefined,
+      logo: logo ?? undefined,
+      verificationDocuments: verificationDocuments.length
+        ? verificationDocuments
+        : undefined,
+    };
 
-      setToast({ message: "Company profile created successfully!", type: "success" });
+    try {
+      await createCompany(companyPayload).unwrap();
+
+      await authRepository.refreshProfile();
+
+      setToast({
+        message: "Company profile created successfully!",
+        type: "success",
+      });
       setTimeout(() => router.push("/recruiter/dashboard"), 1000);
-    } catch (err) {
+    } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to create company.";
+        (err as { message?: string })?.message ?? "Failed to create company.";
       setToast({ message, type: "error" });
-      setLoading(false);
     }
   };
 
@@ -193,13 +203,12 @@ export default function CompanySetupPage() {
             Set up your company
           </h1>
           <p className="text-slate">
-            Tell us about your organization to personalize your Evalexa workspace.
+            Tell us about your organization to personalize your Evalexa
+            workspace.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-
-          {/* ── Required fields ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormInput
               label="Company Name *"
@@ -212,7 +221,10 @@ export default function CompanySetupPage() {
             />
 
             <div className="flex flex-col gap-2">
-              <label htmlFor="industry" className="text-sm font-semibold text-midnight">
+              <label
+                htmlFor="industry"
+                className="text-sm font-semibold text-midnight"
+              >
                 Industry *
               </label>
               <select
@@ -222,9 +234,13 @@ export default function CompanySetupPage() {
                 onChange={handleChange}
                 className={selectClass}
               >
-                <option value="" disabled>Select industry</option>
+                <option value="" disabled>
+                  Select industry
+                </option>
                 {INDUSTRIES.map((ind) => (
-                  <option key={ind} value={ind}>{ind}</option>
+                  <option key={ind} value={ind}>
+                    {ind}
+                  </option>
                 ))}
               </select>
             </div>
@@ -240,7 +256,10 @@ export default function CompanySetupPage() {
             />
 
             <div className="flex flex-col gap-2">
-              <label htmlFor="size" className="text-sm font-semibold text-midnight">
+              <label
+                htmlFor="size"
+                className="text-sm font-semibold text-midnight"
+              >
                 Company Size
               </label>
               <select
@@ -252,13 +271,18 @@ export default function CompanySetupPage() {
               >
                 <option value="">Select size</option>
                 {COMPANY_SIZES.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label htmlFor="type" className="text-sm font-semibold text-midnight">
+              <label
+                htmlFor="type"
+                className="text-sm font-semibold text-midnight"
+              >
                 Company Type
               </label>
               <select
@@ -270,7 +294,9 @@ export default function CompanySetupPage() {
               >
                 <option value="">Select type</option>
                 {COMPANY_TYPES.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -286,7 +312,6 @@ export default function CompanySetupPage() {
             />
           </div>
 
-          {/* ── Contact & web ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormInput
               label="Website"
@@ -309,9 +334,11 @@ export default function CompanySetupPage() {
             />
           </div>
 
-          {/* ── Description ── */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="description" className="text-sm font-semibold text-midnight">
+            <label
+              htmlFor="description"
+              className="text-sm font-semibold text-midnight"
+            >
               Description
             </label>
             <textarea
@@ -325,11 +352,11 @@ export default function CompanySetupPage() {
             />
           </div>
 
-          {/* ── Media uploads ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Logo */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-midnight">Logo</label>
+              <label className="text-sm font-semibold text-midnight">
+                Logo
+              </label>
               <input
                 ref={logoInputRef}
                 type="file"
@@ -345,32 +372,14 @@ export default function CompanySetupPage() {
                 {logo ? logo.name : "Choose logo image…"}
               </button>
             </div>
-
-            {/* Banner */}
-            {/* <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-midnight">Banner</label>
-              <input
-                ref={bannerInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleBannerChange}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => bannerInputRef.current?.click()}
-                className="w-full rounded-xl border border-dashed border-slate/40 bg-surface/50 px-4 py-3 text-sm text-slate hover:border-primary hover:text-primary transition-colors text-left"
-              >
-                {banner ? banner.name : "Choose banner image…"}
-              </button>
-            </div> */}
           </div>
 
-          {/* ── Verification documents ── */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-midnight">
               Verification Documents
-              <span className="ml-2 font-normal text-slate text-xs">(max 5 files, 5 MB each)</span>
+              <span className="ml-2 font-normal text-slate text-xs">
+                (max 5 files, 5 MB each)
+              </span>
             </label>
             <input
               ref={docsInputRef}
@@ -409,7 +418,6 @@ export default function CompanySetupPage() {
             )}
           </div>
 
-          {/* ── Actions ── */}
           <div className="pt-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
             <button
               type="button"

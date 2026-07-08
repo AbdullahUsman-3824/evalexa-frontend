@@ -20,9 +20,8 @@ import {
   formatWorkModel,
   getJob,
   updateJob,
-  type BackendJobStatus,
-  type JobRecord,
-} from "@/lib/services/jobs-service";
+} from "@/repositories/job.repository";
+import { BackendJobStatus, JobRecord } from "@/types/job.types";
 
 const STATUS_OPTIONS: { value: BackendJobStatus; label: string }[] = [
   { value: "OPEN", label: "Published" },

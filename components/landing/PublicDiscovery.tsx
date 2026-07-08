@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Building2, MapPin } from "lucide-react";
-import {
-  getPublicCompanies,
-  type PublicCompany,
-} from "@/lib/services/company-service";
+import { useGetPublicCompaniesQuery } from "@/store/api/companyApi";
+import type { PublicCompany } from "@/types/company.types";
 
 function getCompanyInitials(company: PublicCompany): string {
   return company.name
@@ -19,34 +16,12 @@ function getCompanyInitials(company: PublicCompany): string {
 }
 
 export default function PublicDiscovery() {
-  const [companies, setCompanies] = useState<PublicCompany[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useGetPublicCompaniesQuery({
+    limit: 3,
+    sort: "jobs-high",
+  });
 
-  useEffect(() => {
-    let active = true;
-
-    async function loadCompanies() {
-      try {
-        const response = await getPublicCompanies({
-          limit: 3,
-          sort: "jobs-high",
-        });
-        if (!active) return;
-        setCompanies(response.items.slice(0, 3));
-      } catch {
-        if (!active) return;
-        setCompanies([]);
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    void loadCompanies();
-
-    return () => {
-      active = false;
-    };
-  }, []);
+  const companies = data?.items.slice(0, 3) ?? [];
 
   return (
     <section className="bg-midnight px-4 pb-6 pt-2 text-white sm:px-6 lg:px-8">
@@ -74,7 +49,7 @@ export default function PublicDiscovery() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {loading ? (
+          {isLoading ? (
             Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={index}

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Plus, Building2, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Company } from "@/lib/services/company-service";
+import type { Company } from "@/types/company.types";
 
 export default function AboutSection({
   isLoading,
@@ -125,9 +125,7 @@ export default function AboutSection({
                   </div>
                   <div>
                     <p className="text-xs text-slate mb-0.5">{label}</p>
-                    <p className="text-sm font-medium text-midnight">
-                      {value}
-                    </p>
+                    <p className="text-sm font-medium text-midnight">{value}</p>
                   </div>
                 </div>
               ))}

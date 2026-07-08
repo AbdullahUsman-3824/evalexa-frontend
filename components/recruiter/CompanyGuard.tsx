@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Building2, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getStoredUser, getProfile } from "@/lib/services/auth-service";
+import { authRepository } from "@/repositories/auth.repository";
+import { useAppSelector } from "@/store/hooks";
 
 interface CompanyGuardProps {
   children: React.ReactNode;
@@ -18,24 +19,16 @@ export default function CompanyGuard({
   featureHint,
 }: CompanyGuardProps) {
   const router = useRouter();
-  const [companyId, setCompanyId] = useState<string | null | undefined>(() =>
-    String(getStoredUser()?.companyId ?? null),
-  );
+const { user } = useAppSelector((state) => state.auth);
+const companyId = user?.companyId ? String(user.companyId) : null;
+
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Try to get a fresh profile in case companyId was just set
-    getProfile()
-      .then((profile) => {
-        setCompanyId(profile.companyId ? String(profile.companyId) : null);
-      })
+    authRepository
+      .getProfile()
       .catch(() => {
-        // Stored value is fine as fallback
-        setCompanyId(
-          getStoredUser()?.companyId
-            ? String(getStoredUser()?.companyId)
-            : null,
-        );
+        // Refresh failed (offline, 401, etc.) — fall back to whatever's cached
       })
       .finally(() => setReady(true));
   }, []);

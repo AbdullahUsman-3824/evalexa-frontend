@@ -8,14 +8,12 @@ import { Loader2, MailCheck } from "lucide-react";
 import LeftPanel from "@/components/auth/LeftPanel";
 import FormInput from "@/components/ui/FormInput";
 import Toast from "@/components/ui/Toast";
-import {
-  loginUser,
-  resendVerificationOtp,
-  verifyEmailOtp,
-} from "@/lib/services/auth-service";
+import { authService } from "@/services/auth.service";
 
 const PENDING_SIGNUP_KEY = "pending_signup";
 const OTP_REGEX = /^\d{6}$/;
+
+const { login, resendVerificationOtp, verifyEmailOtp } = authService;
 
 type PendingSignup = {
   email: string;
@@ -115,7 +113,7 @@ function VerifyEmailContent() {
         return;
       }
 
-      const user = await loginUser({
+      const { user } = await login({
         email: pending.email,
         password: pending.password,
       });
@@ -125,9 +123,7 @@ function VerifyEmailContent() {
       let dashboardPath = "/candidate/dashboard";
       if (user.role === "recruiter") {
         dashboardPath =
-          user.companyId === null
-            ? "/company-setup"
-            : "/recruiter/dashboard";
+          user.companyId === null ? "/company-setup" : "/recruiter/dashboard";
       }
 
       router.push(dashboardPath);

@@ -3,12 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Camera, Clock3, Globe2, Mail, Phone } from "lucide-react";
 import SettingRow from "@/components/candidate/settings/SettingRow";
-import {
-  getProfile,
-  getStoredUser,
-  type AuthUser,
-} from "@/lib/services/auth-service";
-import { updateUser } from "@/lib/services/user-service";
+import { useAppSelector } from "@/store/hooks";
+import { authRepository } from "@/repositories/auth.repository";
+import { userService } from "@/services/user.service";
 import Toast from "@/components/ui/Toast";
 
 type ToastState = {
@@ -17,9 +14,7 @@ type ToastState = {
 } | null;
 
 export default function AccountTab() {
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
-    getStoredUser(),
-  );
+  const { user } = useAppSelector((state) => state.auth);
   const [phone, setPhone] = useState("");
   const [designation, setDesignation] = useState(
     "Senior Talent Acquisition Manager",
@@ -32,42 +27,28 @@ export default function AccountTab() {
   const closeToast = useCallback(() => setToast(null), []);
 
   useEffect(() => {
-    const storedUser = getStoredUser();
-    if (storedUser?.phone) setPhone(storedUser.phone);
-    setAccountUser(storedUser);
-
-    void getProfile()
-      .then((profile) => {
-        setAccountUser(profile);
-        if (profile.phone) setPhone(profile.phone);
-      })
-      .catch(() => {
-        // Keep stored session user as fallback if profile request fails.
-      });
-  }, []);
+    if (user?.phone) setPhone(user.phone);
+  }, [user]);
 
   const displayName = useMemo(
-    () =>
-      accountUser?.fullName ??
-      accountUser?.name ??
-      accountUser?.email?.split("@")[0] ??
-      "User",
-    [accountUser],
+    () => user?.fullName ?? user?.name ?? user?.email?.split("@")[0] ?? "User",
+    [user],
   );
 
   const displayEmail = useMemo(
-    () => accountUser?.email ?? "No email available",
-    [accountUser],
+    () => user?.email ?? "No email available",
+    [user],
   );
 
   const handleSave = async () => {
-    if (!accountUser?.id) return;
+    if (!user?.id) return;
     setSaving(true);
     try {
-      await updateUser(accountUser.id, {
-        fullName: accountUser.fullName,
+      await userService.updateUser(user.id, {
+        fullName: user.fullName,
         phone: phone.trim() || undefined,
       });
+      await authRepository.refreshProfile();
       setToast({
         message: "Account settings saved successfully!",
         type: "success",

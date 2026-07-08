@@ -8,8 +8,8 @@ import {
   formatJobStatus,
   formatWorkModel,
   getJobs,
-  type JobRecord,
-} from "@/lib/services/jobs-service";
+} from "@/repositories/job.repository";
+import { JobRecord } from "@/types/job.types";
 
 export default function ActiveJobsOverview() {
   const router = useRouter();

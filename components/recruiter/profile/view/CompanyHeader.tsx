@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Company } from "@/lib/services/company-service";
+import type { Company } from "@/types/company.types";
 import Image from "next/image";
 
 export default function CompanyHeader({

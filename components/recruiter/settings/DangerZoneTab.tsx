@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import DangerCard from "@/components/candidate/settings/DangerCard";
-import { updateUser, deleteUser } from "@/lib/services/user-service";
-import { getStoredUser, clearAuthSession } from "@/lib/services/auth-service";
+import { userService } from "@/services/user.service";
+import { useAppSelector } from "@/store/hooks";
+import { logout } from "@/repositories/auth.repository";
 import { useRouter } from "next/navigation";
 import Toast from "@/components/ui/Toast";
 
@@ -20,16 +21,17 @@ export default function DangerZoneTab() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const { user } = useAppSelector((state) => state.auth);
+
   const canDeleteJobs = deleteText.trim().toUpperCase() === "DELETE";
 
   const closeToast = () => setToast(null);
 
   const handleDeactivate = async () => {
-    const user = getStoredUser();
     if (!user?.id) return;
     setLoading(true);
     try {
-      await updateUser(user.id, { isActive: false });
+      await userService.updateUser(user.id, { isActive: false });
       setToast({
         message: "Account deactivated successfully.",
         type: "success",
@@ -44,12 +46,11 @@ export default function DangerZoneTab() {
   };
 
   const handleDeleteAccount = async () => {
-    const user = getStoredUser();
     if (!user?.id) return;
     setLoading(true);
     try {
-      await deleteUser(user.id);
-      clearAuthSession();
+      await userService.deleteUser(user.id);
+      logout();
       router.push("/");
     } catch (err) {
       const message =

@@ -20,8 +20,8 @@ import {
   formatWorkModel,
   getJob,
   getJobs,
-  type JobRecord,
-} from "@/lib/services/jobs-service";
+} from "@/repositories/job.repository";
+import { JobRecord } from "@/types/job.types";
 
 export function JobPreviewContent() {
   const searchParams = useSearchParams();

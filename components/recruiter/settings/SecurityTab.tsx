@@ -3,8 +3,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { MonitorSmartphone } from "lucide-react";
 import ToggleSwitch from "@/components/candidate/settings/ToggleSwitch";
-import { getStoredUser } from "@/lib/services/auth-service";
-import { updateUser } from "@/lib/services/user-service";
+import { useAppSelector } from "@/store/hooks";
+import { userService } from "@/services/user.service";
 import Toast from "@/components/ui/Toast";
 
 type Session = {
@@ -85,6 +85,7 @@ export default function SecurityTab() {
   const [sessions, setSessions] = useState(initialSessions);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
+  const { user } = useAppSelector((state) => state.auth);
 
   const closeToast = useCallback(() => setToast(null), []);
 
@@ -100,7 +101,6 @@ export default function SecurityTab() {
       setToast({ message: "Passwords do not match.", type: "error" });
       return;
     }
-    const user = getStoredUser();
     if (!user?.id) {
       setToast({
         message: "Session expired. Please log in again.",
@@ -110,7 +110,7 @@ export default function SecurityTab() {
     }
     setSaving(true);
     try {
-      await updateUser(user.id, { password: passwords.next });
+      await userService.updateUser(user.id, { password: passwords.next });
       setToast({ message: "Password updated successfully!", type: "success" });
       setPasswords({ current: "", next: "", confirm: "" });
     } catch (err) {

@@ -1,22 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+
 import CompanyInfoTab, {
   type CompanyFormData,
 } from "@/components/recruiter/profile/edit/CompanyInfoTab";
 import RecruiterTab from "@/components/recruiter/profile/edit/RecruiterTab";
 import BrandingTab from "@/components/recruiter/profile/edit/BrandingTab";
+
 import {
-  updateCompany,
-  getCompanies,
-  type Company,
-} from "@/lib/services/company-service";
-import { getProfile, getStoredUserId } from "@/lib/services/auth-service";
-import { updateUser } from "@/lib/services/user-service";
+  useGetCompaniesQuery,
+  useUpdateCompanyMutation,
+} from "@/store/api/companyApi";
+import type { Company } from "@/types/company.types";
+import { authRepository } from "@/repositories/auth.repository";
+import { useAppSelector } from "@/store/hooks";
+import { userService } from "@/services/user.service";
 import Toast from "@/components/ui/Toast";
 
 type TabId = "company" | "recruiter" | "branding";
@@ -39,13 +41,19 @@ interface RecruiterFormData {
   email: string;
 }
 
-export default function EditProfilePage() {
+// Extracted the main content into a separate component to wrap with Suspense
+export default function EditProfileContent() {
   const router = useRouter();
-
+  const { user } = useAppSelector((state) => state.auth);
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabId) ?? "company";
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
-  
+
+  const { data: companies, isLoading: isCompanyLoading } =
+    useGetCompaniesQuery();
+  const [updateCompanyMutation, { isLoading: isUpdating }] =
+    useUpdateCompanyMutation();
+
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -53,7 +61,7 @@ export default function EditProfilePage() {
   } | null>(null);
 
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const [companyData, setCompanyData] = useState<CompanyFormData>({
     name: "",
@@ -74,58 +82,30 @@ export default function EditProfilePage() {
     email: "",
   });
 
-  // File state — lifted here so handleSave can include them all in one call
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [verificationDocuments, setVerificationDocuments] = useState<File[]>(
     [],
   );
 
-  // Existing URLs from DB — passed to BrandingTab for preview
   const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
   const [currentBannerUrl, setCurrentBannerUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProfile = async () => {
       try {
-        const [companies, profile] = await Promise.all([
-          getCompanies(),
-          getProfile(),
-        ]);
+        const profile = await authRepository.getProfile();
 
         const nameParts = (profile.fullName ?? "")
           .trim()
           .split(/\s+/)
           .filter(Boolean);
         const [firstName = "", ...otherParts] = nameParts;
-
-        setUserId(String(profile.id));
         setRecruiterData({
           firstName,
           lastName: otherParts.join(" "),
           phone: profile.phone ?? "",
           email: profile.email ?? "",
-        });
-
-        if (companies.length === 0) {
-          router.push("/recruiter/company/setup");
-          return;
-        }
-
-        const primary = companies[0] as Company;
-        setCompanyId(primary.id);
-        setCurrentLogoUrl(primary.logo);
-        setCurrentBannerUrl(primary.banner);
-        setCompanyData({
-          name: primary.name ?? "",
-          industry: primary.industry ?? "",
-          size: primary.size ?? null,
-          foundedYear: primary.foundedYear ?? null,
-          type: primary.type ?? null,
-          location: primary.location ?? "",
-          website: primary.website ?? null,
-          email: primary.email ?? null,
-          description: primary.description ?? null,
         });
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -133,8 +113,37 @@ export default function EditProfilePage() {
       }
     };
 
-    void fetchData();
-  }, [router]);
+    void fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    if (!companies) return;
+
+    if (companies.length === 0) {
+      router.push("/recruiter/company/setup");
+      return;
+    }
+
+    // Prevent overwriting unsaved changes if companies data refetches
+    if (!isInitialized) {
+      const primary = companies[0] as Company;
+      setCompanyId(primary.id);
+      setCurrentLogoUrl(primary.logo);
+      setCurrentBannerUrl(primary.banner);
+      setCompanyData({
+        name: primary.name ?? "",
+        industry: primary.industry ?? "",
+        size: primary.size ?? null,
+        foundedYear: primary.foundedYear ?? null,
+        type: primary.type ?? null,
+        location: primary.location ?? "",
+        website: primary.website ?? null,
+        email: primary.email ?? null,
+        description: primary.description ?? null,
+      });
+      setIsInitialized(true);
+    }
+  }, [companies, router, isInitialized]);
 
   const handleSave = async () => {
     if (!companyId) {
@@ -144,9 +153,9 @@ export default function EditProfilePage() {
       });
       return;
     }
-    const effectiveUserId = userId ?? getStoredUserId();
+    const userId = user?.id;
 
-    if (!effectiveUserId) {
+    if (!userId) {
       setToast({
         message: "Session expired. Please log in again.",
         type: "error",
@@ -178,29 +187,31 @@ export default function EditProfilePage() {
     setIsSaving(true);
     try {
       const [updatedCompany] = await Promise.all([
-        updateCompany(companyId, {
-          name: companyData.name || undefined,
-          industry: companyData.industry || undefined,
-          location: companyData.location || undefined,
-          description: companyData.description || undefined,
-          size: companyData.size ?? undefined,
-          foundedYear: companyData.foundedYear ?? undefined,
-          type: companyData.type ?? undefined,
-          website: companyData.website || undefined,
-          email: companyData.email || undefined,
-          logo: logoFile ?? undefined,
-          banner: bannerFile ?? undefined,
-          verificationDocuments: verificationDocuments.length
-            ? verificationDocuments
-            : undefined,
-        }),
-        updateUser(String(effectiveUserId), {
+        updateCompanyMutation({
+          id: companyId,
+          payload: {
+            name: companyData.name || undefined,
+            industry: companyData.industry || undefined,
+            location: companyData.location || undefined,
+            description: companyData.description || undefined,
+            size: companyData.size ?? undefined,
+            foundedYear: companyData.foundedYear ?? undefined,
+            type: companyData.type ?? undefined,
+            website: companyData.website || undefined,
+            email: companyData.email || undefined,
+            logo: logoFile ?? undefined,
+            banner: bannerFile ?? undefined,
+            verificationDocuments: verificationDocuments.length
+              ? verificationDocuments
+              : undefined,
+          },
+        }).unwrap(),
+        userService.updateUser(userId, {
           fullName,
           phone: phone || undefined,
         }),
       ]);
 
-      // Sync state with server response
       setCurrentLogoUrl(updatedCompany.logo);
       setCurrentBannerUrl(updatedCompany.banner);
       setLogoFile(null);
@@ -219,8 +230,7 @@ export default function EditProfilePage() {
         description: updatedCompany.description ?? null,
       });
 
-      // Refresh session so top nav picks up updated name
-      await getProfile();
+      await authRepository.refreshProfile();
 
       setToast({ message: "Profile updated successfully!", type: "success" });
       setTimeout(() => {
@@ -283,6 +293,14 @@ export default function EditProfilePage() {
     }
   };
 
+  if (isCompanyLoading) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-surface">
       <div className="max-w-4xl mx-auto p-6">
@@ -305,7 +323,6 @@ export default function EditProfilePage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          {/* Tab Nav */}
           <div className="border-b border-gray-200 bg-surface/50">
             <div className="flex overflow-x-auto">
               {TABS.map((tab) => (
@@ -335,7 +352,6 @@ export default function EditProfilePage() {
             </div>
           </div>
 
-          {/* Tab Content */}
           <div className="p-8">
             <AnimatePresence mode="wait">
               <motion.div
@@ -364,10 +380,10 @@ export default function EditProfilePage() {
             </button>
             <button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || isUpdating}
               className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/80 disabled:bg-gray-300 disabled:cursor-not-allowed text-midnight rounded-lg font-medium text-sm transition-colors min-w-[130px] justify-center"
             >
-              {isSaving ? (
+              {isSaving || isUpdating ? (
                 <>
                   <svg
                     className="animate-spin h-4 w-4 text-white"

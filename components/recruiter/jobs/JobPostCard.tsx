@@ -12,7 +12,6 @@ import {
   Edit,
 } from "lucide-react";
 import {
-  type JobRecord,
   formatCurrencyRange,
   formatExperienceLevel,
   formatJobDate,
@@ -20,7 +19,8 @@ import {
   formatJobType,
   formatRelativeDays,
   formatWorkModel,
-} from "@/lib/services/jobs-service";
+} from "@/repositories/job.repository";
+import { JobRecord } from "@/types/job.types";
 
 interface JobPostCardProps {
   job: JobRecord;

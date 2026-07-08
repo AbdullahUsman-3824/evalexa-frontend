@@ -1,40 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  getProfile,
-  getStoredUser,
-  type AuthUser,
-} from "@/lib/services/auth-service";
+import { useAppSelector } from "@/store/hooks";
 
 export default function WelcomeBanner() {
   const router = useRouter();
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
-    getStoredUser(),
-  );
-
-  useEffect(() => {
-    void getProfile()
-      .then((profile) => {
-        setAccountUser(profile);
-      })
-      .catch(() => {
-        // Keep stored session user as fallback if profile request fails.
-      });
-  }, []);
+  const { user } = useAppSelector((state) => state.auth);
 
   const displayName = useMemo(() => {
-    const derivedNameFromEmail = accountUser?.email?.split("@")[0];
+    const derivedNameFromEmail = user?.email?.split("@")[0];
     const sourceName =
-      accountUser?.fullName ??
-      accountUser?.name ??
-      derivedNameFromEmail ??
-      "User";
+      user?.fullName ?? user?.name ?? derivedNameFromEmail ?? "User";
     return sourceName.split(" ")[0] ?? sourceName;
-  }, [accountUser]);
+  }, [user]);
 
   return (
     <motion.div

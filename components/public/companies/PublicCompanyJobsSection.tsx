@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   MapPin,
   Briefcase,
@@ -10,13 +10,14 @@ import {
   CalendarDays,
 } from "lucide-react";
 import {
-  getPublicCompany,
-  getPublicCompanyJobs,
-  type PublicCompany,
-  type PublicCompanyJob,
-  type PublicCompanyJobsQuery,
-  type PublicJobsPagination,
-} from "@/lib/services/company-service";
+  useGetPublicCompanyQuery,
+  useGetPublicCompanyJobsQuery,
+} from "@/store/api/companyApi";
+import type {
+  PublicCompanyJob,
+  PublicCompanyJobsQuery,
+  PublicJobsPagination,
+} from "@/types/company.types";
 
 const DEFAULT_LIMIT = 10;
 
@@ -69,9 +70,6 @@ type PublicCompanyJobsSectionProps = {
 export default function PublicCompanyJobsSection({
   companySlug,
 }: PublicCompanyJobsSectionProps) {
-  const [company, setCompany] = useState<PublicCompany | null>(null);
-  const [items, setItems] = useState<PublicCompanyJob[]>([]);
-  const [pagination, setPagination] = useState(initialPagination);
   const [search, setSearch] = useState("");
   const [jobType, setJobType] =
     useState<PublicCompanyJobsQuery["jobType"]>(undefined);
@@ -80,59 +78,31 @@ export default function PublicCompanyJobsSection({
   const [sort, setSort] =
     useState<NonNullable<PublicCompanyJobsQuery["sort"]>>("newest");
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
+  const { data: company } = useGetPublicCompanyQuery(companySlug);
 
-    async function loadJobs() {
-      setLoading(true);
-      setError(null);
+  const {
+    data: jobsData,
+    isFetching: loading,
+    error: queryError,
+  } = useGetPublicCompanyJobsQuery({
+    companySlug,
+    query: {
+      page,
+      limit: DEFAULT_LIMIT,
+      search,
+      jobType,
+      workModel,
+      sort,
+    },
+  });
 
-      try {
-        const [companyResponse, jobsResponse] = await Promise.all([
-          getPublicCompany(companySlug),
-          getPublicCompanyJobs(companySlug, {
-            page,
-            limit: DEFAULT_LIMIT,
-            search,
-            jobType,
-            workModel,
-            sort,
-          }),
-        ]);
-
-        if (!active) return;
-
-        setCompany(companyResponse);
-        setItems(jobsResponse.items);
-        setPagination(jobsResponse.pagination);
-      } catch (fetchError) {
-        if (!active) return;
-
-        setCompany(null);
-        setItems([]);
-        setPagination(initialPagination);
-        setError(
-          fetchError instanceof Error
-            ? fetchError.message
-            : "Unable to load company jobs.",
-        );
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadJobs();
-
-    return () => {
-      active = false;
-    };
-  }, [companySlug, jobType, page, search, sort, workModel]);
-
+  const items = jobsData?.items ?? [];
+  const pagination = jobsData?.pagination ?? initialPagination;
+  const error = queryError
+    ? ((queryError as { message?: string }).message ??
+      "Unable to load company jobs.")
+    : null;
   function resetAndUpdate(action: () => void) {
     action();
     setPage(1);

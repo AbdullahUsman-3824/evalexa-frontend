@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,13 +13,9 @@ import {
   LogOut,
   Plus,
 } from "lucide-react";
-import {
-  getProfile,
-  getStoredUser,
-  type AuthUser,
-  logoutUser,
-} from "@/lib/services/auth-service";
-import { getCompanies, type Company } from "@/lib/services/company-service";
+import { authRepository } from "@/repositories/auth.repository";
+import { useAppSelector } from "@/store/hooks";
+import { useGetCompaniesQuery } from "@/store/api/companyApi";
 
 interface RecruiterTopNavProps {
   onMenuClick: () => void;
@@ -44,10 +40,7 @@ const pageTitles: Record<string, string> = {
 export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [accountUser, setAccountUser] = useState<AuthUser | null>(() =>
-    getStoredUser(),
-  );
-  const [company, setCompany] = useState<Company | null>(null);
+  const { user: accountUser } = useAppSelector((state) => state.auth);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [logoErrorSrc, setLogoErrorSrc] = useState<string | null>(null);
@@ -55,19 +48,8 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pageTitle = pageTitles[pathname] ?? "Recruiter Portal";
   const hasUnreadNotifications = true;
 
-  useEffect(() => {
-    void getProfile()
-      .then((profile) => setAccountUser(profile))
-      .catch(() => {});
-
-    void getCompanies()
-      .then((companies) => {
-        if (companies.length > 0) {
-          setCompany(companies[0] ?? null);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const { data: companies } = useGetCompaniesQuery();
+  const company = companies?.[0] ?? null;
 
   const accountName = useMemo(() => {
     const nameFromEmail = accountUser?.email?.split("@")[0];
@@ -87,7 +69,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   }, [accountName]);
 
   const handleSignOut = async () => {
-    await logoutUser();
+    await authRepository.logout();
     setShowProfileDropdown(false);
     router.push("/login");
   };
