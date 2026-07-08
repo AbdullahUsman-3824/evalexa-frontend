@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import DangerCard from "@/components/candidate/settings/DangerCard";
-import { updateUser, deleteUser } from "@/lib/services/user-service";
+import { userService } from "@/services/user.service";
 import { useAppSelector } from "@/store/hooks";
 import { logout } from "@/repositories/auth.repository";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,7 @@ export default function DangerZoneTab() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      await updateUser(user.id, { isActive: false });
+      await userService.updateUser(user.id, { isActive: false });
       setToast({
         message: "Account deactivated successfully.",
         type: "success",
@@ -49,7 +49,7 @@ export default function DangerZoneTab() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      await deleteUser(user.id);
+      await userService.deleteUser(user.id);
       logout();
       router.push("/");
     } catch (err) {

@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { MonitorSmartphone } from "lucide-react";
 import ToggleSwitch from "@/components/candidate/settings/ToggleSwitch";
 import { useAppSelector } from "@/store/hooks";
-import { updateUser } from "@/lib/services/user-service";
+import { userService } from "@/services/user.service";
 import Toast from "@/components/ui/Toast";
 
 type Session = {
@@ -110,7 +110,7 @@ export default function SecurityTab() {
     }
     setSaving(true);
     try {
-      await updateUser(user.id, { password: passwords.next });
+      await userService.updateUser(user.id, { password: passwords.next });
       setToast({ message: "Password updated successfully!", type: "success" });
       setPasswords({ current: "", next: "", confirm: "" });
     } catch (err) {

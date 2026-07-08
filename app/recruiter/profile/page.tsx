@@ -5,12 +5,16 @@ import AboutSection from "@/components/recruiter/profile/view/AboutSection";
 import RecruiterDetails from "@/components/recruiter/profile/view/RecruiterDetails";
 // import ActiveJobsPreview from "@/components/recruiter/profile/view/ActiveJobsPreview";
 import { useEffect, useState } from "react";
-import { getCompanies, Company } from "@/lib/services/company-service";
+import { useGetCompaniesQuery } from "@/store/api/companyApi";
 import { getJobs } from "@/lib/services/jobs-service";
 
 export default function RecruiterProfile() {
-  const [company, setCompany] = useState<Company | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: companies, isLoading: isCompanyLoading } =
+    useGetCompaniesQuery();
+
+  const company = companies?.[0] ?? null;
+
+  const [isJobsLoading, setIsJobsLoading] = useState(true);
   const [stats, setStats] = useState({
     activeJobs: 0,
     totalHires: 0,
@@ -19,34 +23,34 @@ export default function RecruiterProfile() {
   });
 
   useEffect(() => {
-    const fetchCompany = async () => {
+    if (!company) {
+      setIsJobsLoading(false);
+      return;
+    }
+
+    const fetchJobs = async () => {
       try {
-        const companies = await getCompanies();
-        const fetchedCompany = companies[0] ?? null;
+        const jobs = await getJobs({ status: "OPEN" });
 
-        setCompany(fetchedCompany);
+        const activeJobsCount = jobs.filter(
+          (job) => String(job.companyId) === String(company.id),
+        ).length;
 
-        if (fetchedCompany) {
-          const jobs = await getJobs({ status: "OPEN" });
-
-          const activeJobsCount = jobs.filter(
-            (job) => String(job.companyId) === String(fetchedCompany.id),
-          ).length;
-
-          setStats((prev) => ({
-            ...prev,
-            activeJobs: activeJobsCount,
-          }));
-        }
+        setStats((prev) => ({
+          ...prev,
+          activeJobs: activeJobsCount,
+        }));
       } catch (error) {
-        console.error("Failed to fetch company", error);
+        console.error("Failed to fetch jobs", error);
       } finally {
-        setIsLoading(false);
+        setIsJobsLoading(false);
       }
     };
 
-    fetchCompany();
-  }, []);
+    fetchJobs();
+  }, [company]);
+
+  const isLoading = isCompanyLoading || isJobsLoading;
 
   return (
     <div className="min-h-screen bg-surface">

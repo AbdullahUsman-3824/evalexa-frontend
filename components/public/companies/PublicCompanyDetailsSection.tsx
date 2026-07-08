@@ -1,12 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { MapPin, Briefcase, Users, Zap } from "lucide-react";
-import {
-  getPublicCompany,
-  type PublicCompanyDetails,
-} from "@/lib/services/company-service";
+import { useGetPublicCompanyQuery } from "@/store/api/companyApi";
+import type { PublicCompanyDetails } from "@/types/company.types";
 
 type PublicCompanyDetailsSectionProps = {
   companySlug: string;
@@ -28,45 +25,16 @@ function getCompanyInitials(company: PublicCompanyDetails): string {
 export default function PublicCompanyDetailsSection({
   companySlug,
 }: PublicCompanyDetailsSectionProps) {
-  const [company, setCompany] = useState<PublicCompanyDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: company,
+    isFetching: loading,
+    error: queryError,
+  } = useGetPublicCompanyQuery(companySlug);
 
-  useEffect(() => {
-    let active = true;
-
-    async function loadCompany() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await getPublicCompany(companySlug);
-
-        if (!active) return;
-
-        setCompany(response);
-      } catch (fetchError) {
-        if (!active) return;
-
-        setCompany(null);
-        setError(
-          fetchError instanceof Error
-            ? fetchError.message
-            : "Unable to load company details.",
-        );
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadCompany();
-
-    return () => {
-      active = false;
-    };
-  }, [companySlug]);
+  const error = queryError
+    ? ((queryError as { message?: string }).message ??
+      "Unable to load company details.")
+    : null;
 
   if (loading) {
     return (
@@ -155,9 +123,7 @@ export default function PublicCompanyDetailsSection({
                   Company size
                 </p>
               </div>
-              <p className="mt-2 font-semibold text-midnight">
-                {company.size}
-              </p>
+              <p className="mt-2 font-semibold text-midnight">{company.size}</p>
             </div>
             <div className="rounded-xl border border-slate/10 bg-surface p-4">
               <div className="flex items-center gap-2">

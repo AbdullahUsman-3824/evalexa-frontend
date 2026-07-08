@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Building2, MapPin, Users } from "lucide-react";
-import {
-  getPublicCompanies,
-  type PublicCompany,
-  type PublicCompaniesPagination,
-  type PublicCompaniesQuery,
-} from "@/lib/services/company-service";
+import { useGetPublicCompaniesQuery } from "@/store/api/companyApi";
+import type {
+  PublicCompany,
+  PublicCompaniesPagination,
+  PublicCompaniesQuery,
+} from "@/types/company.types";
 
 const DEFAULT_LIMIT = 12;
 
@@ -66,54 +66,26 @@ export default function PublicCompaniesSection() {
     useState<NonNullable<PublicCompaniesQuery["sort"]>>("newest");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(DEFAULT_LIMIT);
-  const [items, setItems] = useState<PublicCompany[]>([]);
-  const [pagination, setPagination] = useState(initialPagination);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
+  const {
+    data,
+    isFetching,
+    error: queryError,
+  } = useGetPublicCompaniesQuery({
+    page,
+    limit,
+    search,
+    industry,
+    sort,
+  });
 
-    async function loadCompanies() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await getPublicCompanies({
-          page,
-          limit,
-          search,
-          industry,
-          sort,
-        });
-
-        if (!active) return;
-
-        setItems(response.items);
-        setPagination(response.pagination);
-      } catch (fetchError) {
-        if (!active) return;
-
-        setItems([]);
-        setPagination(initialPagination);
-        setError(
-          fetchError instanceof Error
-            ? fetchError.message
-            : "Unable to load companies.",
-        );
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadCompanies();
-
-    return () => {
-      active = false;
-    };
-  }, [industry, limit, page, search, sort]);
+  const items = data?.items ?? [];
+  const pagination = data?.pagination ?? initialPagination;
+  const loading = isFetching;
+  const error = queryError
+    ? ((queryError as { message?: string }).message ??
+      "Unable to load companies.")
+    : null;
 
   function handleFilterChange(updater: () => void, shouldResetPage = true) {
     updater();

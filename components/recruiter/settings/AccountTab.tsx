@@ -5,7 +5,7 @@ import { Camera, Clock3, Globe2, Mail, Phone } from "lucide-react";
 import SettingRow from "@/components/candidate/settings/SettingRow";
 import { useAppSelector } from "@/store/hooks";
 import { authRepository } from "@/repositories/auth.repository";
-import { updateUser } from "@/lib/services/user-service";
+import { userService } from "@/services/user.service";
 import Toast from "@/components/ui/Toast";
 
 type ToastState = {
@@ -44,7 +44,7 @@ export default function AccountTab() {
     if (!user?.id) return;
     setSaving(true);
     try {
-      await updateUser(user.id, {
+      await userService.updateUser(user.id, {
         fullName: user.fullName,
         phone: phone.trim() || undefined,
       });

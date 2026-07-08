@@ -2,11 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import {
-  createCompany,
-  type CompanySize,
-  type CompanyType,
-} from "@/lib/services/company-service";
+import { useCreateCompanyMutation } from "@/store/api/companyApi";
+import type { CompanySize, CompanyType } from "@/types/company.types";
 import FormInput from "@/components/ui/FormInput";
 import Toast from "@/components/ui/Toast";
 import { useAppSelector } from "@/store/hooks";
@@ -50,12 +47,11 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function CompanySetupPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const { user } = useAppSelector((state) => state.auth);
+  const [createCompany, { isLoading: loading }] = useCreateCompanyMutation();
 
   const logoInputRef = useRef<HTMLInputElement>(null);
-  // const bannerInputRef = useRef<HTMLInputElement>(null);
   const docsInputRef = useRef<HTMLInputElement>(null);
 
   const [fields, setFields] = useState({
@@ -71,7 +67,6 @@ export default function CompanySetupPage() {
   });
 
   const [logo, setLogo] = useState<File | null>(null);
-  // const [banner, setBanner] = useState<File | null>(null);
   const [verificationDocuments, setVerificationDocuments] = useState<File[]>(
     [],
   );
@@ -101,16 +96,10 @@ export default function CompanySetupPage() {
     setLogo(file);
   };
 
-  // const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0] ?? null;
-  //   setBanner(file);
-  // };
-
   const handleDocsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const incoming = Array.from(e.target.files ?? []);
     setVerificationDocuments((prev) => {
       const combined = [...prev, ...incoming];
-      // max 5 files enforced by backend; surface it early
       if (combined.length > 5) {
         setToast({
           message: "Maximum 5 verification documents allowed.",
@@ -120,7 +109,6 @@ export default function CompanySetupPage() {
       }
       return combined;
     });
-    // reset input so the same file can be re-selected if removed
     e.target.value = "";
   };
 
@@ -162,25 +150,24 @@ export default function CompanySetupPage() {
       });
       return;
     }
+    const companyPayload = {
+      name: fields.name,
+      industry: fields.industry,
+      location: fields.location,
+      description: fields.description || undefined,
+      size: (fields.size as CompanySize) || undefined,
+      type: (fields.type as CompanyType) || undefined,
+      foundedYear: parsedYear,
+      website: fields.website || undefined,
+      email: fields.email || undefined,
+      logo: logo ?? undefined,
+      verificationDocuments: verificationDocuments.length
+        ? verificationDocuments
+        : undefined,
+    };
 
-    setLoading(true);
     try {
-      await createCompany({
-        name: fields.name,
-        industry: fields.industry,
-        location: fields.location,
-        description: fields.description || undefined,
-        size: (fields.size as CompanySize) || undefined,
-        type: (fields.type as CompanyType) || undefined,
-        foundedYear: parsedYear,
-        website: fields.website || undefined,
-        email: fields.email || undefined,
-        logo: logo ?? undefined,
-        // banner: banner ?? undefined,
-        verificationDocuments: verificationDocuments.length
-          ? verificationDocuments
-          : undefined,
-      });
+      await createCompany(companyPayload).unwrap();
 
       await authRepository.refreshProfile();
 
@@ -189,11 +176,10 @@ export default function CompanySetupPage() {
         type: "success",
       });
       setTimeout(() => router.push("/recruiter/dashboard"), 1000);
-    } catch (err) {
+    } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to create company.";
+        (err as { message?: string })?.message ?? "Failed to create company.";
       setToast({ message, type: "error" });
-      setLoading(false);
     }
   };
 
@@ -223,7 +209,6 @@ export default function CompanySetupPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* ── Required fields ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormInput
               label="Company Name *"
@@ -327,7 +312,6 @@ export default function CompanySetupPage() {
             />
           </div>
 
-          {/* ── Contact & web ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormInput
               label="Website"
@@ -350,7 +334,6 @@ export default function CompanySetupPage() {
             />
           </div>
 
-          {/* ── Description ── */}
           <div className="flex flex-col gap-2">
             <label
               htmlFor="description"
@@ -369,9 +352,7 @@ export default function CompanySetupPage() {
             />
           </div>
 
-          {/* ── Media uploads ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Logo */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-midnight">
                 Logo
@@ -391,28 +372,8 @@ export default function CompanySetupPage() {
                 {logo ? logo.name : "Choose logo image…"}
               </button>
             </div>
-
-            {/* Banner */}
-            {/* <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-midnight">Banner</label>
-              <input
-                ref={bannerInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleBannerChange}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => bannerInputRef.current?.click()}
-                className="w-full rounded-xl border border-dashed border-slate/40 bg-surface/50 px-4 py-3 text-sm text-slate hover:border-primary hover:text-primary transition-colors text-left"
-              >
-                {banner ? banner.name : "Choose banner image…"}
-              </button>
-            </div> */}
           </div>
 
-          {/* ── Verification documents ── */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-midnight">
               Verification Documents
@@ -457,7 +418,6 @@ export default function CompanySetupPage() {
             )}
           </div>
 
-          {/* ── Actions ── */}
           <div className="pt-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
             <button
               type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { authRepository } from "@/repositories/auth.repository";
 import { useAppSelector } from "@/store/hooks";
-import { getCompanies, type Company } from "@/lib/services/company-service";
+import { useGetCompaniesQuery } from "@/store/api/companyApi";
 
 interface RecruiterTopNavProps {
   onMenuClick: () => void;
@@ -41,7 +41,6 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user: accountUser } = useAppSelector((state) => state.auth);
-  const [company, setCompany] = useState<Company | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [logoErrorSrc, setLogoErrorSrc] = useState<string | null>(null);
@@ -49,15 +48,8 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
   const pageTitle = pageTitles[pathname] ?? "Recruiter Portal";
   const hasUnreadNotifications = true;
 
-  useEffect(() => {
-    void getCompanies()
-      .then((companies) => {
-        if (companies.length > 0) {
-          setCompany(companies[0] ?? null);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const { data: companies } = useGetCompaniesQuery();
+  const company = companies?.[0] ?? null;
 
   const accountName = useMemo(() => {
     const nameFromEmail = accountUser?.email?.split("@")[0];

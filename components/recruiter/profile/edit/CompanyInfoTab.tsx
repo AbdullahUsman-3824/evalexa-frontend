@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import { X, Upload } from "lucide-react";
-import { type CompanySize, type CompanyType } from "@/lib/services/company-service";
+import type { CompanySize, CompanyType } from "@/types/company.types";
 
 // ── Shared type — can be moved to a shared types file and imported in both ──
 export interface CompanyFormData {
@@ -93,7 +93,6 @@ export default function CompanyInfoTab({
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-
       {/* Company Name */}
       <div>
         <label className="block text-sm font-medium text-midnight mb-2">
@@ -120,7 +119,9 @@ export default function CompanyInfoTab({
         >
           <option value="">Select industry</option>
           {INDUSTRIES.map((ind) => (
-            <option key={ind} value={ind}>{ind}</option>
+            <option key={ind} value={ind}>
+              {ind}
+            </option>
           ))}
         </select>
       </div>
@@ -140,7 +141,9 @@ export default function CompanyInfoTab({
           >
             <option value="">Select size</option>
             {COMPANY_SIZES.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
+              <option key={value} value={value}>
+                {label}
+              </option>
             ))}
           </select>
         </div>
@@ -178,9 +181,7 @@ export default function CompanyInfoTab({
               <button
                 key={value}
                 type="button"
-                onClick={() =>
-                  onChange({ type: selected ? null : value })
-                }
+                onClick={() => onChange({ type: selected ? null : value })}
                 className={`relative flex items-center justify-center p-3 border-2 rounded-lg transition-all text-sm font-medium ${
                   selected
                     ? "border-primary bg-primary/5 text-primary"
@@ -265,7 +266,8 @@ export default function CompanyInfoTab({
           Verification Documents
         </label>
         <p className="text-xs text-slate mb-3">
-          Business license, incorporation certificate, or tax docs. PDF, PNG, or JPG — max 5 MB each, up to 5 files.
+          Business license, incorporation certificate, or tax docs. PDF, PNG, or
+          JPG — max 5 MB each, up to 5 files.
         </p>
 
         {/* Uploaded list */}
@@ -324,7 +326,6 @@ export default function CompanyInfoTab({
           </div>
         )}
       </div>
-
     </motion.div>
   );
 }
