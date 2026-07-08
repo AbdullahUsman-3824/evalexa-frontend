@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MapPin, DollarSign, CalendarDays, Search } from "lucide-react";
+import { getPublicJobs } from "@/repositories/job.repository";
 import {
-  getPublicJobs,
-  type PublicJob,
-  type PublicJobsPagination,
-  type PublicJobsQuery,
-} from "@/lib/services/jobs-service";
+  PublicJob,
+  PublicJobsPagination,
+  PublicJobsQuery,
+} from "@/types/job.types";
 
 const DEFAULT_LIMIT = 12;
 

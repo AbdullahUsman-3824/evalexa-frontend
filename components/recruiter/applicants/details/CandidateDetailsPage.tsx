@@ -9,10 +9,8 @@ import AIFitAnalysis from "@/components/recruiter/applicants/details/AIFitAnalys
 import ResumeSection from "@/components/recruiter/applicants/details/ResumeSection";
 import RecruiterNotes from "@/components/recruiter/applicants/details/RecruiterNotes";
 import BottomActionBar from "@/components/recruiter/applicants/details/BottomActionBar";
-import {
-  getCandidateDetails,
-  type CandidateDetails,
-} from "@/lib/services/jobs-service";
+import { getCandidateDetails } from "@/repositories/job.repository";
+import { CandidateDetails } from "@/types/job.types";
 
 function statusTone(status: string) {
   if (status === "Rejected") return "bg-danger/10 text-danger";

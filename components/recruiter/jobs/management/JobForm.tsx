@@ -11,13 +11,12 @@ import Step3AISettings from "@/components/recruiter/jobs/management/Step3AISetti
 import Step4Review from "@/components/recruiter/jobs/management/Step4Review";
 import type { JobPostFormData } from "@/components/recruiter/jobs/management/types";
 import { getProfile } from "@/repositories/auth.repository";
+import { createJob, updateJob } from "@/repositories/job.repository";
 import {
-  createJob,
-  updateJob,
-  type CreateJobPayload,
-  type CreateJobSkillPayload,
-  type JobRecord,
-} from "@/lib/services/jobs-service";
+  CreateJobPayload,
+  CreateJobSkillPayload,
+  JobRecord,
+} from "@/types/job.types";
 
 type JobFormMode = "create" | "edit";
 

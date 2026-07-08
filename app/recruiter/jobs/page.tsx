@@ -14,11 +14,8 @@ import JobFilters, {
   type JobSortOption,
 } from "@/components/recruiter/jobs/JobFilters";
 import JobPostCard from "@/components/recruiter/jobs/JobPostCard";
-import {
-  formatJobStatus,
-  getJobs,
-  type JobRecord,
-} from "@/lib/services/jobs-service";
+import { formatJobStatus, getJobs } from "@/repositories/job.repository";
+import { JobRecord } from "@/types/job.types";
 
 function getStatusCounts(jobs: JobRecord[]) {
   return {

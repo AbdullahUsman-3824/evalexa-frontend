@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import JobApplyHeader from "@/components/public/jobs/apply/JobApplyHeader";
-import { getPublicJobBySlug } from "@/lib/services/jobs-service";
+import { getPublicJobBySlug } from "@/repositories/job.repository";
 
 type Props = Readonly<{
   children: React.ReactNode;

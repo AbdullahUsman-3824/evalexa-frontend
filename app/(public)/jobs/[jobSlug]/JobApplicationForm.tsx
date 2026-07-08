@@ -14,9 +14,11 @@ import {
 import {
   submitPublicJobApplication,
   uploadPublicResume,
-  type ResumeUploadResponse,
-  type PublicJobApplicationPayload,
-} from "@/lib/services/jobs-service";
+} from "@/repositories/job.repository";
+import type {
+  ResumeUploadResponse,
+  PublicJobApplicationPayload,
+} from "@/types/job.types";
 
 export type JobDetailData = {
   jobId: string;

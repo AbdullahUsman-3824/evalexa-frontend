@@ -8,8 +8,8 @@ import {
   formatJobStatus,
   formatRelativeDays,
   getJobs,
-  type JobRecord,
-} from "@/lib/services/jobs-service";
+} from "@/repositories/job.repository";
+import { JobRecord } from "@/types/job.types";
 
 export default function ActiveJobsPreview() {
   const [jobs, setJobs] = useState<JobRecord[]>([]);

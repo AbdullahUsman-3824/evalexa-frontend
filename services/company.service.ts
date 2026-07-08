@@ -1,5 +1,5 @@
 // services/company.service.ts
-import { apiRequest } from "@/lib/services/api-client";
+import { apiRequest } from "@/lib/api-client";
 import type {
   Company,
   CreateCompanyPayload,
@@ -67,7 +67,7 @@ export const companyService = {
   createCompany(payload: CreateCompanyPayload): Promise<Company> {
     return apiRequest<Company>(API.company.create, {
       method: "POST",
-      body: buildCompanyFormData(payload),
+      data: buildCompanyFormData(payload),
     });
   },
 
@@ -82,7 +82,7 @@ export const companyService = {
   updateCompany(id: string, payload: UpdateCompanyPayload): Promise<Company> {
     return apiRequest<Company>(API.company.update(id), {
       method: "PATCH",
-      body: buildCompanyFormData(payload),
+      data: buildCompanyFormData(payload),
     });
   },
 
@@ -110,7 +110,7 @@ export const companyService = {
 
   getPublicCompany(companySlug: string): Promise<PublicCompanyDetails> {
     return apiRequest<PublicCompanyDetails>(
-      API.company.getOnePublic(encodeURIComponent(companySlug)),
+      API.company.getOnePublic(companySlug),
       { method: "GET" },
     );
   },
@@ -120,10 +120,9 @@ export const companyService = {
     query: PublicCompanyJobsQuery = {},
   ): Promise<PublicCompanyJobsResponse> {
     const queryString = buildPublicCompanyJobsQueryString(query);
-    const slugEncoded = encodeURIComponent(companySlug);
     const path = queryString
-      ? `${API.company.listPublicJobs(slugEncoded)}?${queryString}`
-      : API.company.listPublicJobs(slugEncoded);
+      ? `${API.company.listPublicJobs(companySlug)}?${queryString}`
+      : API.company.listPublicJobs(companySlug);
     return apiRequest<PublicCompanyJobsResponse>(path, { method: "GET" });
   },
 };

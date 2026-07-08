@@ -23,14 +23,29 @@ export const API = {
     delete: (id: string) => `/companies/${id}`,
     verificationDocuments: (companyId: string) =>
       `/companies/${companyId}/verification-documents`,
-    getOnePublic: (slug: string) => `/public/companies/${slug}`,
+    getOnePublic: (slug: string) =>
+      `/public/companies/${encodeURIComponent(slug)}`,
     listPublic: "/public/companies",
-    listPublicJobs: (slug: string) => `/public/companies/${slug}/jobs`,
+    listPublicJobs: (slug: string) =>
+      `/public/companies/${encodeURIComponent(slug)}/jobs`,
   },
-  public: {},
   jobs: {
-    list: "/jobs",
-    create: "/jobs",
-    details: (id: string) => `/jobs/${id}`,
+    jobs: "/jobs",
+    jobById: (id: string) => `/jobs/${id}`,
+    jobTitles: "/jobs/titles",
+    skills: "/skills",
+    skillCategories: "/skills/categories",
+    skillById: (id: string) => `/skills/${id}`,
+    applicationsForJob: (jobId: string) => `/application/job/${jobId}`,
+    candidateById: (candidateId: string) => `/candidate/${candidateId}`,
+    publicJobs: "/public/jobs",
+    publicFeaturedJobs: "/public/jobs/featured",
+    publicJobBySlug: (slug: string) =>
+      `/public/jobs/${encodeURIComponent(slug)}`,
+    publicSimilarJobs: (slug: string) =>
+      `/public/jobs/${encodeURIComponent(slug)}/similar`,
+    publicJobApply: (slug: string) =>
+      `/public/jobs/${encodeURIComponent(slug)}/apply`,
+    resumeUpload: "/resume/upload",
   },
 };

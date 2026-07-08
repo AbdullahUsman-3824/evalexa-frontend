@@ -6,7 +6,7 @@ import RecruiterDetails from "@/components/recruiter/profile/view/RecruiterDetai
 // import ActiveJobsPreview from "@/components/recruiter/profile/view/ActiveJobsPreview";
 import { useEffect, useState } from "react";
 import { useGetCompaniesQuery } from "@/store/api/companyApi";
-import { getJobs } from "@/lib/services/jobs-service";
+import { getJobs } from "@/repositories/job.repository";
 
 export default function RecruiterProfile() {
   const { data: companies, isLoading: isCompanyLoading } =

@@ -42,8 +42,8 @@ import {
   getSkillCategories,
   getSkills,
   updateSkill,
-  type SkillRecord,
-} from "@/lib/services/jobs-service";
+} from "@/repositories/job.repository";
+import { SkillRecord } from "@/types/job.types";
 
 interface Step2RequirementsProps {
   data: JobPostFormData;

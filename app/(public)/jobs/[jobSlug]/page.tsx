@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import JobOverviewSection from "@/components/public/jobs/apply/JobOverviewSection";
-import { getPublicJobBySlug } from "@/lib/services/jobs-service";
+import { getPublicJobBySlug } from "@/repositories/job.repository";
 import JobApplicationForm, { type JobDetailData } from "./JobApplicationForm";
 
 function normalizeResponsibilities(responsibilities?: string | string[]) {
