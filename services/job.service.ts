@@ -9,7 +9,7 @@ import type {
   UpdateJobPayload,
   Application,
   CandidateDetails,
-  ResumeUploadResponse,
+  ResumeParsePreview,
   PublicJobApplicationPayload,
   PublicJobApplicationResponse,
   PublicJob,
@@ -17,12 +17,7 @@ import type {
   PublicJobsResponse,
 } from "@/types/job.types";
 
-export async function getJobs(query?: JobQuery): Promise<JobRecord[]> {
-  return apiRequest<JobRecord[]>(
-    `${API.jobs}${buildJobsQueryString(query)}`,
-    {},
-  );
-}
+// ...buildSkillsQueryString / buildJobsQueryString / buildPublicJobsQueryString unchanged...
 
 export function buildSkillsQueryString(query?: {
   category?: string;
@@ -69,6 +64,13 @@ export function buildPublicJobsQueryString(query?: PublicJobsQuery) {
 
   const qs = params.toString();
   return qs ? `?${qs}` : "";
+}
+
+export async function getJobs(query?: JobQuery): Promise<JobRecord[]> {
+  return apiRequest<JobRecord[]>(
+    `${API.jobs.list}${buildJobsQueryString(query)}`,
+    {},
+  );
 }
 
 export async function getJob(id: string): Promise<JobRecord> {
@@ -118,7 +120,7 @@ export async function deleteSkill(id: string): Promise<void> {
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<JobRecord> {
-  return apiRequest<JobRecord>(API.jobs.jobs, {
+  return apiRequest<JobRecord>(API.jobs.create, {
     method: "POST",
     data: JSON.stringify(payload),
   });
@@ -150,7 +152,6 @@ export async function getCandidateDetails(
   });
 }
 
-/** Public: list open, non-expired jobs */
 export async function getPublicJobs(
   query?: PublicJobsQuery,
 ): Promise<PublicJobsResponse> {
@@ -160,21 +161,18 @@ export async function getPublicJobs(
   );
 }
 
-/** Public: small curated featured jobs */
 export async function getPublicFeaturedJobs(): Promise<PublicJob[]> {
   return apiRequest<PublicJob[]>(API.jobs.publicFeaturedJobs, {
     method: "GET",
   });
 }
 
-/** Public: job detail by slug (only open + not expired) */
 export async function getPublicJobBySlug(slug: string): Promise<PublicJob> {
   return apiRequest<PublicJob>(API.jobs.publicJobBySlug(slug), {
     method: "GET",
   });
 }
 
-/** Public: similar jobs to a slug */
 export async function getPublicSimilarJobs(
   slug: string,
   limit = 6,
@@ -185,31 +183,31 @@ export async function getPublicSimilarJobs(
   });
 }
 
-/** Submit a public job application as JSON (no auth). */
+export async function parsePublicResume(
+  file: File,
+): Promise<ResumeParsePreview> {
+  const formData = new FormData();
+  formData.append("file", file, file.name);
+
+  return apiRequest<ResumeParsePreview>(API.jobs.resumeParse, {
+    method: "POST",
+    data: formData,
+  });
+}
 export async function submitPublicJobApplication(
   slug: string,
   payload: PublicJobApplicationPayload,
+  resumeFile: File,
 ): Promise<PublicJobApplicationResponse> {
+  const formData = new FormData();
+  formData.append("file", resumeFile, resumeFile.name);
+  formData.append("data", JSON.stringify(payload));
+
   return apiRequest<PublicJobApplicationResponse>(
     API.jobs.publicJobApply(slug),
     {
       method: "POST",
-      data: payload,
+      data: formData,
     },
   );
-}
-
-/** Upload a resume so the backend can extract and return parsed profile data. */
-export async function uploadPublicResume(
-  file: File,
-  candidateId?: string,
-): Promise<ResumeUploadResponse> {
-  const formData = new FormData();
-  formData.append("file", file, file.name);
-
-  return apiRequest<ResumeUploadResponse>(API.jobs.resumeUpload, {
-    method: "POST",
-    data: formData,
-    params: candidateId ? { candidateId } : undefined,
-  });
 }

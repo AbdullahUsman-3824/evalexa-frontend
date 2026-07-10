@@ -29,9 +29,7 @@ export function formatWorkModel(workModel: BackendWorkModel) {
   return workModel === "ONSITE" ? "On-site" : labelFromSegment(workModel);
 }
 
-export function formatExperienceLevel(
-  experienceLevel: BackendExperienceLevel,
-) {
+export function formatExperienceLevel(experienceLevel: BackendExperienceLevel) {
   switch (experienceLevel) {
     case "JUNIOR":
       return "Entry Level";
@@ -70,6 +68,7 @@ export function formatRelativeDays(dateString: string) {
 export function formatCurrencyRange(min: number, max: number) {
   return `PKR ${min.toLocaleString()} - ${max.toLocaleString()}`;
 }
+
 export const {
   getJobs,
   getJob,
@@ -88,5 +87,5 @@ export const {
   getPublicJobBySlug,
   getPublicSimilarJobs,
   submitPublicJobApplication,
-  uploadPublicResume,
+  parsePublicResume, 
 } = jobService;
