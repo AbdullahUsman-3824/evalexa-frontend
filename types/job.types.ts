@@ -236,10 +236,7 @@ export interface CandidateDetails {
   applications: CandidateApplication[];
 }
 
-export type ResumeUploadResponse = {
-  candidateId: string;
-  resumeId: string;
-  resumeUrl: string;
+export type ResumeParsePreview = {
   personal: {
     firstName: string;
     lastName: string;
@@ -268,9 +265,6 @@ export type ResumeUploadResponse = {
 };
 
 export type PublicJobApplicationPayload = {
-  candidateId?: string;
-  resumeId?: string;
-  resumeUrl?: string;
   personal: {
     firstName: string;
     lastName: string;
@@ -303,6 +297,7 @@ export type PublicJobApplicationResponse = {
   applicationId: string;
   candidateId: string;
   resumeId: string;
+  resumeUrl: string;
   status: "APPLIED";
 };
 

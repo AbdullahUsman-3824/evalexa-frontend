@@ -13,10 +13,10 @@ import {
 } from "lucide-react";
 import {
   submitPublicJobApplication,
-  uploadPublicResume,
+  parsePublicResume,
 } from "@/repositories/job.repository";
 import type {
-  ResumeUploadResponse,
+  ResumeParsePreview,
   PublicJobApplicationPayload,
 } from "@/types/job.types";
 
@@ -93,6 +93,14 @@ const years = Array.from(
   (_, index) => `${new Date().getFullYear() + 1 - index}`,
 );
 
+// Single source of truth for accepted resume types — previously the
+// "Import resume from" banner accepted .odt/.rtf while the dropzone (and
+// the backend parser) only ever supported pdf/doc/docx, which produced
+// confusing "parse failed" errors for anyone using the banner.
+const ACCEPTED_RESUME_EXTENSIONS = ".pdf,.doc,.docx";
+const ACCEPTED_RESUME_LABEL = ".pdf, .doc, .docx";
+const MAX_RESUME_SIZE_BYTES = 10 * 1024 * 1024; // matches backend limit
+
 const emptyEducationDraft: EducationDraft = {
   level: "",
   field: "",
@@ -113,9 +121,9 @@ const emptyExperienceDraft: ExperienceDraft = {
 };
 
 const inputBaseClass =
-  "h-[46px] w-full rounded-[10px] border-[1.5px] border-[#E2E8F4] bg-[#F8FAFF] px-4 text-[14px] text-[#0D1B2A] outline-none transition focus:border-[#1E6FFF] focus:bg-white focus:shadow-[0_0_0_3px_rgba(30,111,255,0.10)]";
+  "h-[46px] w-full rounded-[10px] border-[1.5px] border-[#E2E8F4] bg-[#F8FAFF] px-4 text-[14px] text-[#0D1B2A] outline-none transition focus:border-[#1E6FFF] focus:bg-white focus:shadow-[0_0_0_3px_rgba(30,111,255,0.10)] disabled:cursor-not-allowed disabled:opacity-60";
 const textareaBaseClass =
-  "w-full rounded-[10px] border-[1.5px] border-[#E2E8F4] bg-[#F8FAFF] px-4 py-2 text-[14px] text-[#0D1B2A] outline-none transition focus:border-[#1E6FFF] focus:bg-white focus:shadow-[0_0_0_3px_rgba(30,111,255,0.10)]";
+  "w-full rounded-[10px] border-[1.5px] border-[#E2E8F4] bg-[#F8FAFF] px-4 py-2 text-[14px] text-[#0D1B2A] outline-none transition focus:border-[#1E6FFF] focus:bg-white focus:shadow-[0_0_0_3px_rgba(30,111,255,0.10)] disabled:cursor-not-allowed disabled:opacity-60";
 
 function FieldError({ message }: { message?: string }) {
   return (
@@ -190,16 +198,20 @@ export default function JobApplicationForm({
   const [summary, setSummary] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
 
+  // NOTE: candidateId / resumeId / resumeUrl no longer exist client-side.
+  // Nothing is persisted until final submit, so there is nothing to track
+  // or reconcile between the parse step and the submit step.
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [candidateId, setCandidateId] = useState<string | undefined>(undefined);
-  const [resumeId, setResumeId] = useState<string | undefined>(undefined);
-  const [resumeUrl, setResumeUrl] = useState<string | undefined>(undefined);
+  const [isParsing, setIsParsing] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
+
+  // Guards against a stale response overwriting the form if the user
+  // selects a second file before the first parse call resolves.
+  const parseRequestIdRef = useRef(0);
 
   const autofillInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
@@ -247,21 +259,10 @@ export default function JobApplicationForm({
     setEducationDraft(emptyEducationDraft);
     setExperienceDraft(emptyExperienceDraft);
     setErrors((previous) => ({ ...previous, resume: undefined }));
-    setCandidateId(undefined);
   };
 
   const clearDetailsSection = () => {
     setCoverLetter("");
-  };
-
-  const handleAutofillImport = (file: File | null) => {
-    if (!file) return;
-    // Treat autofill import as a resume upload as well
-    handleResumeSelected(file);
-    setToastMessage(
-      `Imported ${file.name}. You can review and edit the fields below.`,
-    );
-    window.setTimeout(() => setToastMessage(""), 2500);
   };
 
   const handleImportSourceSelect = (
@@ -280,41 +281,15 @@ export default function JobApplicationForm({
     window.setTimeout(() => setToastMessage(""), 2500);
   };
 
-  const handleResumeSelected = (file: File | null) => {
-    if (!file) return;
-
-    setResumeFile(file);
-    setErrors((previous) => ({ ...previous, resume: undefined }));
-
-    // Upload immediately and map returned parsed data into form
-    (async () => {
-      setIsUploading(true);
-      try {
-        const resp = await uploadPublicResume(file, candidateId);
-        handleResumeUploadResponse(resp, file);
-        setToastMessage("Resume uploaded and parsed.");
-        window.setTimeout(() => setToastMessage(""), 2500);
-      } catch (err: unknown) {
-        setToastMessage(
-          err instanceof Error ? err.message : "Resume upload failed.",
-        );
-        window.setTimeout(() => setToastMessage(""), 3500);
-      } finally {
-        setIsUploading(false);
-      }
-    })();
-  };
-
   // Helper to parse dates in MM/YYYY or ISO format
   const parseDate = (
     dateString: string | null | undefined,
   ): { month: string; year: string } => {
     if (!dateString) return { month: "", year: "" };
 
-    // Try MM/YYYY format first (e.g., "02/2023")
     if (/^\d{2}\/\d{4}$/.test(dateString)) {
       const [monthStr, yearStr] = dateString.split("/");
-      const monthNum = parseInt(monthStr, 10) - 1; // Convert 1-based to 0-based
+      const monthNum = parseInt(monthStr, 10) - 1;
       return {
         month:
           monthNum >= 0 && monthNum < months.length ? months[monthNum] : "",
@@ -322,7 +297,6 @@ export default function JobApplicationForm({
       };
     }
 
-    // Try ISO date format
     try {
       const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
@@ -361,7 +335,6 @@ export default function JobApplicationForm({
     const trimmed = value.trim();
     if (!trimmed) return "";
 
-    // If the number already includes a country code, send it as-is.
     if (/^\+\d+/.test(trimmed)) {
       return trimmed;
     }
@@ -394,62 +367,109 @@ export default function JobApplicationForm({
     return `${cleanYear}-${fallbackMonthDay}`;
   };
 
-  const handleResumeUploadResponse = (
-    resp: ResumeUploadResponse,
-    file: File,
-  ) => {
-    setCandidateId(resp.candidateId ?? undefined);
-    setResumeId(resp.resumeId ?? undefined);
-    setResumeUrl(resp.resumeUrl ?? undefined);
-
-    // Map personal
-    if (resp.personal) {
-      if (resp.personal.firstName) setFirstName(resp.personal.firstName);
-      if (resp.personal.lastName) setLastName(resp.personal.lastName);
-      if (resp.personal.email) setEmail(resp.personal.email);
-      if (resp.personal.phone) {
-        const parsedPhone = splitPhone(resp.personal.phone);
+  // Only fills a field if the user hasn't already typed something into it.
+  // Previously, parsing silently clobbered anything the user had already
+  // entered by hand (or entered from a first upload, before replacing the
+  // file with a second one).
+  const applyParsePreview = (preview: ResumeParsePreview) => {
+    if (preview.personal) {
+      const p = preview.personal;
+      if (p.firstName && !firstName.trim()) setFirstName(p.firstName);
+      if (p.lastName && !lastName.trim()) setLastName(p.lastName);
+      if (p.email && !email.trim()) setEmail(p.email);
+      if (p.phone && !phone.trim()) {
+        const parsedPhone = splitPhone(p.phone);
         setCountryCode(parsedPhone.code);
         setPhone(parsedPhone.number);
       }
-      if (resp.personal.headline) setHeadline(resp.personal.headline);
-      if (resp.personal.address) setAddress(resp.personal.address);
+      if (p.headline && !headline.trim()) setHeadline(p.headline);
+      if (p.address && !address.trim()) setAddress(p.address);
     }
 
-    // Map education
-    if (Array.isArray(resp.education) && resp.education.length > 0) {
-      const mapped = resp.education.map((e) => ({
-        id: crypto.randomUUID(),
-        level: e.degree ?? "",
-        field: e.field ?? "",
-        institution: e.institution ?? "",
-        startYear: parseDate(e.startDate).year,
-        endYear: parseDate(e.endDate).year,
-      }));
-      setEducations(mapped);
-    }
-
-    // Map experience
-    if (Array.isArray(resp.experience) && resp.experience.length > 0) {
-      const mapped = resp.experience.map((ex) => {
-        const startParsed = parseDate(ex.startDate);
-        const endParsed = parseDate(ex.endDate);
-        return {
+    if (Array.isArray(preview.education) && preview.education.length > 0) {
+      setEducations((previous) => {
+        if (previous.length > 0) return previous; // don't clobber manual entries
+        return preview.education.map((e) => ({
           id: crypto.randomUUID(),
-          title: ex.title ?? "",
-          company: ex.company ?? "",
-          startMonth: startParsed.month,
-          startYear: startParsed.year,
-          endMonth: endParsed.month,
-          endYear: endParsed.year,
-          current: !!ex.isCurrent,
-          description: ex.description ?? "",
-        } as ExperienceEntry;
+          level: e.degree ?? "",
+          field: e.field ?? "",
+          institution: e.institution ?? "",
+          startYear: parseDate(e.startDate).year,
+          endYear: parseDate(e.endDate).year,
+        }));
       });
-      setExperiences(mapped);
     }
-    // keep the file reference
+
+    if (Array.isArray(preview.experience) && preview.experience.length > 0) {
+      setExperiences((previous) => {
+        if (previous.length > 0) return previous;
+        return preview.experience.map((ex) => {
+          const startParsed = parseDate(ex.startDate);
+          const endParsed = parseDate(ex.endDate);
+          return {
+            id: crypto.randomUUID(),
+            title: ex.title ?? "",
+            company: ex.company ?? "",
+            startMonth: startParsed.month,
+            startYear: startParsed.year,
+            endMonth: endParsed.month,
+            endYear: endParsed.year,
+            current: Boolean(ex.isCurrent),
+            description: ex.description ?? "",
+          } as ExperienceEntry;
+        });
+      });
+    }
+  };
+
+  const handleResumeSelected = (file: File | null) => {
+    if (!file) return;
+
+    if (file.size > MAX_RESUME_SIZE_BYTES) {
+      setErrors((previous) => ({
+        ...previous,
+        resume: "File is too large. Maximum size is 10 MB.",
+      }));
+      return;
+    }
+
+    // The file is attached for submission regardless of whether parsing
+    // (autofill) succeeds — parsing is a convenience, not a requirement.
     setResumeFile(file);
+    setErrors((previous) => ({ ...previous, resume: undefined }));
+
+    const requestId = ++parseRequestIdRef.current;
+
+    (async () => {
+      setIsParsing(true);
+      try {
+        const preview = await parsePublicResume(file);
+
+        // A newer file was selected while this request was in flight —
+        // discard this stale response instead of overwriting newer state.
+        if (parseRequestIdRef.current !== requestId) return;
+
+        applyParsePreview(preview);
+        setToastMessage("Resume parsed. Review the autofilled details below.");
+        window.setTimeout(() => setToastMessage(""), 2500);
+      } catch (err: unknown) {
+        if (parseRequestIdRef.current !== requestId) return;
+
+        // Parsing failed, but the file itself is still attached and can
+        // still be submitted — the user just won't get autofill and will
+        // need to fill the fields manually.
+        setToastMessage(
+          err instanceof Error
+            ? `Couldn't read details from this file: ${err.message}. You can still fill the form manually.`
+            : "Couldn't read details from this file. You can still fill the form manually.",
+        );
+        window.setTimeout(() => setToastMessage(""), 4000);
+      } finally {
+        if (parseRequestIdRef.current === requestId) {
+          setIsParsing(false);
+        }
+      }
+    })();
   };
 
   const addEducation = () => {
@@ -473,7 +493,10 @@ export default function JobApplicationForm({
   };
 
   const removeResume = () => {
+    // Nothing was ever persisted server-side at this point, so there's
+    // nothing to clean up remotely — clearing local state is sufficient.
     setResumeFile(null);
+    parseRequestIdRef.current += 1; // invalidate any in-flight parse
   };
 
   const validate = () => {
@@ -539,9 +562,6 @@ export default function JobApplicationForm({
     setSummary("");
     setCoverLetter("");
     setResumeFile(null);
-    setCandidateId(undefined);
-    setResumeId(undefined);
-    setResumeUrl(undefined);
     setErrors({});
   };
 
@@ -561,12 +581,17 @@ export default function JobApplicationForm({
       return;
     }
 
+    if (!resumeFile) {
+      // Should be unreachable given validate(), but keeps TS happy and
+      // guards against a race where the file was removed after validation.
+      setToastMessage("Please attach your resume.");
+      window.setTimeout(() => setToastMessage(""), 3000);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload: PublicJobApplicationPayload = {
-        candidateId: candidateId ?? undefined,
-        resumeId: resumeId ?? undefined,
-        resumeUrl: resumeUrl ?? undefined,
         personal: {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
@@ -601,7 +626,9 @@ export default function JobApplicationForm({
         companyId: jobData.companyId,
       };
 
-      await submitPublicJobApplication(jobSlug, payload);
+      // The resume is parsed and persisted server-side, atomically with
+      // the candidate and application rows, only at this point.
+      await submitPublicJobApplication(jobSlug, payload, resumeFile);
 
       setToastMessage("Application submitted successfully.");
       resetAll();
@@ -617,6 +644,8 @@ export default function JobApplicationForm({
       setSubmitting(false);
     }
   };
+
+  const isBusy = isParsing || submitting;
 
   return (
     <section className="space-y-4 px-0 sm:px-4">
@@ -646,7 +675,7 @@ export default function JobApplicationForm({
               </div>
               <p className="mt-2 text-[13px] text-slate">
                 Save time by importing your resume in one of the following
-                formats: .pdf, .doc, .docx, .odt, or .rtf
+                formats: {ACCEPTED_RESUME_LABEL}
               </p>
             </div>
           </div>
@@ -655,7 +684,8 @@ export default function JobApplicationForm({
             <button
               type="button"
               onClick={() => setIsImportMenuOpen((previous) => !previous)}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2 text-[14px] font-medium text-white shadow-[0_4px_12px_rgba(30,111,255,0.3)]"
+              disabled={isBusy}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2 text-[14px] font-medium text-white shadow-[0_4px_12px_rgba(30,111,255,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
               aria-expanded={isImportMenuOpen}
               aria-haspopup="menu"
             >
@@ -711,10 +741,10 @@ export default function JobApplicationForm({
         <input
           ref={autofillInputRef}
           type="file"
-          accept=".pdf,.doc,.docx,.odt,.rtf"
+          accept={ACCEPTED_RESUME_EXTENSIONS}
           className="hidden"
           onChange={(event) =>
-            handleAutofillImport(event.target.files?.[0] ?? null)
+            handleResumeSelected(event.target.files?.[0] ?? null)
           }
         />
       </div>
@@ -736,6 +766,7 @@ export default function JobApplicationForm({
               <input
                 ref={firstNameRef}
                 value={firstName}
+                disabled={submitting}
                 onChange={(event) => setFirstName(event.target.value)}
                 className={`${inputBaseClass} ${errors.firstName ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
               />
@@ -749,6 +780,7 @@ export default function JobApplicationForm({
               <input
                 ref={lastNameRef}
                 value={lastName}
+                disabled={submitting}
                 onChange={(event) => setLastName(event.target.value)}
                 className={`${inputBaseClass} ${errors.lastName ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
               />
@@ -764,6 +796,7 @@ export default function JobApplicationForm({
               ref={emailRef}
               type="email"
               value={email}
+              disabled={submitting}
               onChange={(event) => setEmail(event.target.value)}
               className={`${inputBaseClass} ${errors.email ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
             />
@@ -779,6 +812,7 @@ export default function JobApplicationForm({
             </label>
             <input
               value={headline}
+              disabled={submitting}
               onChange={(event) => setHeadline(event.target.value)}
               className={inputBaseClass}
             />
@@ -791,8 +825,9 @@ export default function JobApplicationForm({
             <div className="flex gap-2">
               <select
                 value={countryCode}
+                disabled={submitting}
                 onChange={(event) => setCountryCode(event.target.value)}
-                className="h-[46px] min-w-[90px] rounded-[10px] border-[1.5px] border-[#E2E8F4] bg-[#EEF2F7] px-3 text-[14px] text-[#0D1B2A] outline-none transition focus:border-[#1E6FFF]"
+                className="h-[46px] min-w-[90px] rounded-[10px] border-[1.5px] border-[#E2E8F4] bg-[#EEF2F7] px-3 text-[14px] text-[#0D1B2A] outline-none transition focus:border-[#1E6FFF] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {countryCodes.map((country) => (
                   <option key={country.code} value={country.code}>
@@ -803,6 +838,7 @@ export default function JobApplicationForm({
               <input
                 ref={phoneRef}
                 value={phone}
+                disabled={submitting}
                 onChange={(event) => setPhone(event.target.value)}
                 className={`${inputBaseClass} flex-1 ${errors.phone ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
               />
@@ -825,6 +861,7 @@ export default function JobApplicationForm({
             <input
               ref={addressRef}
               value={address}
+              disabled={submitting}
               onChange={(event) => setAddress(event.target.value)}
               className={`${inputBaseClass} ${errors.address ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
             />
@@ -845,8 +882,9 @@ export default function JobApplicationForm({
                 </label>
                 <button
                   type="button"
+                  disabled={submitting}
                   onClick={() => setShowEducationForm((previous) => !previous)}
-                  className="inline-flex h-8 items-center gap-2 rounded-[8px] border-[1.5px] border-dashed border-[#C5CFDF] bg-transparent px-3 text-[13px] text-[#6B7A99] transition hover:border-[#1E6FFF] hover:text-[#1E6FFF]"
+                  className="inline-flex h-8 items-center gap-2 rounded-[8px] border-[1.5px] border-dashed border-[#C5CFDF] bg-transparent px-3 text-[13px] text-[#6B7A99] transition hover:border-[#1E6FFF] hover:text-[#1E6FFF] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-sm bg-[#EEF4FF] text-[#1E6FFF]">
                     <Plus size={12} />
@@ -1008,8 +1046,9 @@ export default function JobApplicationForm({
                 </label>
                 <button
                   type="button"
+                  disabled={submitting}
                   onClick={() => setShowExperienceForm((previous) => !previous)}
-                  className="inline-flex h-8 items-center gap-2 rounded-[8px] border-[1.5px] border-dashed border-[#C5CFDF] bg-transparent px-3 text-[13px] text-[#6B7A99] transition hover:border-[#1E6FFF] hover:text-[#1E6FFF]"
+                  className="inline-flex h-8 items-center gap-2 rounded-[8px] border-[1.5px] border-dashed border-[#C5CFDF] bg-transparent px-3 text-[13px] text-[#6B7A99] transition hover:border-[#1E6FFF] hover:text-[#1E6FFF] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-sm bg-[#EEF4FF] text-[#1E6FFF]">
                     <Plus size={12} />
@@ -1229,6 +1268,7 @@ export default function JobApplicationForm({
               <textarea
                 rows={5}
                 value={summary}
+                disabled={submitting}
                 onChange={(event) => setSummary(event.target.value)}
                 className={textareaBaseClass}
               />
@@ -1247,7 +1287,7 @@ export default function JobApplicationForm({
               <input
                 ref={resumeInputRef}
                 type="file"
-                accept=".pdf,.doc,.docx"
+                accept={ACCEPTED_RESUME_EXTENSIONS}
                 className="hidden"
                 onChange={(event) =>
                   handleResumeSelected(event.target.files?.[0] ?? null)
@@ -1257,12 +1297,13 @@ export default function JobApplicationForm({
               <div
                 onDragOver={(event) => {
                   event.preventDefault();
-                  setIsDragOver(true);
+                  if (!isBusy) setIsDragOver(true);
                 }}
                 onDragLeave={() => setIsDragOver(false)}
                 onDrop={(event) => {
                   event.preventDefault();
                   setIsDragOver(false);
+                  if (isBusy) return;
                   handleResumeSelected(event.dataTransfer.files?.[0] ?? null);
                 }}
                 className={`flex min-h-[130px] flex-col items-center justify-center gap-2 rounded-[12px] border-2 border-dashed p-8 text-center transition-transform duration-150 ${
@@ -1271,9 +1312,14 @@ export default function JobApplicationForm({
                     : resumeFile
                       ? "border-[1.5px] border-[#00B37E] bg-[#F0FBF6]"
                       : "border-[#C5D5F0] bg-[#F5F8FF]"
-                }`}
+                } ${isBusy ? "pointer-events-none opacity-75" : ""}`}
               >
-                {resumeFile ? (
+                {isParsing ? (
+                  <div className="flex items-center justify-center gap-2 text-sm text-[#1E6FFF]">
+                    <Loader2 size={18} className="animate-spin" />
+                    Reading your resume...
+                  </div>
+                ) : resumeFile ? (
                   <div className="flex items-center justify-center gap-3 text-sm text-[#0D1B2A]">
                     <CheckCircle size={18} className="text-[#00B37E]" />
                     <div className="text-sm">
@@ -1285,7 +1331,8 @@ export default function JobApplicationForm({
                     <button
                       type="button"
                       onClick={removeResume}
-                      className="text-sm text-[#E63946] hover:underline"
+                      disabled={submitting}
+                      className="text-sm text-[#E63946] hover:underline disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Remove
                     </button>
@@ -1299,7 +1346,8 @@ export default function JobApplicationForm({
                       <button
                         type="button"
                         onClick={() => resumeInputRef.current?.click()}
-                        className="font-medium text-[#1E6FFF] hover:underline"
+                        disabled={isBusy}
+                        className="font-medium text-[#1E6FFF] hover:underline disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Choose file
                       </button>
@@ -1309,7 +1357,7 @@ export default function JobApplicationForm({
                       </span>
                     </p>
                     <p className="mt-1 text-[12px] text-[#B0B8CC]">
-                      Supported formats: .pdf, .doc, .docx
+                      Supported formats: {ACCEPTED_RESUME_LABEL}
                     </p>
                   </div>
                 )}
@@ -1326,6 +1374,7 @@ export default function JobApplicationForm({
           <textarea
             rows={6}
             value={coverLetter}
+            disabled={submitting}
             onChange={(event) => setCoverLetter(event.target.value)}
             className={textareaBaseClass}
           />
@@ -1333,7 +1382,7 @@ export default function JobApplicationForm({
 
         <button
           type="submit"
-          disabled={!requiredFilled || submitting || isUploading}
+          disabled={!requiredFilled || submitting || isParsing}
           className="flex h-13.5 w-full items-center justify-center gap-2 rounded-xl bg-success text-[15px] font-semibold text-white shadow-[0_4px_16px_rgba(0,179,126,0.35)] transition hover:bg-[#009E6E] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? (

@@ -45,6 +45,7 @@ export default function JobPostsPage() {
 
       try {
         const data = await getJobs();
+    
         if (isMounted) {
           setJobs(data);
         }

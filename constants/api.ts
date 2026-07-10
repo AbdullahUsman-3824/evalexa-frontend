@@ -30,7 +30,8 @@ export const API = {
       `/public/companies/${encodeURIComponent(slug)}/jobs`,
   },
   jobs: {
-    jobs: "/jobs",
+    list: "/jobs",
+    create: "/jobs",
     jobById: (id: string) => `/jobs/${id}`,
     jobTitles: "/jobs/titles",
     skills: "/skills",
@@ -46,6 +47,6 @@ export const API = {
       `/public/jobs/${encodeURIComponent(slug)}/similar`,
     publicJobApply: (slug: string) =>
       `/public/jobs/${encodeURIComponent(slug)}/apply`,
-    resumeUpload: "/resume/upload",
+    resumeParse: "/resume/parse",
   },
 };
