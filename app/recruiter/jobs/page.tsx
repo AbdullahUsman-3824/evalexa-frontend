@@ -45,7 +45,7 @@ export default function JobPostsPage() {
 
       try {
         const data = await getJobs();
-    
+
         if (isMounted) {
           setJobs(data);
         }
@@ -213,7 +213,7 @@ export default function JobPostsPage() {
         )}
 
         {!isLoading && !hasNoJobs && !hasNoResults && (
-          <section className="space-y-4">
+          <section className="grid gap-4 lg:grid-cols-2">
             {filteredJobs.map((job, index) => (
               <motion.div
                 key={job.id}

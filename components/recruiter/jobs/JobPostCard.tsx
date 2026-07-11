@@ -1,25 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Building2,
-  CalendarDays,
-  MapPin,
-  Sparkles,
-  Tag,
-  BriefcaseBusiness,
-  ArrowRight,
-  Edit,
-} from "lucide-react";
-import {
-  formatCurrencyRange,
-  formatExperienceLevel,
-  formatJobDate,
-  formatJobStatus,
-  formatJobType,
-  formatRelativeDays,
-  formatWorkModel,
-} from "@/repositories/job.repository";
+import { BriefcaseBusiness, ArrowRight, Edit, Users } from "lucide-react";
+import { formatJobDate, formatJobStatus } from "@/repositories/job.repository";
 import { JobRecord } from "@/types/job.types";
 
 interface JobPostCardProps {
@@ -47,34 +30,28 @@ function statusClass(status: ReturnType<typeof formatJobStatus>) {
   }
 }
 
+function getApplicationsCount(job: JobRecord) {
+  return job._count?.applications ?? 0;
+}
+
 export default function JobPostCard({ job }: JobPostCardProps) {
   const status = formatJobStatus(job.status);
-  const skills = job.jobSkills.map((relation) => relation.skill.name);
-  const topSkills = skills.slice(0, 4);
-  const remainingSkills = Math.max(0, skills.length - topSkills.length);
+  const applicationsCount = getApplicationsCount(job);
 
   return (
     <article className="rounded-2xl border border-slate/20 bg-white p-5 shadow-sm transition hover:shadow-md">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-sm font-bold text-primary">
             {getInitials(job.company.name) || "J"}
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="font-syne text-lg font-semibold text-midnight">
               {job.title}
             </h3>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate">
-              <span className="inline-flex items-center gap-1.5">
-                <Building2 className="h-4 w-4" />
-                {job.company.name}
-              </span>
-              <span className="hidden sm:inline">·</span>
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" />
-                {job.location}
-              </span>
-            </div>
+            <p className="mt-1 text-sm text-slate">
+              Managed by {job.creator.fullName}
+            </p>
           </div>
         </div>
 
@@ -85,66 +62,18 @@ export default function JobPostCard({ job }: JobPostCardProps) {
         </span>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-midnight">
-        <span className="rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
-          {formatJobType(job.jobType)}
-        </span>
-        <span className="rounded-full bg-slate/15 px-3 py-1 font-medium text-slate">
-          {formatWorkModel(job.workModel)}
-        </span>
-        <span className="rounded-full bg-cyan/10 px-3 py-1 font-medium text-cyan">
-          {formatExperienceLevel(job.experienceLevel)}
-        </span>
-        <span className="rounded-full bg-success/10 px-3 py-1 font-medium text-success">
-          {formatCurrencyRange(job.salaryMin, job.salaryMax)}
-        </span>
-      </div>
-
-      <div className="mt-4 grid gap-3 rounded-xl bg-surface/60 p-4 text-sm text-midnight md:grid-cols-2">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-slate" />
-          Posted {formatRelativeDays(job.createdAt)}
-        </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl bg-surface/60 p-4 text-sm text-midnight">
         <div className="flex items-center gap-2">
           <BriefcaseBusiness className="h-4 w-4 text-slate" />
           Deadline {formatJobDate(job.applicationDeadline)}
         </div>
-        <div className="flex items-center gap-2 md:col-span-2">
-          <Sparkles className="h-4 w-4 text-slate" />
-          AI screening{" "}
-          {job.aiConfig
-            ? `enabled at ${job.aiConfig.minMatchScore}% match`
-            : "not configured"}
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate">
-          Skills
-        </p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {topSkills.map((skill) => (
-            <span
-              key={skill}
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-            >
-              <Tag className="h-3.5 w-3.5" />
-              {skill}
-            </span>
-          ))}
-          {remainingSkills > 0 && (
-            <span className="rounded-full bg-slate/15 px-3 py-1 text-xs font-medium text-slate">
-              +{remainingSkills} more
-            </span>
-          )}
-          {topSkills.length === 0 && (
-            <span className="text-sm text-slate">No skills configured yet</span>
-          )}
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-slate" />
+          {applicationsCount} application{applicationsCount === 1 ? "" : "s"}
         </div>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate/10 pt-4">
-        <p className="text-sm text-slate">Managed by {job.creator.fullName}</p>
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/recruiter/jobs/${job.id}/edit`}

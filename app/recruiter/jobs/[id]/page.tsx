@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
+  Edit,
   Loader2,
   Save,
   Sparkles,
@@ -162,6 +163,13 @@ export default function JobDetailsPage() {
                   >
                     Preview as Candidate
                   </Link>
+                  <Link
+                    href={`/recruiter/jobs/${job.id}/edit`}
+                    className="inline-flex items-center gap-2 rounded-lg border border-slate/25 px-3 py-2 text-sm font-semibold text-midnight hover:bg-surface"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit Job
+                  </Link>
                   <button
                     type="button"
                     onClick={() => void handleSaveStatus()}
@@ -210,65 +218,67 @@ export default function JobDetailsPage() {
             <div className="space-y-5">
               <section className="rounded-2xl border border-slate/15 bg-white p-5 shadow-sm">
                 <h2 className="font-syne text-lg font-semibold text-midnight">
-                  Job Summary
+                  Job Overview
                 </h2>
-                <div className="mt-4 grid gap-3 text-sm text-midnight sm:grid-cols-2">
-                  <p>
-                    <span className="text-slate">Company:</span>{" "}
-                    {job.company.name}
-                  </p>
-                  <p>
-                    <span className="text-slate">Created by:</span>{" "}
-                    {job.creator.fullName}
-                  </p>
-                  <p>
-                    <span className="text-slate">Salary:</span>{" "}
-                    {formatCurrencyRange(job.salaryMin, job.salaryMax)}
-                  </p>
-                  <p>
-                    <span className="text-slate">Experience:</span>{" "}
-                    {formatExperienceLevel(job.experienceLevel)}
-                  </p>
-                  <p>
-                    <span className="text-slate">Work model:</span>{" "}
-                    {formatWorkModel(job.workModel)}
-                  </p>
-                  <p>
-                    <span className="text-slate">Posted:</span>{" "}
-                    {formatJobDate(job.createdAt)}
-                  </p>
-                </div>
-              </section>
+                <div className="mt-4 space-y-5">
+                  <div className="grid gap-3 text-sm text-midnight sm:grid-cols-2">
+                    <p>
+                      <span className="text-slate">Company:</span>{" "}
+                      {job.company.name}
+                    </p>
+                    <p>
+                      <span className="text-slate">Created by:</span>{" "}
+                      {job.creator.fullName}
+                    </p>
+                    <p>
+                      <span className="text-slate">Salary:</span>{" "}
+                      {formatCurrencyRange(job.salaryMin, job.salaryMax)}
+                    </p>
+                    <p>
+                      <span className="text-slate">Experience:</span>{" "}
+                      {formatExperienceLevel(job.experienceLevel)}
+                    </p>
+                    <p>
+                      <span className="text-slate">Work model:</span>{" "}
+                      {formatWorkModel(job.workModel)}
+                    </p>
+                    <p>
+                      <span className="text-slate">Posted:</span>{" "}
+                      {formatJobDate(job.createdAt)}
+                    </p>
+                  </div>
 
-              <section className="rounded-2xl border border-slate/15 bg-white p-5 shadow-sm">
-                <h2 className="font-syne text-lg font-semibold text-midnight">
-                  Description
-                </h2>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-midnight">
-                  {job.description}
-                </p>
-              </section>
+                  <div className="rounded-xl bg-surface/60 p-4">
+                    <h3 className="text-sm font-semibold text-midnight">
+                      Description
+                    </h3>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-midnight">
+                      {job.description}
+                    </p>
+                  </div>
 
-              <section className="rounded-2xl border border-slate/15 bg-white p-5 shadow-sm">
-                <h2 className="font-syne text-lg font-semibold text-midnight">
-                  Skills
-                </h2>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {skills.length > 0 ? (
-                    skills.map((relation) => (
-                      <span
-                        key={`${relation.skillId}-${relation.skill.name}`}
-                        className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-                      >
-                        {relation.skill.name} · {relation.importance} ·{" "}
-                        {relation.skill.category}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-slate">
-                      No skills configured.
-                    </span>
-                  )}
+                  <div>
+                    <h3 className="text-sm font-semibold text-midnight">
+                      Skills
+                    </h3>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {skills.length > 0 ? (
+                        skills.map((relation) => (
+                          <span
+                            key={`${relation.skillId}-${relation.skill.name}`}
+                            className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                          >
+                            {relation.skill.name} · {relation.importance} ·{" "}
+                            {relation.skill.category}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-slate">
+                          No skills configured.
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </section>
             </div>
@@ -306,25 +316,24 @@ export default function JobDetailsPage() {
                     No AI configuration found for this job.
                   </p>
                 )}
-              </section>
-
-              <section className="rounded-2xl border border-slate/15 bg-white p-5 shadow-sm">
-                <h2 className="font-syne text-lg font-semibold text-midnight">
-                  Ownership
-                </h2>
-                <div className="mt-4 space-y-2 text-sm text-midnight">
-                  <p>
-                    <span className="text-slate">Company ID:</span>{" "}
-                    {job.companyId}
-                  </p>
-                  <p>
-                    <span className="text-slate">Creator email:</span>{" "}
-                    {job.creator.email}
-                  </p>
-                  <p>
-                    <span className="text-slate">Updated:</span>{" "}
-                    {formatJobDate(job.updatedAt)}
-                  </p>
+                <div className="mt-5 border-t border-slate/10 pt-4">
+                  <h3 className="font-syne text-base font-semibold text-midnight">
+                    Ownership
+                  </h3>
+                  <div className="mt-3 space-y-2 text-sm text-midnight">
+                    <p>
+                      <span className="text-slate">Company ID:</span>{" "}
+                      {job.companyId}
+                    </p>
+                    <p>
+                      <span className="text-slate">Creator email:</span>{" "}
+                      {job.creator.email}
+                    </p>
+                    <p>
+                      <span className="text-slate">Updated:</span>{" "}
+                      {formatJobDate(job.updatedAt)}
+                    </p>
+                  </div>
                 </div>
               </section>
             </aside>

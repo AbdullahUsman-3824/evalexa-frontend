@@ -51,6 +51,10 @@ export interface JobCreatorRecord {
   email: string;
 }
 
+export interface JobCountRecord {
+  applications: number;
+}
+
 export interface JobRecord {
   id: string;
   slug?: string;
@@ -72,6 +76,7 @@ export interface JobRecord {
   creator: JobCreatorRecord;
   aiConfig: JobAiConfigRecord | null;
   jobSkills: JobSkillRecord[];
+  _count?: JobCountRecord;
 }
 
 export interface JobTitleRecord {
