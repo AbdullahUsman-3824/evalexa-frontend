@@ -15,6 +15,7 @@ import type {
   PublicJob,
   PublicJobsQuery,
   PublicJobsResponse,
+  JobListRecord,
 } from "@/types/job.types";
 
 // ...buildSkillsQueryString / buildJobsQueryString / buildPublicJobsQueryString unchanged...
@@ -66,8 +67,8 @@ export function buildPublicJobsQueryString(query?: PublicJobsQuery) {
   return qs ? `?${qs}` : "";
 }
 
-export async function getJobs(query?: JobQuery): Promise<JobRecord[]> {
-  return apiRequest<JobRecord[]>(
+export async function getJobs(query?: JobQuery): Promise<JobListRecord[]> {
+  return apiRequest<JobListRecord[]>(
     `${API.jobs.list}${buildJobsQueryString(query)}`,
     {},
   );

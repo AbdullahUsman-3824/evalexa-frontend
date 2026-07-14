@@ -39,44 +39,60 @@ export interface JobAiConfigRecord {
 }
 
 export interface JobCompanyRecord {
-  id: number;
+  id: string;
   name: string;
   logo: string | null;
   location: string | null;
 }
 
 export interface JobCreatorRecord {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
 }
 
-export interface JobCountRecord {
-  applications: number;
-}
 
 export interface JobRecord {
   id: string;
-  slug?: string;
-  companyId: number;
-  createdBy: number;
+  slug: string;
+  companyId: string;
+  createdBy: string;
+
   title: string;
+  department: string;
   description: string;
+  responsibilities: string;
+
   jobType: BackendJobType;
   experienceLevel: BackendExperienceLevel;
+  educationLevel: BackendEducationLevel;
+
   salaryMin: number;
   salaryMax: number;
+  salaryCurrency: BackendCurrency;
+  salaryPeriod: BackendSalaryPeriod;
+
   location: string;
   workModel: BackendWorkModel;
   status: BackendJobStatus;
+
   applicationDeadline: string;
+
   createdAt: string;
   updatedAt: string;
+
   company: JobCompanyRecord;
   creator: JobCreatorRecord;
   aiConfig: JobAiConfigRecord | null;
   jobSkills: JobSkillRecord[];
-  _count?: JobCountRecord;
+}
+
+export interface JobListRecord {
+  id: string;
+  title: string;
+  applicationDeadline: string;
+  status: BackendJobStatus;
+  applications: number;
 }
 
 export interface JobTitleRecord {
