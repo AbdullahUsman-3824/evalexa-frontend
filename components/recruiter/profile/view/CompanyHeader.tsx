@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { Company } from "@/types/company.types";
+import type { Company, CompanyStats } from "@/types/company.types";
 import Image from "next/image";
 
 export default function CompanyHeader({
@@ -24,12 +24,7 @@ export default function CompanyHeader({
 }: {
   isLoading: boolean;
   company: Company | null;
-  stats: {
-    activeJobs: number;
-    totalHires: number;
-    avgResponseTime: string;
-    rating: number;
-  };
+  stats?: CompanyStats;
 }) {
   const router = useRouter();
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
@@ -198,7 +193,7 @@ export default function CompanyHeader({
               <Briefcase className="w-5 h-5 text-primary" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {stats.activeJobs}
+              {stats?.activeJobs}
             </p>
             <p className="text-slate text-xs">Active Jobs</p>
           </div>
@@ -208,7 +203,7 @@ export default function CompanyHeader({
               <Users className="w-5 h-5 text-success" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {stats.totalHires}
+              {stats?.totalHires}
             </p>
             <p className="text-slate text-xs">Total Hires</p>
           </div>
@@ -218,7 +213,7 @@ export default function CompanyHeader({
               <Clock className="w-5 h-5 text-cyan" />
             </div>
             <p className="text-white text-2xl font-bold mb-1">
-              {stats.avgResponseTime}
+              {stats?.avgResponseTimeHours}
             </p>
             <p className="text-slate text-xs">Avg Response Time</p>
           </div>
@@ -227,7 +222,9 @@ export default function CompanyHeader({
             <div className="flex items-center justify-center gap-2 mb-2">
               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
             </div>
-            <p className="text-white text-2xl font-bold mb-1">{stats.rating}</p>
+            <p className="text-white text-2xl font-bold mb-1">
+              {stats?.candidateRating}
+            </p>
             <p className="text-slate text-xs">Candidate Rating</p>
           </div>
         </div>

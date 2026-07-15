@@ -9,6 +9,7 @@ import type {
   PublicCompaniesResponse,
   PublicCompanyJobsQuery,
   PublicCompanyJobsResponse,
+  CompanyStats,
 } from "@/types/company.types";
 
 // Generic error shape returned when a service call throws
@@ -109,6 +110,21 @@ export const companyApi = createApi({
       },
     }),
 
+    // ─── Stats ─────────────────────────────────────
+    getCompanyStats: builder.query<CompanyStats, string>({
+      queryFn: async (companyId) => {
+        try {
+          const data = await companyService.getCompanyStats(companyId);
+          return { data };
+        } catch (error) {
+          return toQueryError(error);
+        }
+      },
+      providesTags: (result, error, companyId) => [
+        { type: "Company", id: companyId },
+      ],
+    }),
+
     // ─── Public ─────────────────────────────────────
 
     getPublicCompanies: builder.query<
@@ -168,6 +184,7 @@ export const {
   useUpdateCompanyMutation,
   useDeleteCompanyMutation,
   useGetVerificationDocumentUrlsQuery,
+  useGetCompanyStatsQuery,
   useGetPublicCompaniesQuery,
   useGetPublicCompanyQuery,
   useGetPublicCompanyJobsQuery,

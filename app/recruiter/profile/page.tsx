@@ -4,53 +4,22 @@ import CompanyHeader from "@/components/recruiter/profile/view/CompanyHeader";
 import AboutSection from "@/components/recruiter/profile/view/AboutSection";
 import RecruiterDetails from "@/components/recruiter/profile/view/RecruiterDetails";
 // import ActiveJobsPreview from "@/components/recruiter/profile/view/ActiveJobsPreview";
-import { useEffect, useState } from "react";
-import { useGetCompaniesQuery } from "@/store/api/companyApi";
-import { getJobs } from "@/repositories/job.repository";
+import {
+  useGetCompaniesQuery,
+  useGetCompanyStatsQuery,
+} from "@/store/api/companyApi";
 
 export default function RecruiterProfile() {
   const { data: companies, isLoading: isCompanyLoading } =
     useGetCompaniesQuery();
 
   const company = companies?.[0] ?? null;
+  const { data: stats, isLoading: isStatsLoading } = useGetCompanyStatsQuery(
+    company?.id ?? "",
+    { skip: !company?.id },
+  );
 
-  const [isJobsLoading, setIsJobsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    activeJobs: 0,
-    totalHires: 0,
-    avgResponseTime: "N/A",
-    rating: 0,
-  });
-
-  useEffect(() => {
-    if (!company) {
-      setIsJobsLoading(false);
-      return;
-    }
-
-    const fetchJobs = async () => {
-      try {
-        const jobs = await getJobs({ status: "OPEN" });
-
-        const activeJobsCount = jobs.filter(
-          (job) => String(job.companyId) === String(company.id),
-        ).length;
-
-        setStats((prev) => ({
-          ...prev,
-          activeJobs: activeJobsCount,
-        }));
-      } catch (error) {
-        console.error("Failed to fetch jobs", error);
-      } finally {
-        setIsJobsLoading(false);
-      }
-    };
-
-    fetchJobs();
-  }, [company]);
-
-  const isLoading = isCompanyLoading || isJobsLoading;
+  const isLoading = isCompanyLoading || isStatsLoading;
 
   return (
     <div className="min-h-screen bg-surface">

@@ -150,4 +150,18 @@ export type CreateCompanyPayload = {
   verificationDocuments?: File[];
 };
 
+// ─── Company stats ────────────────────────────────────
+
+export type CompanyStats = {
+  activeJobs: number;
+  totalJobsPosted: number;
+  totalApplicants: number;
+  totalShortlisted: number;
+  totalInterviews: number;
+  totalHires: number;
+  avgResponseTimeHours: number;
+  avgTimeToHireDays: number;
+  candidateRating: number;
+};
+
 export type UpdateCompanyPayload = Partial<CreateCompanyPayload>;

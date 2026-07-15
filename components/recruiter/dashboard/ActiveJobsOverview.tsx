@@ -3,17 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
-import {
-  formatCurrencyRange,
-  formatJobStatus,
-  formatWorkModel,
-  getJobs,
-} from "@/repositories/job.repository";
-import { JobRecord } from "@/types/job.types";
+import { formatJobStatus, getJobs } from "@/repositories/job.repository";
+import { JobListRecord } from "@/types/job.types";
 
 export default function ActiveJobsOverview() {
   const router = useRouter();
-  const [jobs, setJobs] = useState<JobRecord[]>([]);
+  const [jobs, setJobs] = useState<JobListRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -86,13 +81,6 @@ export default function ActiveJobsOverview() {
                       {formatJobStatus(job.status)}
                     </span>
                   </div>
-                  <p className="text-sm text-slate">
-                    {job.company.name} · {job.location} ·{" "}
-                    {formatWorkModel(job.workModel)}
-                  </p>
-                  <p className="text-sm font-medium text-midnight">
-                    {formatCurrencyRange(job.salaryMin, job.salaryMax)}
-                  </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">

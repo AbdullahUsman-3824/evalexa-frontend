@@ -23,6 +23,7 @@ export const API = {
     delete: (id: string) => `/companies/${id}`,
     verificationDocuments: (companyId: string) =>
       `/companies/${companyId}/verification-documents`,
+    getStats: (companyId: string) => `/companies/${companyId}/stats`,
     getOnePublic: (slug: string) =>
       `/public/companies/${encodeURIComponent(slug)}`,
     listPublic: "/public/companies",

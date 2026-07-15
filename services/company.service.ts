@@ -9,6 +9,7 @@ import type {
   PublicCompanyDetails,
   PublicCompanyJobsQuery,
   PublicCompanyJobsResponse,
+  CompanyStats,
 } from "@/types/company.types";
 import { API } from "@/constants/api";
 
@@ -96,6 +97,13 @@ export const companyService = {
     });
   },
 
+  // ─── Stats ─────────────────────────────────────
+
+  getCompanyStats(companyId: string): Promise<CompanyStats> {
+    return apiRequest<CompanyStats>(API.company.getStats(companyId), {
+      method: "GET",
+    });
+  },
   // ─── Public ─────────────────────────────────────
 
   getPublicCompanies(
