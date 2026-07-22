@@ -50,12 +50,12 @@ function mapApplicationToCandidate(app: Application): ApplicantCandidate {
     id: app.id,
     candidateId: app.candidate.id,
     name: app.candidate.fullName,
-    title: app.resume.extractedEducation || "Professional",
+    title: app.resume.extractedEducation || "Not specified",
     location: app.candidate.location || "Not specified",
     appliedLabel: formatAppliedLabel(appliedDaysAgo),
     appliedDaysAgo,
-    matchScore: app.matchScore,
-    resumeScore: app.matchScore,
+    matchScore: app.matchScore, // still null until AI screening ships — already hidden from UI
+    resumeScore: null, // no separate resume-score field exists yet, don't fake it
     matchedSkills: [],
     missingSkills: [],
     experienceYears,
@@ -75,20 +75,8 @@ function sortByOption(
   sortBy: ApplicantSortOption,
 ) {
   return [...candidates].sort((a, b) => {
-    if (sortBy === "AI Match (High→Low)") {
-      if (a.matchScore === null && b.matchScore === null) return 0;
-      if (a.matchScore === null) return 1;
-      if (b.matchScore === null) return -1;
-      return b.matchScore - a.matchScore;
-    }
     if (sortBy === "Newest") return a.appliedDaysAgo - b.appliedDaysAgo;
-    if (sortBy === "Resume Score") {
-      if (a.resumeScore === null && b.resumeScore === null) return 0;
-      if (a.resumeScore === null) return 1;
-      if (b.resumeScore === null) return -1;
-      return b.resumeScore - a.resumeScore;
-    }
-    return b.experienceYears - a.experienceYears;
+    return b.experienceYears - a.experienceYears; // "Experience" fallback
   });
 }
 
@@ -105,9 +93,7 @@ export default function RecruiterApplicantsPage() {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [search, setSearch] = useState("");
   const [activeStatus, setActiveStatus] = useState<StatusFilter>("All");
-  const [sortBy, setSortBy] = useState<ApplicantSortOption>(
-    "AI Match (High→Low)",
-  );
+  const [sortBy, setSortBy] = useState<ApplicantSortOption>("Newest");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [minMatchScore, setMinMatchScore] = useState(0);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -116,7 +102,8 @@ export default function RecruiterApplicantsPage() {
   const [location, setLocation] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
-  const [tableSortKey, setTableSortKey] = useState<TableSortKey>("matchScore");
+  const [tableSortKey, setTableSortKey] =
+    useState<TableSortKey>("appliedDaysAgo");
   const [tableSortDirection, setTableSortDirection] = useState<"asc" | "desc">(
     "desc",
   );
@@ -273,14 +260,14 @@ export default function RecruiterApplicantsPage() {
     setPage(1);
     setSearch("");
     setActiveStatus("All");
-    setSortBy("AI Match (High→Low)");
+    setSortBy("Newest");
     setShowAdvanced(false);
     setMinMatchScore(0);
     setSelectedSkills([]);
     setExpRange([0, 10]);
     setEducation("Any");
     setLocation("");
-    setTableSortKey("matchScore");
+    setTableSortKey("appliedDaysAgo");
     setTableSortDirection("desc");
   };
 

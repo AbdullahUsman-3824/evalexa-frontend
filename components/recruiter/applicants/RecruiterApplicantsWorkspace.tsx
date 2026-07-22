@@ -11,12 +11,7 @@ import CandidateCard, {
 } from "@/components/recruiter/applicants/CandidateCard";
 
 export type StatusFilter = "All" | ApplicantStatus;
-export type TableSortKey =
-  | "name"
-  | "matchScore"
-  | "resumeScore"
-  | "experienceYears"
-  | "appliedDaysAgo";
+export type TableSortKey = "name" | "experienceYears" | "appliedDaysAgo";
 
 interface RecruiterApplicantsWorkspaceProps {
   selectedJobId: string;
