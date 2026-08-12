@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { Sparkles, Trophy, Users, Video } from "lucide-react";
 import type { JobPostFormData } from "@/types/job.types";
 
 interface Step3AISettingsProps {
@@ -11,53 +11,35 @@ interface Step3AISettingsProps {
   ) => void;
 }
 
-function SettingCard({
-  title,
-  description,
+function Toggle({
   enabled,
   onToggle,
-  children,
   accent = "primary",
 }: {
-  title: string;
-  description: string;
   enabled: boolean;
   onToggle: () => void;
-  children?: React.ReactNode;
   accent?: "primary" | "cyan";
 }) {
   return (
-    <div className="rounded-xl border border-slate/15 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="font-syne text-lg font-semibold text-midnight">
-            {title}
-          </h3>
-          <p className="mt-1 text-sm text-slate">{description}</p>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={enabled}
-          onClick={onToggle}
-          className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-            enabled
-              ? accent === "cyan"
-                ? "bg-cyan-500"
-                : "bg-primary"
-              : "bg-slate/30"
-          }`}
-        >
-          <span
-            className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
-              enabled ? "left-5" : "left-0.5"
-            }`}
-          />
-        </button>
-      </div>
-
-      {enabled && children ? <div className="mt-5">{children}</div> : null}
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      onClick={onToggle}
+      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+        enabled
+          ? accent === "cyan"
+            ? "bg-cyan-500"
+            : "bg-primary"
+          : "bg-slate/25"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-all ${
+          enabled ? "left-5" : "left-0.5"
+        }`}
+      />
+    </button>
   );
 }
 
@@ -66,10 +48,10 @@ function NumberField({
   label,
   hint,
   value,
-  min = 1,
+  min = 0,
   max,
   onChange,
-  accent = "primary",
+  suffix,
 }: {
   id: string;
   label: string;
@@ -78,37 +60,108 @@ function NumberField({
   min?: number;
   max?: number;
   onChange: (value: number) => void;
-  accent?: "primary" | "cyan";
+  suffix?: string;
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-midnight" htmlFor={id}>
+    <div className="space-y-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor={id} className="text-sm font-medium text-midnight">
           {label}
         </label>
-        {hint ? <p className="text-xs text-slate">{hint}</p> : null}
+        {hint ? <span className="text-xs text-slate">{hint}</span> : null}
       </div>
-      <input
-        id={id}
-        type="number"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => {
-          const next = Number(e.target.value);
-          if (Number.isNaN(next)) return;
-          const clamped = Math.max(
-            min,
-            max !== undefined ? Math.min(max, next) : next,
-          );
-          onChange(clamped);
-        }}
-        className={`h-11 w-36 rounded-lg border px-3 text-midnight outline-none focus:ring-2 ${
-          accent === "cyan"
-            ? "border-cyan/25 focus:border-cyan focus:ring-cyan/20"
-            : "border-slate/25 focus:border-primary focus:ring-primary/20"
-        }`}
-      />
+      <div className="relative">
+        <input
+          id={id}
+          type="number"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => {
+            const next = Number(e.target.value);
+            if (Number.isNaN(next)) return;
+            const clamped = Math.max(
+              min,
+              max !== undefined ? Math.min(max, next) : next,
+            );
+            onChange(clamped);
+          }}
+          className="h-11 w-full rounded-lg border border-slate/20 bg-white px-3 pr-12 text-sm text-midnight outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+        />
+        {suffix ? (
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate">
+            {suffix}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function SettingCard({
+  icon,
+  title,
+  description,
+  enabled,
+  onToggle,
+  accent = "primary",
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  enabled: boolean;
+  onToggle: () => void;
+  accent?: "primary" | "cyan";
+  children?: React.ReactNode;
+}) {
+  const accentRing =
+    accent === "cyan"
+      ? "ring-cyan-500/20 border-cyan-500/30"
+      : "ring-primary/20 border-primary/30";
+  const iconBg =
+    accent === "cyan"
+      ? enabled
+        ? "bg-cyan-500/15 text-cyan-600"
+        : "bg-slate/10 text-slate"
+      : enabled
+        ? "bg-primary/15 text-primary"
+        : "bg-slate/10 text-slate";
+
+  return (
+    <div
+      className={`flex h-full flex-col rounded-2xl border bg-white p-5 shadow-sm transition ${
+        enabled ? `ring-1 ${accentRing}` : "border-slate/15 opacity-95"
+      }`}
+    >
+      {/* Header */}
+      <div className="flex items-start gap-3">
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition ${iconBg}`}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-syne text-base font-semibold text-midnight">
+              {title}
+            </h3>
+            <Toggle enabled={enabled} onToggle={onToggle} accent={accent} />
+          </div>
+          <p className="mt-1 text-sm leading-relaxed text-slate">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      {/* Body – only when enabled */}
+      {enabled && children ? (
+        <div className="mt-5 border-t border-slate/10 pt-5">{children}</div>
+      ) : (
+        <div className="mt-5 flex flex-1 items-end">
+          <p className="text-xs text-slate/70">Turn on to configure options</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -126,8 +179,9 @@ export default function Step3AISettings({
 
   return (
     <div className="space-y-6 text-midnight">
-      <div className="rounded-xl bg-gradient-to-br from-white to-surface p-5 shadow-sm">
-        <div className="flex items-center gap-3">
+      {/* Page intro */}
+      <div className="rounded-2xl border border-slate/10 bg-gradient-to-br from-white via-white to-surface/80 p-5 shadow-sm">
+        <div className="flex items-center gap-4">
           <div className="rounded-2xl bg-primary/10 p-3 text-primary">
             <Sparkles className="h-6 w-6" />
           </div>
@@ -135,37 +189,38 @@ export default function Step3AISettings({
             <h2 className="font-syne text-xl font-semibold text-midnight">
               AI configuration
             </h2>
-            <p className="text-sm text-slate">
-              Control ranking, shortlisting, and AI interview behaviour for this
-              job.
+            <p className="mt-0.5 text-sm text-slate">
+              Ranking, shortlisting, and interview limits for this job.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        {/* Ranking */}
+      {/* Cards */}
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         <SettingCard
+          icon={<Trophy className="h-5 w-5" />}
           title="Candidate ranking"
-          description="Score and rank applicants so the strongest matches surface first."
+          description="Score applicants so the strongest matches surface first."
           enabled={enableRanking}
           onToggle={() => onChange("enableRanking", !enableRanking)}
         >
           <NumberField
             id="minimumMatchScore"
             label="Minimum match score"
-            hint="Candidates below this score are deprioritised (0–100)."
+            hint="0–100"
             value={minimumMatchScore}
             min={0}
             max={100}
+            suffix="pts"
             onChange={(value) => onChange("minimumMatchScore", value)}
           />
         </SettingCard>
 
-        {/* Auto-shortlist */}
         <SettingCard
+          icon={<Users className="h-5 w-5" />}
           title="Auto-shortlist"
-          description="Let Evalexa automatically shortlist the strongest candidates for recruiter review."
+          description="Automatically shortlist top candidates for recruiter review."
           enabled={enableAutoShortlist}
           onToggle={() =>
             onChange("enableAutoShortlisting", !enableAutoShortlist)
@@ -174,17 +229,18 @@ export default function Step3AISettings({
           <NumberField
             id="shortlistLimit"
             label="Shortlist limit"
-            hint="Max number of candidates to auto-shortlist."
+            hint="Max candidates"
             value={shortlistLimit}
             min={1}
+            suffix="max"
             onChange={(value) => onChange("shortlistLimit", value)}
           />
         </SettingCard>
 
-        {/* AI interview */}
         <SettingCard
+          icon={<Video className="h-5 w-5" />}
           title="AI interview"
-          description="Invite the final candidates to an AI-assisted interview round."
+          description="Invite finalists to an AI-assisted interview round."
           enabled={enableAiInterview}
           onToggle={() => onChange("enableAiInterview", !enableAiInterview)}
           accent="cyan"
@@ -192,11 +248,11 @@ export default function Step3AISettings({
           <NumberField
             id="interviewLimit"
             label="Interview limit"
-            hint="Max candidates invited to the AI interview."
+            hint="Max invites"
             value={interviewLimit}
             min={1}
+            suffix="max"
             onChange={(value) => onChange("interviewLimit", value)}
-            accent="cyan"
           />
         </SettingCard>
       </div>
