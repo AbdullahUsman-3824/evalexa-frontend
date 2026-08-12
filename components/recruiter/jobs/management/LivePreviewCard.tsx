@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDays, MapPin } from "lucide-react";
-import type { JobPostFormData } from "./types";
+import type { JobPostFormData } from "@/types/job.types";
 
 interface LivePreviewCardProps {
   data: JobPostFormData;
@@ -28,11 +28,6 @@ export default function LivePreviewCard({ data }: LivePreviewCardProps) {
           <span className="rounded-full bg-slate/10 px-3 py-1 font-semibold text-slate">
             {data.workMode}
           </span>
-          {data.urgentHiring && (
-            <span className="rounded-full bg-warning/10 px-3 py-1 font-semibold text-warning">
-              Urgently Hiring
-            </span>
-          )}
         </div>
 
         <div className="mt-4 space-y-2 text-sm text-slate">

@@ -1,18 +1,120 @@
-export type BackendJobType = "FULL_TIME" | "PART_TIME" | "CONTRACT";
-export type BackendExperienceLevel = "JUNIOR" | "MID" | "SENIOR" | "LEAD";
+/* =========================
+   Backend enums / unions
+========================= */
+
+export type BackendJobType =
+  | "FULL_TIME"
+  | "PART_TIME"
+  | "CONTRACT"
+  | "INTERN"
+  | "FREELANCE";
+
+export type BackendExperienceLevel =
+  | "INTERN"
+  | "JUNIOR"
+  | "MID"
+  | "SENIOR"
+  | "LEAD";
+
 export type BackendWorkModel = "ONSITE" | "REMOTE" | "HYBRID";
-export type BackendJobStatus = "OPEN" | "CLOSED" | "DRAFT";
+
+export type BackendJobStatus = "DRAFT" | "OPEN" | "CLOSED" | "ARCHIVED";
+
 export type BackendSkillImportance = "REQUIRED" | "PREFERRED";
+
 export type BackendEducationLevel =
   | "HIGH_SCHOOL"
+  | "DIPLOMA"
+  | "ASSOCIATE"
   | "BACHELOR"
   | "MASTER"
   | "PHD"
   | "ANY";
+
 export type BackendCurrency = "PKR" | "USD" | "EUR";
-export type BackendSalaryPeriod = "MONTHLY" | "YEARLY";
+
+export type BackendSalaryPeriod = "HOURLY" | "MONTHLY" | "YEARLY";
 
 export type JobSortBy = "newest" | "deadline";
+
+/* =========================
+   Form UI label types
+   (human-readable labels used inside the multi-step job form;
+    mapped to backend enums before submitting)
+========================= */
+
+export type FormJobType =
+  | "Full-time"
+  | "Part-time"
+  | "Contract"
+  | "Internship"
+  | "Freelance";
+
+export type FormWorkMode = "On-site" | "Remote" | "Hybrid";
+
+export type FormExperienceLevel =
+  | "Intern"
+  | "Entry"
+  | "Mid"
+  | "Senior"
+  | "Lead";
+
+export type FormEducationLevel =
+  | "Any"
+  | "High School"
+  | "Diploma"
+  | "Associate"
+  | "Bachelor's"
+  | "Master's"
+  | "PhD";
+
+/** Skill as held in form state — includes display fields for the UI table. */
+export interface FormSkill {
+  skillId: string;
+  name: string;
+  category: string;
+  importance: BackendSkillImportance;
+  /** 1–100 weighting used by the AI ranking engine. */
+  weight: number;
+}
+
+/**
+ * Internal state shape for the multi-step job creation / edit form.
+ * Uses FormJobType / FormWorkMode / etc. so step components can render
+ * values directly. JobForm.tsx maps these to backend enums on submit.
+ */
+export interface JobPostFormData {
+  // Step 1 — Basic info
+  title: string;
+  department: string;
+  jobType: FormJobType;
+  workModel: FormWorkMode;
+  location: string;
+  applicationDeadline: string;
+
+  // Step 2 — Requirements
+  salaryMin: string;
+  salaryMax: string;
+  currency: BackendCurrency;
+  salaryPer: BackendSalaryPeriod;
+  experienceLevel: FormExperienceLevel;
+  educationLevel: FormEducationLevel;
+  skills: FormSkill[];
+  description: string;
+  totalOpenings: number;
+
+  // Step 3 — AI config
+  enableRanking: boolean;
+  enableAutoShortlisting: boolean;
+  shortlistLimit: number;
+  minimumMatchScore: number;
+  enableAiInterview: boolean;
+  interviewLimit: number | null;
+}
+
+/* =========================
+   Nested records
+========================= */
 
 export interface JobSkillRecord {
   jobId: string;
@@ -26,16 +128,18 @@ export interface JobSkillRecord {
   };
 }
 
+/** Current AI config shape (matches create payload) */
 export interface JobAiConfigRecord {
-  id: number;
-  jobId: string;
-  minMatchScore: number;
-  autoShortlistThreshold: number;
-  enableAutoShortlist: boolean;
+  id?: number | string;
+  jobId?: string;
+  enableRanking: boolean;
+  enableAutoShortlisting: boolean;
+  shortlistLimit: number;
+  minimumMatchScore: number;
   enableAiInterview: boolean;
-  aiInterviewThreshold: number;
-  createdAt: string;
-  updatedAt: string;
+  interviewLimit: number | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface JobCompanyRecord {
@@ -51,17 +155,25 @@ export interface JobCreatorRecord {
   email: string;
 }
 
+export interface JobSalaryRecord {
+  min: number;
+  max: number;
+  currency: BackendCurrency;
+  period: BackendSalaryPeriod;
+}
+
+/* =========================
+   Job records
+========================= */
 
 export interface JobRecord {
   id: string;
-  slug: string;
   companyId: string;
   createdBy: string;
-
   title: string;
+  slug: string;
   department: string;
   description: string;
-  responsibilities: string;
 
   jobType: BackendJobType;
   experienceLevel: BackendExperienceLevel;
@@ -77,6 +189,7 @@ export interface JobRecord {
   status: BackendJobStatus;
 
   applicationDeadline: string;
+  totalOpenings: number;
 
   createdAt: string;
   updatedAt: string;
@@ -115,55 +228,58 @@ export interface SkillRecord {
   category: string;
 }
 
+/* =========================
+   Create / Update payloads
+========================= */
+
 export interface CreateJobSkillPayload {
-  skillId?: string;
-  name?: string;
-  category?: string;
+  skillId: string;
   importance: BackendSkillImportance;
   weight: number;
 }
 
 export interface CreateJobAiConfigPayload {
-  enableAutoShortlist: boolean;
+  enableRanking: boolean;
+  enableAutoShortlisting: boolean;
+  shortlistLimit: number;
+  minimumMatchScore: number;
   enableAiInterview: boolean;
-  resumeSelectionCount: number;
-  interviewSelectionCount: number;
-  minMatchScore?: number;
-  autoShortlistThreshold?: number;
-  aiInterviewThreshold?: number;
+  interviewLimit: number | null;
 }
 
 export interface CreateJobPayload {
   title: string;
-  description: string;
   department: string;
+  location: string;
   jobType: BackendJobType;
+  workModel: BackendWorkModel;
+  description: string;
+  applicationDeadline: string; // ISO 8601, e.g. "2026-09-30T23:59:59.000Z"
   experienceLevel: BackendExperienceLevel;
-  educationLevel?: BackendEducationLevel;
+  educationLevel: BackendEducationLevel;
   salary: {
     min: number;
     max: number;
     currency: BackendCurrency;
     period: BackendSalaryPeriod;
   };
-  location: string;
-  workModel: BackendWorkModel;
-  status?: BackendJobStatus;
-  applicationDeadline: string;
+  status: BackendJobStatus;
+  totalOpenings: number;
   skills: CreateJobSkillPayload[];
-  responsibilities: string;
   aiConfig: CreateJobAiConfigPayload;
 }
 
-export interface UpdateJobPayload extends Omit<
-  Partial<CreateJobPayload>,
-  "aiConfig"
-> {
+export type UpdateJobPayload = Partial<
+  Omit<CreateJobPayload, "aiConfig" | "skills">
+> & {
   skills?: CreateJobSkillPayload[];
   aiConfig?: Partial<CreateJobAiConfigPayload>;
-}
+};
 
-/* Application types */
+/* =========================
+   Application types
+========================= */
+
 export type ApplicationStatus =
   | "APPLIED"
   | "SCREENING"
@@ -189,7 +305,7 @@ export interface ApplicationResume {
   id: string;
   resumeUrl: string;
   extractedEducation: string;
-  extractedExperience: number; // in months
+  extractedExperience: number; // months
   uploadedAt: string;
 }
 
@@ -207,15 +323,18 @@ export interface Application {
   resume: ApplicationResume;
 }
 
-/* Candidate Details types */
+/* =========================
+   Candidate details
+========================= */
+
 export interface CandidateResume {
   id: string;
   resumeUrl: string;
   fileName: string;
   description: string;
   parsedData: Record<string, unknown>;
-  extractedSkills: string[];
-  extractedExperience: number; // in months
+  extractedSkills: Array<{ name: string; category?: string }>;
+  extractedExperience: number; // months
   extractedEducation: string;
   isPrimary: boolean;
   uploadedAt: string;
@@ -283,6 +402,7 @@ export type ResumeParsePreview = {
     isCurrent: boolean;
     description: string | null;
   }>;
+  skills: Array<{ name: string; category?: string }>;
 };
 
 export type PublicJobApplicationPayload = {
@@ -310,8 +430,7 @@ export type PublicJobApplicationPayload = {
     endDate?: string;
     isCurrent?: boolean;
   }>;
-  jobId: string;
-  companyId: string;
+  skills: Array<{ name: string; category?: string }>;
 };
 
 export type PublicJobApplicationResponse = {
@@ -322,7 +441,10 @@ export type PublicJobApplicationResponse = {
   status: "APPLIED";
 };
 
-/* Public-facing job types */
+/* =========================
+   Public-facing job types
+========================= */
+
 export type PublicJobSkill = {
   importance: BackendSkillImportance;
   weight: number;

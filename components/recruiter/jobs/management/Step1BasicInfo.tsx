@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { JobPostFormData, JobType, WorkMode } from "./types";
+import type {
+  JobPostFormData,
+  FormJobType as JobType,
+  FormWorkMode as WorkMode,
+} from "@/types/job.types";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -40,21 +44,17 @@ const WORK_MODES: WorkMode[] = ["On-site", "Remote", "Hybrid"];
 function validate(data: JobPostFormData) {
   const errors: Partial<Record<keyof JobPostFormData, string>> = {};
 
-  if (!data.jobTitle.trim())
-    errors.jobTitle = "Job title is required.";
-  else if (data.jobTitle.trim().length < 3)
-    errors.jobTitle = "Job title must be at least 3 characters.";
+  if (!data.title.trim()) errors.title = "Job title is required.";
+  else if (data.title.trim().length < 3)
+    errors.title = "Job title must be at least 3 characters.";
 
-  if (!data.department)
-    errors.department = "Please select a department.";
+  if (!data.department) errors.department = "Please select a department.";
 
-  if (!data.jobType)
-    errors.jobType = "Please select a job type.";
+  if (!data.jobType) errors.jobType = "Please select a job type.";
 
-  if (!data.workMode)
-    errors.workMode = "Please select a work mode.";
+  if (!data.workModel) errors.workModel = "Please select a work mode.";
 
-  if (data.workMode !== "Remote" && !data.location.trim())
+  if (data.workModel !== "Remote" && !data.location.trim())
     errors.location = "Location is required for on-site and hybrid roles.";
 
   if (!data.applicationDeadline)
@@ -65,8 +65,13 @@ function validate(data: JobPostFormData) {
   return errors;
 }
 
-export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) {
-  const [touched, setTouched] = useState<Partial<Record<keyof JobPostFormData, boolean>>>({});
+export default function Step1BasicInfo({
+  data,
+  onChange,
+}: Step1BasicInfoProps) {
+  const [touched, setTouched] = useState<
+    Partial<Record<keyof JobPostFormData, boolean>>
+  >({});
 
   const errors = validate(data);
 
@@ -80,24 +85,23 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-sm flex flex-col gap-5 text-midnight">
-
       {/* Job Title */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <FieldLabel htmlFor="jobTitle">Job title</FieldLabel>
+          <FieldLabel htmlFor="title">Job title</FieldLabel>
           <span className="text-xs text-muted-foreground">
-            {data.jobTitle.length}/80
+            {data.title.length}/80
           </span>
         </div>
         <Input
-          id="jobTitle"
-          value={data.jobTitle}
-          onChange={(e) => onChange("jobTitle", e.target.value.slice(0, 80))}
-          onBlur={() => touch("jobTitle")}
+          id="title"
+          value={data.title}
+          onChange={(e) => onChange("title", e.target.value.slice(0, 80))}
+          onBlur={() => touch("title")}
           placeholder="e.g. Senior Frontend Developer"
-          className={`h-10 ${err("jobTitle") ? "border-red-400 focus-visible:ring-red-300" : ""}`}
+          className={`h-10 ${err("title") ? "border-red-400 focus-visible:ring-red-300" : ""}`}
         />
-        <FieldError message={err("jobTitle")} />
+        <FieldError message={err("title")} />
       </div>
 
       {/* Department + Location */}
@@ -119,14 +123,16 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
             </SelectTrigger>
             <SelectContent>
               {DEPARTMENTS.map((dep) => (
-                <SelectItem key={dep} value={dep}>{dep}</SelectItem>
+                <SelectItem key={dep} value={dep}>
+                  {dep}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <FieldError message={err("department")} />
         </div>
 
-        {data.workMode !== "Remote" ? (
+        {data.workModel !== "Remote" ? (
           <div className="flex flex-col gap-1.5">
             <FieldLabel htmlFor="location">Location</FieldLabel>
             <Input
@@ -163,7 +169,9 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
             </SelectTrigger>
             <SelectContent>
               {JOB_TYPES.map((type) => (
-                <SelectItem key={type} value={type}>{type}</SelectItem>
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -171,27 +179,29 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <FieldLabel htmlFor="workMode">Work mode</FieldLabel>
+          <FieldLabel htmlFor="workModel">Work mode</FieldLabel>
           <Select
-            value={data.workMode}
+            value={data.workModel}
             onValueChange={(val) => {
-              onChange("workMode", val as WorkMode);
-              touch("workMode");
+              onChange("workModel", val as WorkMode);
+              touch("workModel");
             }}
           >
             <SelectTrigger
-              id="workMode"
-              className={`h-10 w-full ${err("workMode") ? "border-red-400 focus:ring-red-300" : ""}`}
+              id="workModel"
+              className={`h-10 w-full ${err("workModel") ? "border-red-400 focus:ring-red-300" : ""}`}
             >
               <SelectValue placeholder="Select work mode" />
             </SelectTrigger>
             <SelectContent>
               {WORK_MODES.map((mode) => (
-                <SelectItem key={mode} value={mode}>{mode}</SelectItem>
+                <SelectItem key={mode} value={mode}>
+                  {mode}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <FieldError message={err("workMode")} />
+          <FieldError message={err("workModel")} />
         </div>
       </div>
 
@@ -210,7 +220,6 @@ export default function Step1BasicInfo({ data, onChange }: Step1BasicInfoProps) 
           <FieldError message={err("applicationDeadline")} />
         </div>
       </div>
-
     </div>
   );
 }

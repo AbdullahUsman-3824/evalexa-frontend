@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Edit3, Rocket, Save, Loader2, X } from "lucide-react";
-import type { JobPostFormData } from "./types";
+import type { JobPostFormData } from "@/types/job.types";
 
 interface Step4ReviewProps {
   data: JobPostFormData;
@@ -32,19 +32,10 @@ export default function Step4Review({
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
 
   const selectedSkills = data.skills ?? [];
-  const legacySkills = data.requiredSkills ?? [];
-  const responsibilitiesText =
-    typeof data.responsibilities === "string"
-      ? data.responsibilities
-      : Array.isArray(data.responsibilities)
-        ? data.responsibilities.join("\n")
-        : "";
-  const enableAutoShortlist =
-    data.enableAutoShortlist ?? data.autoShortlistEnabled ?? false;
-  const enableAiInterview =
-    data.enableAiInterview ?? data.aiInterviewEnabled ?? false;
-  const resumeSelectionCount = data.resumeSelectionCount ?? 20;
-  const interviewSelectionCount = data.interviewSelectionCount ?? 5;
+  const enableAutoShortlist = data.enableAutoShortlisting;
+  const enableAiInterview = data.enableAiInterview;
+  const shortlistLimit = data.shortlistLimit;
+  const interviewLimit = data.interviewLimit ?? 0;
 
   const formattedSalary =
     data.salaryMin && data.salaryMax
@@ -73,7 +64,7 @@ export default function Step4Review({
         </div>
         <div className="grid gap-2 text-sm text-midnight sm:grid-cols-2">
           <p>
-            <span className="text-slate">Title:</span> {data.jobTitle || "—"}
+            <span className="text-slate">Title:</span> {data.title || "—"}
           </p>
           <p>
             <span className="text-slate">Department:</span> {data.department}
@@ -82,11 +73,11 @@ export default function Step4Review({
             <span className="text-slate">Type:</span> {data.jobType}
           </p>
           <p>
-            <span className="text-slate">Mode:</span> {data.workMode}
+            <span className="text-slate">Mode:</span> {data.workModel}
           </p>
           <p>
             <span className="text-slate">Location:</span>{" "}
-            {data.workMode === "Remote" ? "Remote" : data.location || "—"}
+            {data.workModel === "Remote" ? "Remote" : data.location || "—"}
           </p>
           <p>
             <span className="text-slate">Deadline:</span>{" "}
@@ -95,11 +86,6 @@ export default function Step4Review({
               : "—"}
           </p>
         </div>
-        {data.urgentHiring && (
-          <span className="mt-3 inline-flex rounded-full bg-warning/10 px-3 py-1 text-xs font-semibold text-warning">
-            Urgent Hiring
-          </span>
-        )}
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
@@ -124,8 +110,7 @@ export default function Step4Review({
             {data.experienceLevel}
           </p>
           <p>
-            <span className="text-slate">Education:</span>{" "}
-            {data.educationRequirement}
+            <span className="text-slate">Education:</span> {data.educationLevel}
           </p>
           <p>
             <span className="text-slate">Skills selected:</span>{" "}
@@ -169,41 +154,8 @@ export default function Step4Review({
                   </tbody>
                 </table>
               </div>
-            ) : legacySkills.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {legacySkills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
             ) : (
               <p className="text-sm text-slate">No skills selected yet.</p>
-            )}
-          </div>
-
-          <div>
-            <p className="mb-1 text-sm font-medium text-midnight">
-              Responsibilities
-            </p>
-            {responsibilitiesText.trim() ? (
-              <ul className="list-disc space-y-1 pl-5 text-sm text-midnight">
-                {responsibilitiesText
-                  .split("\n")
-                  .filter((line) => line.trim())
-                  .map((line, index) => (
-                    <li key={`${line}-${index}`}>
-                      {line.replace(/^[-*]\s*/, "")}
-                    </li>
-                  ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate">
-                No responsibilities provided.
-              </p>
             )}
           </div>
 
@@ -212,7 +164,7 @@ export default function Step4Review({
               Description
             </p>
             <div className="max-h-56 overflow-auto rounded-lg border border-slate/15 bg-surface p-3 text-sm text-midnight whitespace-pre-wrap">
-              {data.jobDescription || "No description provided."}
+              {data.description || "No description provided."}
             </div>
           </div>
         </div>
@@ -241,8 +193,8 @@ export default function Step4Review({
             </span>
           </p>
           <p>
-            <span className="text-slate">Resume selection:</span>{" "}
-            {resumeSelectionCount}
+            <span className="text-slate">Shortlist limit:</span>{" "}
+            {shortlistLimit}
           </p>
           <p>
             <span className="text-slate">AI interview:</span>{" "}
@@ -253,8 +205,8 @@ export default function Step4Review({
             </span>
           </p>
           <p>
-            <span className="text-slate">Interview selection:</span>{" "}
-            {interviewSelectionCount}
+            <span className="text-slate">Interview limit:</span>{" "}
+            {interviewLimit}
           </p>
         </div>
       </div>

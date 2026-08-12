@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, useEffect } from "react";
 import {
   CheckCircle,
   ChevronDown,
@@ -50,6 +50,11 @@ type ExperienceDraft = {
 type EducationEntry = EducationDraft & { id: string };
 type ExperienceEntry = ExperienceDraft & { id: string };
 
+type SkillEntry = {
+  name: string;
+  category?: string;
+};
+
 type Errors = Partial<
   Record<
     "firstName" | "lastName" | "email" | "phone" | "address" | "resume",
@@ -93,13 +98,9 @@ const years = Array.from(
   (_, index) => `${new Date().getFullYear() + 1 - index}`,
 );
 
-// Single source of truth for accepted resume types — previously the
-// "Import resume from" banner accepted .odt/.rtf while the dropzone (and
-// the backend parser) only ever supported pdf/doc/docx, which produced
-// confusing "parse failed" errors for anyone using the banner.
 const ACCEPTED_RESUME_EXTENSIONS = ".pdf,.doc,.docx";
 const ACCEPTED_RESUME_LABEL = ".pdf, .doc, .docx";
-const MAX_RESUME_SIZE_BYTES = 10 * 1024 * 1024; // matches backend limit
+const MAX_RESUME_SIZE_BYTES = 10 * 1024 * 1024;
 
 const emptyEducationDraft: EducationDraft = {
   level: "",
@@ -171,10 +172,13 @@ function SectionCard({
 export default function JobApplicationForm({
   jobSlug,
   jobData,
+  initialData = null,
 }: {
   jobSlug: string;
   jobData: JobDetailData;
+  initialData?: ResumeParsePreview | null;
 }) {
+  // --- Personal ---
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -183,24 +187,30 @@ export default function JobApplicationForm({
     countryCodes[0]?.code ?? "+92",
   );
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("Lahore, Pakistan");
+  const [address, setAddress] = useState("");
 
+  // --- Education ---
   const [showEducationForm, setShowEducationForm] = useState(false);
   const [educationDraft, setEducationDraft] =
     useState<EducationDraft>(emptyEducationDraft);
   const [educations, setEducations] = useState<EducationEntry[]>([]);
 
+  // --- Experience ---
   const [showExperienceForm, setShowExperienceForm] = useState(false);
   const [experienceDraft, setExperienceDraft] =
     useState<ExperienceDraft>(emptyExperienceDraft);
   const [experiences, setExperiences] = useState<ExperienceEntry[]>([]);
 
+  // --- Summary & Cover Letter ---
   const [summary, setSummary] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
 
-  // NOTE: candidateId / resumeId / resumeUrl no longer exist client-side.
-  // Nothing is persisted until final submit, so there is nothing to track
-  // or reconcile between the parse step and the submit step.
+  // --- Skills ---
+  const [skills, setSkills] = useState<SkillEntry[]>([]);
+  const [skillInput, setSkillInput] = useState("");
+  const [skillCategory, setSkillCategory] = useState("");
+
+  // --- Resume ---
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
@@ -209,10 +219,10 @@ export default function JobApplicationForm({
   const [toastMessage, setToastMessage] = useState("");
   const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
 
-  // Guards against a stale response overwriting the form if the user
-  // selects a second file before the first parse call resolves.
   const parseRequestIdRef = useRef(0);
+  const hasAppliedInitial = useRef(false);
 
+  // --- Refs ---
   const autofillInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
   const firstNameRef = useRef<HTMLInputElement>(null);
@@ -231,6 +241,7 @@ export default function JobApplicationForm({
     address.trim().length > 0 &&
     Boolean(resumeFile);
 
+  // --- Clear functions ---
   const clearPersonalSection = () => {
     setFirstName("");
     setLastName("");
@@ -239,8 +250,8 @@ export default function JobApplicationForm({
     setCountryCode(countryCodes[0]?.code ?? "+92");
     setPhone("");
     setAddress("");
-    setErrors((previous) => ({
-      ...previous,
+    setErrors((prev) => ({
+      ...prev,
       firstName: undefined,
       lastName: undefined,
       email: undefined,
@@ -254,39 +265,38 @@ export default function JobApplicationForm({
     setExperiences([]);
     setSummary("");
     setResumeFile(null);
+    setSkills([]);
     setShowEducationForm(false);
     setShowExperienceForm(false);
     setEducationDraft(emptyEducationDraft);
     setExperienceDraft(emptyExperienceDraft);
-    setErrors((previous) => ({ ...previous, resume: undefined }));
+    setErrors((prev) => ({ ...prev, resume: undefined }));
   };
 
   const clearDetailsSection = () => {
     setCoverLetter("");
   };
 
+  // --- Import menu ---
   const handleImportSourceSelect = (
     source: "device" | "google-drive" | "dropbox" | "linkedin",
   ) => {
     setIsImportMenuOpen(false);
-
     if (source === "device") {
       autofillInputRef.current?.click();
       return;
     }
-
     setToastMessage(
       "This import source is coming soon. Please use This device for now.",
     );
     window.setTimeout(() => setToastMessage(""), 2500);
   };
 
-  // Helper to parse dates in MM/YYYY or ISO format
+  // --- Helper functions ---
   const parseDate = (
     dateString: string | null | undefined,
   ): { month: string; year: string } => {
     if (!dateString) return { month: "", year: "" };
-
     if (/^\d{2}\/\d{4}$/.test(dateString)) {
       const [monthStr, yearStr] = dateString.split("/");
       const monthNum = parseInt(monthStr, 10) - 1;
@@ -296,7 +306,6 @@ export default function JobApplicationForm({
         year: yearStr || "",
       };
     }
-
     try {
       const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
@@ -306,25 +315,19 @@ export default function JobApplicationForm({
         };
       }
     } catch {
-      // fallthrough
+      // ignore
     }
-
     return { month: "", year: "" };
   };
 
   const splitPhone = (
     value: string | null | undefined,
   ): { code: string; number: string } => {
-    if (!value) {
-      return { code: countryCodes[0]?.code ?? "+92", number: "" };
-    }
-
+    if (!value) return { code: countryCodes[0]?.code ?? "+92", number: "" };
     const trimmed = value.trim();
     const match = trimmed.match(/^(\+\d+)\s*(.*)$/);
-    if (!match) {
+    if (!match)
       return { code: countryCodes[0]?.code ?? "+92", number: trimmed };
-    }
-
     return {
       code: match[1] || countryCodes[0]?.code || "+92",
       number: (match[2] || "").trim(),
@@ -334,11 +337,7 @@ export default function JobApplicationForm({
   const normalizePhoneForSubmit = (code: string, value: string): string => {
     const trimmed = value.trim();
     if (!trimmed) return "";
-
-    if (/^\+\d+/.test(trimmed)) {
-      return trimmed;
-    }
-
+    if (/^\+\d+/.test(trimmed)) return trimmed;
     return `${code} ${trimmed}`.trim();
   };
 
@@ -349,11 +348,9 @@ export default function JobApplicationForm({
   ): string | undefined => {
     const cleanYear = year.trim();
     if (!cleanYear) return undefined;
-
     const monthIndex = months.findIndex(
-      (month) => month.toLowerCase() === monthName.trim().toLowerCase(),
+      (m) => m.toLowerCase() === monthName.trim().toLowerCase(),
     );
-
     if (monthIndex < 0) return undefined;
     return `${cleanYear}-${String(monthIndex + 1).padStart(2, "0")}-${fallbackDay}`;
   };
@@ -367,10 +364,7 @@ export default function JobApplicationForm({
     return `${cleanYear}-${fallbackMonthDay}`;
   };
 
-  // Only fills a field if the user hasn't already typed something into it.
-  // Previously, parsing silently clobbered anything the user had already
-  // entered by hand (or entered from a first upload, before replacing the
-  // file with a second one).
+  // --- Apply parsed preview ---
   const applyParsePreview = (preview: ResumeParsePreview) => {
     if (preview.personal) {
       const p = preview.personal;
@@ -378,17 +372,17 @@ export default function JobApplicationForm({
       if (p.lastName && !lastName.trim()) setLastName(p.lastName);
       if (p.email && !email.trim()) setEmail(p.email);
       if (p.phone && !phone.trim()) {
-        const parsedPhone = splitPhone(p.phone);
-        setCountryCode(parsedPhone.code);
-        setPhone(parsedPhone.number);
+        const parsed = splitPhone(p.phone);
+        setCountryCode(parsed.code);
+        setPhone(parsed.number);
       }
       if (p.headline && !headline.trim()) setHeadline(p.headline);
       if (p.address && !address.trim()) setAddress(p.address);
     }
 
     if (Array.isArray(preview.education) && preview.education.length > 0) {
-      setEducations((previous) => {
-        if (previous.length > 0) return previous; // don't clobber manual entries
+      setEducations((prev) => {
+        if (prev.length > 0) return prev;
         return preview.education.map((e) => ({
           id: crypto.randomUUID(),
           level: e.degree ?? "",
@@ -401,8 +395,8 @@ export default function JobApplicationForm({
     }
 
     if (Array.isArray(preview.experience) && preview.experience.length > 0) {
-      setExperiences((previous) => {
-        if (previous.length > 0) return previous;
+      setExperiences((prev) => {
+        if (prev.length > 0) return prev;
         return preview.experience.map((ex) => {
           const startParsed = parseDate(ex.startDate);
           const endParsed = parseDate(ex.endDate);
@@ -416,48 +410,62 @@ export default function JobApplicationForm({
             endYear: endParsed.year,
             current: Boolean(ex.isCurrent),
             description: ex.description ?? "",
-          } as ExperienceEntry;
+          };
         });
       });
     }
+
+    // --- Handle skills: support both string[] and { name, category }[] ---
+    if (Array.isArray(preview.skills) && preview.skills.length > 0) {
+      const skillEntries: SkillEntry[] = preview.skills.flatMap((skill) => {
+        if (skill && typeof skill === "object" && "name" in skill) {
+          return {
+            name: (skill as { name: string }).name,
+            category: (skill as { category?: string }).category || "",
+          };
+        }
+        if (typeof skill === "string") {
+          return { name: skill, category: "" };
+        }
+        return [];
+      });
+      setSkills((prev) => (prev.length === 0 ? skillEntries : prev));
+    }
   };
 
+  // --- Apply initialData on mount ---
+  useEffect(() => {
+    if (initialData && !hasAppliedInitial.current) {
+      applyParsePreview(initialData);
+      hasAppliedInitial.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData]);
+
+  // --- Resume file handler ---
   const handleResumeSelected = (file: File | null) => {
     if (!file) return;
-
     if (file.size > MAX_RESUME_SIZE_BYTES) {
-      setErrors((previous) => ({
-        ...previous,
+      setErrors((prev) => ({
+        ...prev,
         resume: "File is too large. Maximum size is 10 MB.",
       }));
       return;
     }
-
-    // The file is attached for submission regardless of whether parsing
-    // (autofill) succeeds — parsing is a convenience, not a requirement.
     setResumeFile(file);
-    setErrors((previous) => ({ ...previous, resume: undefined }));
+    setErrors((prev) => ({ ...prev, resume: undefined }));
 
     const requestId = ++parseRequestIdRef.current;
-
     (async () => {
       setIsParsing(true);
       try {
         const preview = await parsePublicResume(file);
-
-        // A newer file was selected while this request was in flight —
-        // discard this stale response instead of overwriting newer state.
         if (parseRequestIdRef.current !== requestId) return;
-
         applyParsePreview(preview);
         setToastMessage("Resume parsed. Review the autofilled details below.");
         window.setTimeout(() => setToastMessage(""), 2500);
       } catch (err: unknown) {
         if (parseRequestIdRef.current !== requestId) return;
-
-        // Parsing failed, but the file itself is still attached and can
-        // still be submitted — the user just won't get autofill and will
-        // need to fill the fields manually.
         setToastMessage(
           err instanceof Error
             ? `Couldn't read details from this file: ${err.message}. You can still fill the form manually.`
@@ -472,10 +480,11 @@ export default function JobApplicationForm({
     })();
   };
 
+  // --- Add / remove education & experience ---
   const addEducation = () => {
     if (!educationDraft.level || !educationDraft.institution) return;
-    setEducations((previous) => [
-      ...previous,
+    setEducations((prev) => [
+      ...prev,
       { ...educationDraft, id: crypto.randomUUID() },
     ]);
     setEducationDraft(emptyEducationDraft);
@@ -484,8 +493,8 @@ export default function JobApplicationForm({
 
   const addExperience = () => {
     if (!experienceDraft.title || !experienceDraft.company) return;
-    setExperiences((previous) => [
-      ...previous,
+    setExperiences((prev) => [
+      ...prev,
       { ...experienceDraft, id: crypto.randomUUID() },
     ]);
     setExperienceDraft(emptyExperienceDraft);
@@ -493,28 +502,47 @@ export default function JobApplicationForm({
   };
 
   const removeResume = () => {
-    // Nothing was ever persisted server-side at this point, so there's
-    // nothing to clean up remotely — clearing local state is sufficient.
     setResumeFile(null);
-    parseRequestIdRef.current += 1; // invalidate any in-flight parse
+    parseRequestIdRef.current += 1;
   };
 
+  // --- Skills handlers ---
+  const addSkill = () => {
+    const trimmed = skillInput.trim();
+    if (trimmed && !skills.some((s) => s.name === trimmed)) {
+      setSkills((prev) => [
+        ...prev,
+        { name: trimmed, category: skillCategory.trim() || undefined },
+      ]);
+      setSkillInput("");
+      setSkillCategory("");
+    }
+  };
+
+  const removeSkill = (skillName: string) => {
+    setSkills((prev) => prev.filter((s) => s.name !== skillName));
+  };
+
+  const handleSkillKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addSkill();
+    }
+  };
+
+  // --- Validation ---
   const validate = () => {
     const nextErrors: Errors = {};
-
     if (!firstName.trim()) nextErrors.firstName = "This field is required";
     if (!lastName.trim()) nextErrors.lastName = "This field is required";
-
     if (!email.trim()) {
       nextErrors.email = "This field is required";
     } else if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
       nextErrors.email = "Please enter a valid email";
     }
-
     if (!phone.trim()) nextErrors.phone = "This field is required";
     if (!address.trim()) nextErrors.address = "This field is required";
     if (!resumeFile) nextErrors.resume = "This field is required";
-
     return nextErrors;
   };
 
@@ -535,10 +563,8 @@ export default function JobApplicationForm({
       address: addressRef,
       resume: resumeRef,
     };
-
     const firstErrorKey = order.find((key) => nextErrors[key]);
     if (!firstErrorKey) return;
-
     const target = refMap[firstErrorKey].current;
     if (!target) return;
     target.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -552,9 +578,10 @@ export default function JobApplicationForm({
     setHeadline("");
     setCountryCode(countryCodes[0]?.code ?? "+92");
     setPhone("");
-    setAddress("Lahore, Pakistan");
+    setAddress("");
     setEducations([]);
     setExperiences([]);
+    setSkills([]);
     setEducationDraft(emptyEducationDraft);
     setExperienceDraft(emptyExperienceDraft);
     setShowEducationForm(false);
@@ -565,25 +592,21 @@ export default function JobApplicationForm({
     setErrors({});
   };
 
+  // --- Submit ---
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextErrors = validate();
     setErrors(nextErrors);
-
     if (Object.keys(nextErrors).length > 0) {
       scrollToFirstError(nextErrors);
       return;
     }
-
     if (!jobSlug) {
       setToastMessage("Unable to determine job. Please try again.");
       window.setTimeout(() => setToastMessage(""), 3000);
       return;
     }
-
     if (!resumeFile) {
-      // Should be unreachable given validate(), but keeps TS happy and
-      // guards against a race where the file was removed after validation.
       setToastMessage("Please attach your resume.");
       window.setTimeout(() => setToastMessage(""), 3000);
       return;
@@ -622,14 +645,13 @@ export default function JobApplicationForm({
             : toIsoDateFromMonthYear(item.endMonth, item.endYear, "28"),
           isCurrent: item.current,
         })),
-        jobId: jobData.jobId,
-        companyId: jobData.companyId,
+        skills: skills.map((skill) => ({
+          name: skill.name.trim(),
+          category: skill.category?.trim() || "",
+        })),
       };
 
-      // The resume is parsed and persisted server-side, atomically with
-      // the candidate and application rows, only at this point.
       await submitPublicJobApplication(jobSlug, payload, resumeFile);
-
       setToastMessage("Application submitted successfully.");
       resetAll();
       window.setTimeout(() => setToastMessage(""), 3000);
@@ -647,6 +669,7 @@ export default function JobApplicationForm({
 
   const isBusy = isParsing || submitting;
 
+  // --- Render --- (unchanged from previous version)
   return (
     <section className="space-y-4 px-0 sm:px-4">
       {toastMessage ? (
@@ -683,7 +706,7 @@ export default function JobApplicationForm({
           <div className="relative w-full sm:w-auto">
             <button
               type="button"
-              onClick={() => setIsImportMenuOpen((previous) => !previous)}
+              onClick={() => setIsImportMenuOpen((prev) => !prev)}
               disabled={isBusy}
               className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2 text-[14px] font-medium text-white shadow-[0_4px_12px_rgba(30,111,255,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
               aria-expanded={isImportMenuOpen}
@@ -696,7 +719,7 @@ export default function JobApplicationForm({
               />
             </button>
 
-            {isImportMenuOpen ? (
+            {isImportMenuOpen && (
               <div
                 className="absolute right-0 z-20 mt-2 w-full min-w-56 rounded-lg border border-border bg-white p-1 shadow-lg sm:w-56"
                 role="menu"
@@ -734,7 +757,7 @@ export default function JobApplicationForm({
                   LinkedIn (Coming soon)
                 </button>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
 
@@ -743,9 +766,7 @@ export default function JobApplicationForm({
           type="file"
           accept={ACCEPTED_RESUME_EXTENSIONS}
           className="hidden"
-          onChange={(event) =>
-            handleResumeSelected(event.target.files?.[0] ?? null)
-          }
+          onChange={(e) => handleResumeSelected(e.target.files?.[0] ?? null)}
         />
       </div>
 
@@ -754,6 +775,7 @@ export default function JobApplicationForm({
       </p>
 
       <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+        {/* Personal information section */}
         <SectionCard
           title="Personal information"
           onClear={clearPersonalSection}
@@ -767,12 +789,11 @@ export default function JobApplicationForm({
                 ref={firstNameRef}
                 value={firstName}
                 disabled={submitting}
-                onChange={(event) => setFirstName(event.target.value)}
+                onChange={(e) => setFirstName(e.target.value)}
                 className={`${inputBaseClass} ${errors.firstName ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
               />
               <FieldError message={errors.firstName} />
             </div>
-
             <div>
               <label className="mb-1 block text-[13px] font-medium text-[#4A5568]">
                 <span className="text-[#E63946]">*</span> Last name
@@ -781,7 +802,7 @@ export default function JobApplicationForm({
                 ref={lastNameRef}
                 value={lastName}
                 disabled={submitting}
-                onChange={(event) => setLastName(event.target.value)}
+                onChange={(e) => setLastName(e.target.value)}
                 className={`${inputBaseClass} ${errors.lastName ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
               />
               <FieldError message={errors.lastName} />
@@ -797,7 +818,7 @@ export default function JobApplicationForm({
               type="email"
               value={email}
               disabled={submitting}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               className={`${inputBaseClass} ${errors.email ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
             />
             <FieldError message={errors.email} />
@@ -813,7 +834,7 @@ export default function JobApplicationForm({
             <input
               value={headline}
               disabled={submitting}
-              onChange={(event) => setHeadline(event.target.value)}
+              onChange={(e) => setHeadline(e.target.value)}
               className={inputBaseClass}
             />
           </div>
@@ -826,7 +847,7 @@ export default function JobApplicationForm({
               <select
                 value={countryCode}
                 disabled={submitting}
-                onChange={(event) => setCountryCode(event.target.value)}
+                onChange={(e) => setCountryCode(e.target.value)}
                 className="h-[46px] min-w-[90px] rounded-[10px] border-[1.5px] border-[#E2E8F4] bg-[#EEF2F7] px-3 text-[14px] text-[#0D1B2A] outline-none transition focus:border-[#1E6FFF] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {countryCodes.map((country) => (
@@ -839,7 +860,7 @@ export default function JobApplicationForm({
                 ref={phoneRef}
                 value={phone}
                 disabled={submitting}
-                onChange={(event) => setPhone(event.target.value)}
+                onChange={(e) => setPhone(e.target.value)}
                 className={`${inputBaseClass} flex-1 ${errors.phone ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
               />
             </div>
@@ -862,7 +883,7 @@ export default function JobApplicationForm({
               ref={addressRef}
               value={address}
               disabled={submitting}
-              onChange={(event) => setAddress(event.target.value)}
+              onChange={(e) => setAddress(e.target.value)}
               className={`${inputBaseClass} ${errors.address ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
             />
             <p className="mt-1 text-xs text-slate">
@@ -873,8 +894,10 @@ export default function JobApplicationForm({
           </div>
         </SectionCard>
 
+        {/* Profile section */}
         <SectionCard title="Profile" onClear={clearProfileSection}>
           <div className="space-y-5">
+            {/* Education */}
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <label className="text-[13px] text-slate">
@@ -883,7 +906,7 @@ export default function JobApplicationForm({
                 <button
                   type="button"
                   disabled={submitting}
-                  onClick={() => setShowEducationForm((previous) => !previous)}
+                  onClick={() => setShowEducationForm((prev) => !prev)}
                   className="inline-flex h-8 items-center gap-2 rounded-[8px] border-[1.5px] border-dashed border-[#C5CFDF] bg-transparent px-3 text-[13px] text-[#6B7A99] transition hover:border-[#1E6FFF] hover:text-[#1E6FFF] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-sm bg-[#EEF4FF] text-[#1E6FFF]">
@@ -901,10 +924,10 @@ export default function JobApplicationForm({
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       <select
                         value={educationDraft.level}
-                        onChange={(event) =>
-                          setEducationDraft((previous) => ({
-                            ...previous,
-                            level: event.target.value,
+                        onChange={(e) =>
+                          setEducationDraft((prev) => ({
+                            ...prev,
+                            level: e.target.value,
                           }))
                         }
                         className={inputBaseClass}
@@ -919,10 +942,10 @@ export default function JobApplicationForm({
                       <input
                         placeholder="Field of Study"
                         value={educationDraft.field}
-                        onChange={(event) =>
-                          setEducationDraft((previous) => ({
-                            ...previous,
-                            field: event.target.value,
+                        onChange={(e) =>
+                          setEducationDraft((prev) => ({
+                            ...prev,
+                            field: e.target.value,
                           }))
                         }
                         className={inputBaseClass}
@@ -930,10 +953,10 @@ export default function JobApplicationForm({
                       <input
                         placeholder="Institution"
                         value={educationDraft.institution}
-                        onChange={(event) =>
-                          setEducationDraft((previous) => ({
-                            ...previous,
-                            institution: event.target.value,
+                        onChange={(e) =>
+                          setEducationDraft((prev) => ({
+                            ...prev,
+                            institution: e.target.value,
                           }))
                         }
                         className={inputBaseClass}
@@ -941,10 +964,10 @@ export default function JobApplicationForm({
                       <div className="grid grid-cols-2 gap-2">
                         <select
                           value={educationDraft.startYear}
-                          onChange={(event) =>
-                            setEducationDraft((previous) => ({
-                              ...previous,
-                              startYear: event.target.value,
+                          onChange={(e) =>
+                            setEducationDraft((prev) => ({
+                              ...prev,
+                              startYear: e.target.value,
                             }))
                           }
                           className={inputBaseClass}
@@ -961,10 +984,10 @@ export default function JobApplicationForm({
                         </select>
                         <select
                           value={educationDraft.endYear}
-                          onChange={(event) =>
-                            setEducationDraft((previous) => ({
-                              ...previous,
-                              endYear: event.target.value,
+                          onChange={(e) =>
+                            setEducationDraft((prev) => ({
+                              ...prev,
+                              endYear: e.target.value,
                             }))
                           }
                           className={inputBaseClass}
@@ -1001,7 +1024,7 @@ export default function JobApplicationForm({
                 </div>
               </div>
 
-              {educations.length > 0 ? (
+              {educations.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {educations.map((entry) => (
                     <div
@@ -1024,8 +1047,8 @@ export default function JobApplicationForm({
                       <button
                         type="button"
                         onClick={() =>
-                          setEducations((previous) =>
-                            previous.filter((item) => item.id !== entry.id),
+                          setEducations((prev) =>
+                            prev.filter((item) => item.id !== entry.id),
                           )
                         }
                         className="text-slate transition hover:text-[#DC2626]"
@@ -1036,9 +1059,10 @@ export default function JobApplicationForm({
                     </div>
                   ))}
                 </div>
-              ) : null}
+              )}
             </div>
 
+            {/* Experience */}
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <label className="text-[13px] text-slate">
@@ -1047,7 +1071,7 @@ export default function JobApplicationForm({
                 <button
                   type="button"
                   disabled={submitting}
-                  onClick={() => setShowExperienceForm((previous) => !previous)}
+                  onClick={() => setShowExperienceForm((prev) => !prev)}
                   className="inline-flex h-8 items-center gap-2 rounded-[8px] border-[1.5px] border-dashed border-[#C5CFDF] bg-transparent px-3 text-[13px] text-[#6B7A99] transition hover:border-[#1E6FFF] hover:text-[#1E6FFF] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-sm bg-[#EEF4FF] text-[#1E6FFF]">
@@ -1066,10 +1090,10 @@ export default function JobApplicationForm({
                       <input
                         placeholder="Job Title"
                         value={experienceDraft.title}
-                        onChange={(event) =>
-                          setExperienceDraft((previous) => ({
-                            ...previous,
-                            title: event.target.value,
+                        onChange={(e) =>
+                          setExperienceDraft((prev) => ({
+                            ...prev,
+                            title: e.target.value,
                           }))
                         }
                         className={inputBaseClass}
@@ -1077,10 +1101,10 @@ export default function JobApplicationForm({
                       <input
                         placeholder="Company"
                         value={experienceDraft.company}
-                        onChange={(event) =>
-                          setExperienceDraft((previous) => ({
-                            ...previous,
-                            company: event.target.value,
+                        onChange={(e) =>
+                          setExperienceDraft((prev) => ({
+                            ...prev,
+                            company: e.target.value,
                           }))
                         }
                         className={inputBaseClass}
@@ -1088,10 +1112,10 @@ export default function JobApplicationForm({
                       <div className="grid grid-cols-2 gap-2">
                         <select
                           value={experienceDraft.startMonth}
-                          onChange={(event) =>
-                            setExperienceDraft((previous) => ({
-                              ...previous,
-                              startMonth: event.target.value,
+                          onChange={(e) =>
+                            setExperienceDraft((prev) => ({
+                              ...prev,
+                              startMonth: e.target.value,
                             }))
                           }
                           className={inputBaseClass}
@@ -1105,10 +1129,10 @@ export default function JobApplicationForm({
                         </select>
                         <select
                           value={experienceDraft.startYear}
-                          onChange={(event) =>
-                            setExperienceDraft((previous) => ({
-                              ...previous,
-                              startYear: event.target.value,
+                          onChange={(e) =>
+                            setExperienceDraft((prev) => ({
+                              ...prev,
+                              startYear: e.target.value,
                             }))
                           }
                           className={inputBaseClass}
@@ -1128,10 +1152,10 @@ export default function JobApplicationForm({
                       <div className="grid grid-cols-2 gap-2">
                         <select
                           value={experienceDraft.endMonth}
-                          onChange={(event) =>
-                            setExperienceDraft((previous) => ({
-                              ...previous,
-                              endMonth: event.target.value,
+                          onChange={(e) =>
+                            setExperienceDraft((prev) => ({
+                              ...prev,
+                              endMonth: e.target.value,
                             }))
                           }
                           disabled={experienceDraft.current}
@@ -1146,10 +1170,10 @@ export default function JobApplicationForm({
                         </select>
                         <select
                           value={experienceDraft.endYear}
-                          onChange={(event) =>
-                            setExperienceDraft((previous) => ({
-                              ...previous,
-                              endYear: event.target.value,
+                          onChange={(e) =>
+                            setExperienceDraft((prev) => ({
+                              ...prev,
+                              endYear: e.target.value,
                             }))
                           }
                           disabled={experienceDraft.current}
@@ -1169,16 +1193,12 @@ export default function JobApplicationForm({
                       <input
                         type="checkbox"
                         checked={experienceDraft.current}
-                        onChange={(event) =>
-                          setExperienceDraft((previous) => ({
-                            ...previous,
-                            current: event.target.checked,
-                            endMonth: event.target.checked
-                              ? ""
-                              : previous.endMonth,
-                            endYear: event.target.checked
-                              ? ""
-                              : previous.endYear,
+                        onChange={(e) =>
+                          setExperienceDraft((prev) => ({
+                            ...prev,
+                            current: e.target.checked,
+                            endMonth: e.target.checked ? "" : prev.endMonth,
+                            endYear: e.target.checked ? "" : prev.endYear,
                           }))
                         }
                       />
@@ -1189,10 +1209,10 @@ export default function JobApplicationForm({
                       rows={4}
                       placeholder="Description (Optional)"
                       value={experienceDraft.description}
-                      onChange={(event) =>
-                        setExperienceDraft((previous) => ({
-                          ...previous,
-                          description: event.target.value,
+                      onChange={(e) =>
+                        setExperienceDraft((prev) => ({
+                          ...prev,
+                          description: e.target.value,
                         }))
                       }
                       className={`${textareaBaseClass} mt-3`}
@@ -1221,7 +1241,7 @@ export default function JobApplicationForm({
                 </div>
               </div>
 
-              {experiences.length > 0 ? (
+              {experiences.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {experiences.map((entry) => (
                     <div
@@ -1243,8 +1263,8 @@ export default function JobApplicationForm({
                       <button
                         type="button"
                         onClick={() =>
-                          setExperiences((previous) =>
-                            previous.filter((item) => item.id !== entry.id),
+                          setExperiences((prev) =>
+                            prev.filter((item) => item.id !== entry.id),
                           )
                         }
                         className="text-slate transition hover:text-[#DC2626]"
@@ -1255,9 +1275,72 @@ export default function JobApplicationForm({
                     </div>
                   ))}
                 </div>
-              ) : null}
+              )}
             </div>
 
+            {/* Skills section */}
+            <div>
+              <label className="mb-1 block text-[13px] font-medium text-[#4A5568]">
+                Skills{" "}
+                <span className="ml-2 text-[12px] font-normal text-[#9BA3B2]">
+                  (Optional)
+                </span>
+              </label>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={handleSkillKeyDown}
+                  placeholder="Skill name"
+                  className={`${inputBaseClass} flex-1 min-w-[120px]`}
+                  disabled={submitting}
+                />
+                <input
+                  type="text"
+                  value={skillCategory}
+                  onChange={(e) => setSkillCategory(e.target.value)}
+                  placeholder="Category (optional)"
+                  className={`${inputBaseClass} flex-1 min-w-[120px]`}
+                  disabled={submitting}
+                />
+                <button
+                  type="button"
+                  onClick={addSkill}
+                  disabled={submitting || !skillInput.trim()}
+                  className="h-[46px] rounded-[10px] bg-primary px-4 text-sm font-medium text-white transition hover:bg-[#185dde] disabled:opacity-60"
+                >
+                  Add
+                </button>
+              </div>
+              {skills.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {skills.map((skill) => (
+                    <span
+                      key={skill.name}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#EEF4FF] px-3 py-1 text-sm text-[#0D1B2A]"
+                    >
+                      {skill.name}
+                      {skill.category && (
+                        <span className="text-xs text-[#6B7A99]">
+                          ({skill.category})
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeSkill(skill.name)}
+                        className="text-slate hover:text-[#DC2626]"
+                        aria-label={`Remove ${skill.name}`}
+                      >
+                        <X size={14} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Summary */}
             <div>
               <label className="mb-1 block text-[13px] font-medium text-[#4A5568]">
                 Summary{" "}
@@ -1269,11 +1352,12 @@ export default function JobApplicationForm({
                 rows={5}
                 value={summary}
                 disabled={submitting}
-                onChange={(event) => setSummary(event.target.value)}
+                onChange={(e) => setSummary(e.target.value)}
                 className={textareaBaseClass}
               />
             </div>
 
+            {/* Resume upload */}
             <div ref={resumeRef}>
               <label className="mb-2 flex items-center gap-1 text-[13px] font-medium text-[#4A5568]">
                 <span>
@@ -1289,22 +1373,22 @@ export default function JobApplicationForm({
                 type="file"
                 accept={ACCEPTED_RESUME_EXTENSIONS}
                 className="hidden"
-                onChange={(event) =>
-                  handleResumeSelected(event.target.files?.[0] ?? null)
+                onChange={(e) =>
+                  handleResumeSelected(e.target.files?.[0] ?? null)
                 }
               />
 
               <div
-                onDragOver={(event) => {
-                  event.preventDefault();
+                onDragOver={(e) => {
+                  e.preventDefault();
                   if (!isBusy) setIsDragOver(true);
                 }}
                 onDragLeave={() => setIsDragOver(false)}
-                onDrop={(event) => {
-                  event.preventDefault();
+                onDrop={(e) => {
+                  e.preventDefault();
                   setIsDragOver(false);
                   if (isBusy) return;
-                  handleResumeSelected(event.dataTransfer.files?.[0] ?? null);
+                  handleResumeSelected(e.dataTransfer.files?.[0] ?? null);
                 }}
                 className={`flex min-h-[130px] flex-col items-center justify-center gap-2 rounded-[12px] border-2 border-dashed p-8 text-center transition-transform duration-150 ${
                   isDragOver
@@ -1367,6 +1451,7 @@ export default function JobApplicationForm({
           </div>
         </SectionCard>
 
+        {/* Details section */}
         <SectionCard title="Details" onClear={clearDetailsSection}>
           <label className="mb-1 block text-[13px] text-slate">
             Cover letter (Optional)
@@ -1375,7 +1460,7 @@ export default function JobApplicationForm({
             rows={6}
             value={coverLetter}
             disabled={submitting}
-            onChange={(event) => setCoverLetter(event.target.value)}
+            onChange={(e) => setCoverLetter(e.target.value)}
             className={textareaBaseClass}
           />
         </SectionCard>
@@ -1415,7 +1500,6 @@ export default function JobApplicationForm({
             Help ↗
           </a>
         </div>
-
         <p className="mt-3 text-[12px] text-[#B0B8CC]">
           Powered by <span className="font-medium text-primary">Evalexa</span> ·
           Cookie settings · Accessibility
