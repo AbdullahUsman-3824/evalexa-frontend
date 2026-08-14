@@ -252,10 +252,10 @@ export default function CandidateDetailsPageComponent() {
               <div className="mt-2 flex flex-wrap gap-2">
                 {primaryResume?.extractedSkills?.slice(0, 5).map((skill) => (
                   <span
-                    key={skill}
+                    key={skill.name}
                     className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success"
                   >
-                    {skill}
+                    {skill.name}
                   </span>
                 ))}
               </div>
@@ -267,10 +267,10 @@ export default function CandidateDetailsPageComponent() {
               <div className="mt-2 flex flex-wrap gap-2">
                 {primaryResume?.extractedSkills?.slice(5).map((skill) => (
                   <span
-                    key={skill}
+                    key={skill.name}
                     className="rounded-full bg-surface px-2.5 py-1 text-xs text-midnight"
                   >
-                    {skill}
+                    {skill.name}
                   </span>
                 ))}
               </div>

@@ -295,19 +295,21 @@ export default function JobDetailsPage() {
                 {job.aiConfig ? (
                   <div className="mt-4 space-y-2 text-sm text-midnight">
                     <p>
-                      <span className="text-slate">Min match:</span>{" "}
-                      {job.aiConfig.minMatchScore}%
+                      <span className="text-slate">Ranking: </span>{" "}
+                      {job.aiConfig.enableRanking
+                        ? `On at ${job.aiConfig.minimumMatchScore}%`
+                        : "Off"}
                     </p>
                     <p>
                       <span className="text-slate">Auto shortlist:</span>{" "}
-                      {job.aiConfig.enableAutoShortlist
-                        ? `On at ${job.aiConfig.autoShortlistThreshold}%`
+                      {job.aiConfig.enableAutoShortlisting
+                        ? `On at ${job.aiConfig.shortlistLimit}%`
                         : "Off"}
                     </p>
                     <p>
                       <span className="text-slate">AI interview:</span>{" "}
                       {job.aiConfig.enableAiInterview
-                        ? `On at ${job.aiConfig.aiInterviewThreshold}%`
+                        ? `On at ${job.aiConfig.interviewLimit}%`
                         : "Off"}
                     </p>
                   </div>

@@ -171,7 +171,7 @@ export default function Step3AISettings({
   onChange,
 }: Step3AISettingsProps) {
   const enableRanking = data.enableRanking;
-  const enableAutoShortlist = data.enableAutoShortlisting;
+  const enableAutoShortlisting = data.enableAutoShortlisting;
   const shortlistLimit = data.shortlistLimit;
   const minimumMatchScore = data.minimumMatchScore;
   const enableAiInterview = data.enableAiInterview;
@@ -221,9 +221,9 @@ export default function Step3AISettings({
           icon={<Users className="h-5 w-5" />}
           title="Auto-shortlist"
           description="Automatically shortlist top candidates for recruiter review."
-          enabled={enableAutoShortlist}
+          enabled={enableAutoShortlisting}
           onToggle={() =>
-            onChange("enableAutoShortlisting", !enableAutoShortlist)
+            onChange("enableAutoShortlisting", !enableAutoShortlisting)
           }
         >
           <NumberField

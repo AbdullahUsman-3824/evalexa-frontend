@@ -8,17 +8,21 @@ interface LivePreviewCardProps {
 }
 
 export default function LivePreviewCard({ data }: LivePreviewCardProps) {
-  const title = data.jobTitle.trim() || "Job title will appear here";
+  const title = data.title.trim() || "Job title will appear here";
   const location =
-    data.workMode === "Remote"
+    data.workModel === "Remote"
       ? "Remote"
       : data.location.trim() || "Location not specified";
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-slate">Your post will look like this →</p>
+      <p className="text-sm font-medium text-slate">
+        Your post will look like this →
+      </p>
       <div className="rounded-xl border border-slate/20 bg-white p-5 shadow-sm">
-        <h3 className="font-syne text-lg font-semibold text-midnight">{title}</h3>
+        <h3 className="font-syne text-lg font-semibold text-midnight">
+          {title}
+        </h3>
         <p className="mt-1 text-sm text-slate">Evalexa • Recruitment Team</p>
 
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
@@ -26,7 +30,7 @@ export default function LivePreviewCard({ data }: LivePreviewCardProps) {
             {data.jobType}
           </span>
           <span className="rounded-full bg-slate/10 px-3 py-1 font-semibold text-slate">
-            {data.workMode}
+            {data.workModel}
           </span>
         </div>
 
@@ -49,4 +53,3 @@ export default function LivePreviewCard({ data }: LivePreviewCardProps) {
     </div>
   );
 }
-
