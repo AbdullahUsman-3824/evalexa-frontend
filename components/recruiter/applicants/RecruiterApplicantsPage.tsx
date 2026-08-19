@@ -1,112 +1,57 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
 import RecruiterApplicantsHeader from "@/components/recruiter/applicants/RecruiterApplicantsHeader";
 import RecruiterApplicantsWorkspace, {
   type StatusFilter,
   type TableSortKey,
 } from "@/components/recruiter/applicants/RecruiterApplicantsWorkspace";
 import {
-  type ApplicantCandidate,
-  type ApplicantStatus,
-} from "@/components/recruiter/applicants/CandidateCard";
-import {
   getApplicationsForJob,
+  getJobSummary,
+  getJobProcessingStatus,
   getJobTitles,
+  retryFailedApplicationsForJob,
 } from "@/repositories/job.repository";
-import { Application, JobTitleRecord } from "@/types/job.types";
-import type { ApplicantSortOption } from "@/components/recruiter/applicants/ApplicantFilters";
+import {
+  Application,
+  ApplicationListResponse,
+  JobProcessingStatusResponse,
+  JobTitleRecord,
+  JobSummaryRecord,
+} from "@/types/job.types";
 
-function formatAppliedLabel(daysAgo: number): string {
-  if (daysAgo <= 1) return "Today";
-  if (daysAgo <= 7) return `${daysAgo} days ago`;
-  const weeksAgo = Math.floor(daysAgo / 7);
-  return weeksAgo === 1 ? "1 week ago" : `${weeksAgo} weeks ago`;
-}
-
-function mapApplicationToCandidate(app: Application): ApplicantCandidate {
-  const appliedDate = new Date(app.appliedAt);
-  const now = new Date();
-  const diffMs = now.getTime() - appliedDate.getTime();
-  const appliedDaysAgo = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-
-  const statusMap: Record<Application["status"], ApplicantStatus> = {
-    APPLIED: "New",
-    SCREENING: "AI Screened",
-    SHORTLISTED: "Shortlisted",
-    INTERVIEW: "Interview",
-    OFFER: "Shortlisted",
-    REJECTED: "Rejected",
-    HIRED: "Shortlisted",
-  };
-
-  const experienceYears = Math.max(
-    0,
-    Math.round(app.resume.extractedExperience / 12),
-  );
-
-  return {
-    id: app.id,
-    candidateId: app.candidate.id,
-    name: app.candidate.fullName,
-    title: app.resume.extractedEducation || "Not specified",
-    location: app.candidate.location || "Not specified",
-    appliedLabel: formatAppliedLabel(appliedDaysAgo),
-    appliedDaysAgo,
-    matchScore: app.matchScore, // still null until AI screening ships — already hidden from UI
-    resumeScore: null, // no separate resume-score field exists yet, don't fake it
-    matchedSkills: [],
-    missingSkills: [],
-    experienceYears,
-    education: app.resume.extractedEducation || "Not specified",
-    status: statusMap[app.status],
-    shortlisted:
-      app.status === "SHORTLISTED" ||
-      app.status === "INTERVIEW" ||
-      app.status === "OFFER" ||
-      app.status === "HIRED",
-    bookmarked: false,
-  };
-}
-
-function sortByOption(
-  candidates: ApplicantCandidate[],
-  sortBy: ApplicantSortOption,
-) {
-  return [...candidates].sort((a, b) => {
-    if (sortBy === "Newest") return a.appliedDaysAgo - b.appliedDaysAgo;
-    return b.experienceYears - a.experienceYears; // "Experience" fallback
-  });
-}
+const PAGE_SIZE = 20;
 
 export default function RecruiterApplicantsPage() {
   const [jobTitles, setJobTitles] = useState<JobTitleRecord[]>([]);
   const [selectedJobId, setSelectedJobId] = useState("");
-  const [candidates, setCandidates] = useState<ApplicantCandidate[]>([]);
+  const [selectedJobSummary, setSelectedJobSummary] =
+    useState<JobSummaryRecord | null>(null);
+  const [processingStatus, setProcessingStatus] =
+    useState<JobProcessingStatusResponse | null>(null);
   const [loadingTitles, setLoadingTitles] = useState(true);
   const [loadingApplications, setLoadingApplications] = useState(false);
+  const [retryingFailed, setRetryingFailed] = useState(false);
   const [titlesError, setTitlesError] = useState<string | null>(null);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
   const [applicationsError, setApplicationsError] = useState<string | null>(
     null,
   );
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [search, setSearch] = useState("");
   const [activeStatus, setActiveStatus] = useState<StatusFilter>("All");
-  const [sortBy, setSortBy] = useState<ApplicantSortOption>("Newest");
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [minMatchScore, setMinMatchScore] = useState(0);
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [expRange, setExpRange] = useState<[number, number]>([0, 10]);
-  const [education, setEducation] = useState("Any");
-  const [location, setLocation] = useState("");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<TableSortKey>("rankPosition");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
-  const [tableSortKey, setTableSortKey] =
-    useState<TableSortKey>("appliedDaysAgo");
-  const [tableSortDirection, setTableSortDirection] = useState<"asc" | "desc">(
-    "desc",
-  );
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [applicationsMeta, setApplicationsMeta] = useState<
+    ApplicationListResponse["meta"]
+  >({
+    page: 1,
+    limit: PAGE_SIZE,
+    total: 0,
+    totalPages: 1,
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -119,8 +64,10 @@ export default function RecruiterApplicantsPage() {
         if (!isMounted) return;
         setJobTitles(titles);
         setSelectedJobId((current) => {
-          if (!current) return "";
-          return titles.some((title) => title.id === current) ? current : "";
+          if (current && titles.some((title) => title.id === current)) {
+            return current;
+          }
+          return titles[0]?.id ?? "";
         });
       } catch (requestError) {
         if (!isMounted) return;
@@ -143,11 +90,73 @@ export default function RecruiterApplicantsPage() {
 
   useEffect(() => {
     if (!selectedJobId) {
-      setCandidates([]);
+      setSelectedJobSummary(null);
+      setProcessingStatus(null);
+      setApplications([]);
+      setApplicationsMeta({
+        page: 1,
+        limit: PAGE_SIZE,
+        total: 0,
+        totalPages: 1,
+      });
       setApplicationsError(null);
+      setSummaryError(null);
       setLoadingApplications(false);
       return;
     }
+
+    let isMounted = true;
+
+    async function loadJobOverview() {
+      try {
+        setSummaryError(null);
+
+        const [summaryResult, processingResult] = await Promise.allSettled([
+          getJobSummary(selectedJobId),
+          getJobProcessingStatus(selectedJobId),
+        ]);
+
+        if (!isMounted) return;
+
+        if (summaryResult.status === "fulfilled") {
+          setSelectedJobSummary(summaryResult.value);
+        } else {
+          setSelectedJobSummary(null);
+          setSummaryError(
+            summaryResult.reason instanceof Error
+              ? summaryResult.reason.message
+              : "Failed to load job summary.",
+          );
+        }
+
+        if (processingResult.status === "fulfilled") {
+          setProcessingStatus(processingResult.value);
+        } else {
+          setProcessingStatus(null);
+        }
+      } catch (requestError) {
+        if (!isMounted) return;
+        setSelectedJobSummary(null);
+        setProcessingStatus(null);
+        setSummaryError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Failed to load job summary.",
+        );
+      } finally {
+        // no-op; the main applications loader owns the visible loading state
+      }
+    }
+
+    void loadJobOverview();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedJobId]);
+
+  useEffect(() => {
+    if (!selectedJobId) return;
 
     let isMounted = true;
 
@@ -155,19 +164,34 @@ export default function RecruiterApplicantsPage() {
       try {
         setLoadingApplications(true);
         setApplicationsError(null);
-        const applications = await getApplicationsForJob(selectedJobId);
+
+        const response = await getApplicationsForJob(selectedJobId, {
+          page,
+          limit: PAGE_SIZE,
+          search: search.trim() || undefined,
+          status: activeStatus === "All" ? undefined : activeStatus,
+          sortBy,
+          sortOrder,
+        });
+
         if (!isMounted) return;
-        setCandidates(applications.map(mapApplicationToCandidate));
-        setSelectedIds([]);
-        setPage(1);
+
+        setApplications(response.data);
+        setApplicationsMeta(response.meta);
       } catch (requestError) {
         if (!isMounted) return;
+        setApplications([]);
+        setApplicationsMeta({
+          page,
+          limit: PAGE_SIZE,
+          total: 0,
+          totalPages: 1,
+        });
         setApplicationsError(
           requestError instanceof Error
             ? requestError.message
             : "Failed to load applications.",
         );
-        setCandidates([]);
       } finally {
         if (isMounted) setLoadingApplications(false);
       }
@@ -178,177 +202,77 @@ export default function RecruiterApplicantsPage() {
     return () => {
       isMounted = false;
     };
-  }, [selectedJobId]);
+  }, [activeStatus, page, search, selectedJobId, sortBy, sortOrder]);
 
   const selectedJob = useMemo(
-    () => jobTitles.find((jobTitle) => jobTitle.id === selectedJobId) ?? null,
-    [jobTitles, selectedJobId],
+    () =>
+      selectedJobSummary ??
+      jobTitles.find((jobTitle) => jobTitle.id === selectedJobId) ??
+      null,
+    [jobTitles, selectedJobId, selectedJobSummary],
   );
 
-  const filteredSortedCandidates = useMemo(() => {
-    const searched = candidates.filter((candidate) => {
-      const haystack =
-        `${candidate.name} ${candidate.title} ${candidate.matchedSkills.join(" ")}`.toLowerCase();
-      const matchesSearch = haystack.includes(search.toLowerCase());
-      const matchesStatus =
-        activeStatus === "All" || candidate.status === activeStatus;
-      const matchesScore =
-        candidate.matchScore === null || candidate.matchScore >= minMatchScore;
-      const matchesSkills =
-        selectedSkills.length === 0 ||
-        selectedSkills.every((skill) =>
-          candidate.matchedSkills.includes(skill),
-        );
-      const matchesExp =
-        candidate.experienceYears >= Math.min(...expRange) &&
-        candidate.experienceYears <= Math.max(...expRange);
-      const matchesEducation =
-        education === "Any" || candidate.education.includes(education);
-      const matchesLocation =
-        location.trim().length === 0 ||
-        candidate.location.toLowerCase().includes(location.toLowerCase());
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesScore &&
-        matchesSkills &&
-        matchesExp &&
-        matchesEducation &&
-        matchesLocation
-      );
-    });
-
-    return sortByOption(searched, sortBy);
-  }, [
-    candidates,
-    search,
-    activeStatus,
-    minMatchScore,
-    selectedSkills,
-    expRange,
-    education,
-    location,
-    sortBy,
-  ]);
-
-  const tableRows = useMemo(() => {
-    return [...filteredSortedCandidates].sort((a, b) => {
-      const aVal = a[tableSortKey];
-      const bVal = b[tableSortKey];
-      if (typeof aVal === "number" && typeof bVal === "number") {
-        return tableSortDirection === "asc" ? aVal - bVal : bVal - aVal;
-      }
-      if (typeof aVal === "string" && typeof bVal === "string") {
-        return tableSortDirection === "asc"
-          ? aVal.localeCompare(bVal)
-          : bVal.localeCompare(aVal);
-      }
-      return 0;
-    });
-  }, [filteredSortedCandidates, tableSortKey, tableSortDirection]);
-
-  const activeFilterCount = [
-    minMatchScore > 0,
-    selectedSkills.length > 0,
-    expRange[0] !== 0 || expRange[1] !== 10,
-    education !== "Any",
-    location.trim().length > 0,
-  ].filter(Boolean).length;
-
-  const resetViewState = () => {
-    setSelectedIds([]);
-    setPage(1);
-    setSearch("");
-    setActiveStatus("All");
-    setSortBy("Newest");
-    setShowAdvanced(false);
-    setMinMatchScore(0);
-    setSelectedSkills([]);
-    setExpRange([0, 10]);
-    setEducation("Any");
-    setLocation("");
-    setTableSortKey("appliedDaysAgo");
-    setTableSortDirection("desc");
-  };
+  const failedApplicationsCount = processingStatus?.progress.failed ?? 0;
 
   const handleJobChange = (jobId: string) => {
     setSelectedJobId(jobId);
-    resetViewState();
-  };
-
-  const updateCandidate = (id: string, patch: Partial<ApplicantCandidate>) => {
-    setCandidates((prev) =>
-      prev.map((candidate) =>
-        candidate.id === id ? { ...candidate, ...patch } : candidate,
-      ),
-    );
-  };
-
-  const handleShortlist = (id: string) => {
-    const target = candidates.find((candidate) => candidate.id === id);
-    if (!target) return;
-    updateCandidate(id, {
-      shortlisted: !target.shortlisted,
-      status: target.shortlisted ? "AI Screened" : "Shortlisted",
+    setPage(1);
+    setSearch("");
+    setActiveStatus("All");
+    setSortBy("rankPosition");
+    setSortOrder("desc");
+    setSelectedJobSummary(null);
+    setProcessingStatus(null);
+    setApplications([]);
+    setApplicationsMeta({
+      page: 1,
+      limit: PAGE_SIZE,
+      total: 0,
+      totalPages: 1,
     });
   };
 
-  const handleReject = (id: string) =>
-    updateCandidate(id, { status: "Rejected", shortlisted: false });
-  const handleUndoReject = (id: string) =>
-    updateCandidate(id, { status: "AI Screened" });
-  const handleBookmark = (id: string) => {
-    const target = candidates.find((candidate) => candidate.id === id);
-    if (!target) return;
-    updateCandidate(id, { bookmarked: !target.bookmarked });
-  };
+  const handleRetryFailed = async () => {
+    if (!selectedJobId || failedApplicationsCount === 0) return;
 
-  const handleBulkShortlist = () => {
-    setCandidates((prev) =>
-      prev.map((candidate) =>
-        selectedIds.includes(candidate.id)
-          ? {
-              ...candidate,
-              shortlisted: true,
-              status: "Shortlisted" as ApplicantStatus,
-            }
-          : candidate,
-      ),
-    );
-  };
+    try {
+      setRetryingFailed(true);
+      await retryFailedApplicationsForJob(selectedJobId);
+      const [summaryResult, processingResult, applicationsResult] =
+        await Promise.allSettled([
+          getJobSummary(selectedJobId),
+          getJobProcessingStatus(selectedJobId),
+          getApplicationsForJob(selectedJobId, {
+            page,
+            limit: PAGE_SIZE,
+            search: search.trim() || undefined,
+            status: activeStatus === "All" ? undefined : activeStatus,
+            sortBy,
+            sortOrder,
+          }),
+        ]);
 
-  const handleBulkReject = () => {
-    setCandidates((prev) =>
-      prev.map((candidate) =>
-        selectedIds.includes(candidate.id)
-          ? {
-              ...candidate,
-              shortlisted: false,
-              status: "Rejected" as ApplicantStatus,
-            }
-          : candidate,
-      ),
-    );
-  };
-
-  const handleTableSortChange = (key: TableSortKey) => {
-    if (tableSortKey === key) {
-      setTableSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-      return;
+      if (summaryResult.status === "fulfilled") {
+        setSelectedJobSummary(summaryResult.value);
+      }
+      if (processingResult.status === "fulfilled") {
+        setProcessingStatus(processingResult.value);
+      }
+      if (applicationsResult.status === "fulfilled") {
+        setApplications(applicationsResult.value.data);
+        setApplicationsMeta(applicationsResult.value.meta);
+      }
+    } finally {
+      setRetryingFailed(false);
     }
-    setTableSortKey(key);
-    setTableSortDirection("desc");
   };
 
-  if (loadingTitles) {
+  if (loadingTitles && jobTitles.length === 0) {
     return (
       <div className="min-h-screen bg-surface p-6">
         <div className="mx-auto max-w-7xl">
-          <div className="flex items-center justify-center rounded-xl border border-slate/20 bg-white p-12">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-slate">Loading job titles...</p>
-            </div>
+          <div className="rounded-xl border border-slate/20 bg-white p-12 text-center text-sm text-slate shadow-sm">
+            Loading job titles...
           </div>
         </div>
       </div>
@@ -377,72 +301,44 @@ export default function RecruiterApplicantsPage() {
           jobTitles={jobTitles}
           selectedJobId={selectedJobId}
           selectedJobTitle={selectedJob?.title ?? null}
-          applicationCount={candidates.length}
-          loadingApplications={loadingApplications}
+          applicationCount={
+            selectedJobSummary?.applications ?? applicationsMeta.total
+          }
+          jobOpenings={selectedJobSummary?.openings ?? null}
           onJobChange={handleJobChange}
         />
 
         <RecruiterApplicantsWorkspace
           selectedJobId={selectedJobId}
           loadingApplications={loadingApplications}
-          applicationsError={applicationsError}
-          candidates={candidates}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          applicationsError={summaryError ?? applicationsError}
+          retryingFailed={retryingFailed}
+          processingStatus={processingStatus}
+          onRetryFailed={handleRetryFailed}
+          applications={applications}
+          applicationsMeta={applicationsMeta}
           search={search}
-          onSearchChange={setSearch}
+          onSearchChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
           activeStatus={activeStatus}
-          onStatusChange={setActiveStatus}
+          onStatusChange={(value) => {
+            setActiveStatus(value);
+            setPage(1);
+          }}
           sortBy={sortBy}
-          onSortByChange={setSortBy}
-          showAdvanced={showAdvanced}
-          onToggleAdvanced={() => setShowAdvanced((prev) => !prev)}
-          minMatchScore={minMatchScore}
-          onMinMatchScoreChange={setMinMatchScore}
-          selectedSkills={selectedSkills}
-          onToggleSkill={(skill) =>
-            setSelectedSkills((prev) =>
-              prev.includes(skill)
-                ? prev.filter((item) => item !== skill)
-                : [...prev, skill],
-            )
-          }
-          expRange={expRange}
-          onExpRangeChange={(range) =>
-            setExpRange([Math.max(0, range[0]), Math.min(10, range[1])])
-          }
-          education={education}
-          onEducationChange={setEducation}
-          location={location}
-          onLocationChange={setLocation}
-          activeFilterCount={activeFilterCount}
-          filteredSortedCandidates={tableRows}
-          selectedIds={selectedIds}
-          onToggleSelect={(id) =>
-            setSelectedIds((prev) =>
-              prev.includes(id)
-                ? prev.filter((item) => item !== id)
-                : [...prev, id],
-            )
-          }
-          onSelectAllPage={(checked, ids) =>
-            setSelectedIds((prev) =>
-              checked
-                ? Array.from(new Set([...prev, ...ids]))
-                : prev.filter((id) => !ids.includes(id)),
-            )
-          }
-          onToggleShortlist={handleShortlist}
-          onToggleBookmark={handleBookmark}
-          onReject={handleReject}
-          onUndoReject={handleUndoReject}
-          onBulkShortlist={handleBulkShortlist}
-          onBulkReject={handleBulkReject}
+          onSortByChange={(value) => {
+            setSortBy(value);
+            setPage(1);
+          }}
+          sortOrder={sortOrder}
+          onSortOrderChange={(value) => {
+            setSortOrder(value);
+            setPage(1);
+          }}
           page={page}
           onPageChange={setPage}
-          sortKey={tableSortKey}
-          sortDirection={tableSortDirection}
-          onSortChange={handleTableSortChange}
         />
       </div>
     </div>

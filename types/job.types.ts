@@ -37,6 +37,9 @@ export type BackendSalaryPeriod = "HOURLY" | "MONTHLY" | "YEARLY";
 
 export type JobSortBy = "newest" | "deadline";
 
+export type ApplicationListSortBy = "rankPosition" | "matchScore" | "appliedAt";
+export type ApplicationListSortOrder = "asc" | "desc";
+
 /* =========================
    Form UI label types
    (human-readable labels used inside the multi-step job form;
@@ -200,6 +203,13 @@ export interface JobRecord {
   jobSkills: JobSkillRecord[];
 }
 
+export interface JobSummaryRecord {
+  id: string;
+  title: string;
+  openings: number;
+  applications: number;
+}
+
 export interface JobListRecord {
   id: string;
   title: string;
@@ -321,6 +331,99 @@ export interface Application {
   updatedAt: string;
   candidate: ApplicationCandidate;
   resume: ApplicationResume;
+}
+
+export interface ApplicationListResponse {
+  data: Application[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface ApplicationListQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: ApplicationStatus;
+  sortBy?: ApplicationListSortBy;
+  sortOrder?: ApplicationListSortOrder;
+}
+
+export type ProcessingStatusValue =
+  | "PENDING"
+  | "RUNNING"
+  | "COMPLETED"
+  | "FAILED"
+  | "CANCELLED"
+  | "SKIPPED";
+
+export type ProcessingTaskTypeValue =
+  | "RESUME_PARSE"
+  | "RESUME_ANALYSIS"
+  | "RANKING"
+  | "SHORTLISTING"
+  | "AI_INTERVIEW"
+  | "EMAIL_NOTIFICATION";
+
+export interface JobProcessingProgress {
+  total: number;
+  completed: number;
+  processing: number;
+  failed: number;
+}
+
+export interface JobProcessingLastError {
+  message?: string;
+  [key: string]: unknown;
+}
+
+export interface JobProcessingStatusResponse {
+  jobId: string;
+  jobProcessingId: string;
+  status: ProcessingStatusValue;
+  currentTask: ProcessingTaskTypeValue | null;
+  progress: JobProcessingProgress;
+  startedAt: string | null;
+  completedAt: string | null;
+  retryCount: number;
+  lastError: JobProcessingLastError | null;
+}
+
+export interface RetryFailedApplicationResult {
+  applicationId: string;
+  taskId: string;
+  taskType: ProcessingTaskTypeValue;
+  jobName: string;
+}
+
+export interface RetryFailedApplicationsResponse {
+  jobId: string;
+  retried: number;
+  results: RetryFailedApplicationResult[];
+}
+
+export interface BulkUploadApplicationResult {
+  applicationId: string;
+  candidateId: string;
+  resumeId: string;
+  fileName: string;
+}
+
+export interface BulkUploadErrorResult {
+  fileName: string;
+  reason: string;
+}
+
+export interface BulkUploadResponse {
+  jobId: string;
+  companyId: string;
+  accepted: number;
+  rejected: number;
+  applications: BulkUploadApplicationResult[];
+  errors: BulkUploadErrorResult[];
 }
 
 /* =========================

@@ -38,7 +38,8 @@ export const API = {
     skills: "/skills",
     skillCategories: "/skills/categories",
     skillById: (id: string) => `/skills/${id}`,
-    applicationsForJob: (jobId: string) => `/application/job/${jobId}`,
+    applicationsForJob: (jobId: string) => `/application/jobs/${jobId}`,
+    bulkUploadApplicants: (jobId: string) => `/application/job/${jobId}/bulk`,
     candidateById: (candidateId: string) => `/candidate/${candidateId}`,
     publicJobs: "/public/jobs",
     publicFeaturedJobs: "/public/jobs/featured",
@@ -49,5 +50,11 @@ export const API = {
     publicJobApply: (slug: string) =>
       `/public/jobs/${encodeURIComponent(slug)}/apply`,
     resumeParse: "/resume/parse",
+  },
+  processing: {
+    jobStatus: (jobId: string) => `/processing/jobs/${jobId}/status`,
+    retryFailedForJob: (jobId: string) =>
+      `/processing/jobs/${jobId}/retry-failed`,
+    reprocessJob: (jobId: string) => `/processing/jobs/${jobId}/reprocess`,
   },
 };

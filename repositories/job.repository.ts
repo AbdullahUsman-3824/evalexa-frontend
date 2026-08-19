@@ -72,6 +72,7 @@ export function formatCurrencyRange(min: number, max: number) {
 export const {
   getJobs,
   getJob,
+  getJobSummary,
   getJobTitles,
   getSkills,
   getSkillCategories,
@@ -81,11 +82,14 @@ export const {
   createJob,
   updateJob,
   getApplicationsForJob,
+  bulkUploadApplicantsForJob,
+  getJobProcessingStatus,
+  retryFailedApplicationsForJob,
   getCandidateDetails,
   getPublicJobs,
   getPublicFeaturedJobs,
   getPublicJobBySlug,
   getPublicSimilarJobs,
   submitPublicJobApplication,
-  parsePublicResume, 
+  parsePublicResume,
 } = jobService;

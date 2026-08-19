@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import JobApplyHeader from "@/components/public/jobs/apply/JobApplyHeader";
 import { getPublicJobBySlug } from "@/repositories/job.repository";
 
 type Props = Readonly<{
@@ -16,13 +15,6 @@ export default async function JobDetailLayout({ children, params }: Props) {
 
   return (
     <div className="min-h-screen bg-[#EEF2F7] text-midnight">
-      <JobApplyHeader
-        company={job.company?.name ?? ""}
-        title={job.title ?? ""}
-        workMode={job.workModel ?? ""}
-        postedBy={job.company?.name ?? ""}
-        location={job.location ?? ""}
-      />
       {children}
     </div>
   );

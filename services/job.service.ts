@@ -7,7 +7,6 @@ import type {
   SkillRecord,
   CreateJobPayload,
   UpdateJobPayload,
-  Application,
   CandidateDetails,
   ResumeParsePreview,
   PublicJobApplicationPayload,
@@ -16,6 +15,12 @@ import type {
   PublicJobsQuery,
   PublicJobsResponse,
   JobListRecord,
+  ApplicationListResponse,
+  ApplicationListQuery,
+  JobSummaryRecord,
+  JobProcessingStatusResponse,
+  BulkUploadResponse,
+  RetryFailedApplicationsResponse,
 } from "@/types/job.types";
 
 // ...buildSkillsQueryString / buildJobsQueryString / buildPublicJobsQueryString unchanged...
@@ -76,6 +81,12 @@ export async function getJobs(query?: JobQuery): Promise<JobListRecord[]> {
 
 export async function getJob(id: string): Promise<JobRecord> {
   return apiRequest<JobRecord>(API.jobs.jobById(id), {});
+}
+
+export async function getJobSummary(id: string): Promise<JobSummaryRecord> {
+  return apiRequest<JobSummaryRecord>(`${API.jobs.jobById(id)}/summary`, {
+    method: "GET",
+  });
 }
 
 export async function getJobTitles(): Promise<JobTitleRecord[]> {
@@ -139,9 +150,42 @@ export async function updateJob(
 
 export async function getApplicationsForJob(
   jobId: string,
-): Promise<Application[]> {
-  return apiRequest<Application[]>(API.jobs.applicationsForJob(jobId), {
-    method: "GET",
+  query?: ApplicationListQuery,
+): Promise<ApplicationListResponse> {
+  const params = new URLSearchParams();
+
+  if (query?.page !== undefined) params.set("page", String(query.page));
+  if (query?.limit !== undefined) params.set("limit", String(query.limit));
+  if (query?.search?.trim()) params.set("search", query.search.trim());
+  if (query?.status) params.set("status", query.status);
+  if (query?.sortBy) params.set("sortBy", query.sortBy);
+  if (query?.sortOrder) params.set("sortOrder", query.sortOrder);
+
+  const queryString = params.toString();
+  const response = await apiRequest<ApplicationListResponse>(
+    `${API.jobs.applicationsForJob(jobId)}${queryString ? `?${queryString}` : ""}`,
+    { method: "GET" },
+  );
+
+  return response;
+}
+
+export async function bulkUploadApplicantsForJob(
+  jobId: string,
+  files: File[],
+): Promise<BulkUploadResponse> {
+  if (!files.length) {
+    throw new Error("At least one resume file is required.");
+  }
+
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("files", file, file.name);
+  });
+
+  return apiRequest<BulkUploadResponse>(API.jobs.bulkUploadApplicants(jobId), {
+    method: "POST",
+    data: formData,
   });
 }
 
@@ -151,6 +195,28 @@ export async function getCandidateDetails(
   return apiRequest<CandidateDetails>(API.jobs.candidateById(candidateId), {
     method: "GET",
   });
+}
+
+export async function getJobProcessingStatus(
+  jobId: string,
+): Promise<JobProcessingStatusResponse> {
+  return apiRequest<JobProcessingStatusResponse>(
+    API.processing.jobStatus(jobId),
+    {
+      method: "GET",
+    },
+  );
+}
+
+export async function retryFailedApplicationsForJob(
+  jobId: string,
+): Promise<RetryFailedApplicationsResponse> {
+  return apiRequest<RetryFailedApplicationsResponse>(
+    API.processing.retryFailedForJob(jobId),
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function getPublicJobs(

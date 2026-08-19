@@ -1,113 +1,111 @@
 "use client";
 
-import { Download, Loader2, Star, X } from "lucide-react";
-import ApplicantFilters, {
-  type ApplicantSortOption,
-} from "@/components/recruiter/applicants/ApplicantFilters";
+import { Loader2, RefreshCw, Search } from "lucide-react";
 import ApplicantTable from "@/components/recruiter/applicants/ApplicantTable";
-import CandidateCard, {
-  type ApplicantCandidate,
-  type ApplicantStatus,
-} from "@/components/recruiter/applicants/CandidateCard";
+import type {
+  Application,
+  ApplicationListResponse,
+  ApplicationListSortBy,
+  ApplicationListSortOrder,
+  ApplicationStatus,
+  JobProcessingStatusResponse,
+} from "@/types/job.types";
 
-export type StatusFilter = "All" | ApplicantStatus;
-export type TableSortKey = "name" | "experienceYears" | "appliedDaysAgo";
+export type StatusFilter = "All" | ApplicationStatus;
+export type TableSortKey = ApplicationListSortBy;
 
 interface RecruiterApplicantsWorkspaceProps {
   selectedJobId: string;
   loadingApplications: boolean;
   applicationsError: string | null;
-  candidates: ApplicantCandidate[];
-  viewMode: "cards" | "table";
-  onViewModeChange: (mode: "cards" | "table") => void;
+  retryingFailed: boolean;
+  processingStatus: JobProcessingStatusResponse | null;
+  onRetryFailed: () => void;
+  applications: Application[];
+  applicationsMeta: ApplicationListResponse["meta"];
   search: string;
   onSearchChange: (value: string) => void;
   activeStatus: StatusFilter;
   onStatusChange: (status: StatusFilter) => void;
-  sortBy: ApplicantSortOption;
-  onSortByChange: (value: ApplicantSortOption) => void;
-  showAdvanced: boolean;
-  onToggleAdvanced: () => void;
-  minMatchScore: number;
-  onMinMatchScoreChange: (value: number) => void;
-  selectedSkills: string[];
-  onToggleSkill: (skill: string) => void;
-  expRange: [number, number];
-  onExpRangeChange: (range: [number, number]) => void;
-  education: string;
-  onEducationChange: (value: string) => void;
-  location: string;
-  onLocationChange: (value: string) => void;
-  activeFilterCount: number;
-  filteredSortedCandidates: ApplicantCandidate[];
-  selectedIds: string[];
-  onToggleSelect: (id: string) => void;
-  onSelectAllPage: (checked: boolean, ids: string[]) => void;
-  onToggleShortlist: (id: string) => void;
-  onToggleBookmark: (id: string) => void;
-  onReject: (id: string) => void;
-  onUndoReject: (id: string) => void;
-  onBulkShortlist: () => void;
-  onBulkReject: () => void;
+  sortBy: TableSortKey;
+  onSortByChange: (value: TableSortKey) => void;
+  sortOrder: ApplicationListSortOrder;
+  onSortOrderChange: (value: ApplicationListSortOrder) => void;
   page: number;
   onPageChange: (page: number) => void;
-  sortKey: TableSortKey;
-  sortDirection: "asc" | "desc";
-  onSortChange: (key: TableSortKey) => void;
 }
 
-const allSkills = [
-  "React",
-  "TypeScript",
-  "Node.js",
-  "Next.js",
-  "Tailwind",
-  "GraphQL",
-  "Docker",
-  "AWS",
-];
+function formatProcessingStatus(status: JobProcessingStatusResponse["status"]) {
+  switch (status) {
+    case "PENDING":
+      return "Pending";
+    case "RUNNING":
+      return "Running";
+    case "COMPLETED":
+      return "Completed";
+    case "FAILED":
+      return "Failed";
+    case "CANCELLED":
+      return "Cancelled";
+    case "SKIPPED":
+      return "Skipped";
+    default:
+      return "Idle";
+  }
+}
+
+function formatProcessingTask(
+  task: JobProcessingStatusResponse["currentTask"],
+) {
+  switch (task) {
+    case "RESUME_PARSE":
+      return "Resume Parse";
+    case "RESUME_ANALYSIS":
+      return "Resume Analysis";
+    case "RANKING":
+      return "Ranking";
+    case "SHORTLISTING":
+      return "Shortlisting";
+    case "AI_INTERVIEW":
+      return "AI Interview";
+    case "EMAIL_NOTIFICATION":
+      return "Email Notification";
+    default:
+      return "No active task";
+  }
+}
 
 export default function RecruiterApplicantsWorkspace({
   selectedJobId,
   loadingApplications,
   applicationsError,
-  viewMode,
-  onViewModeChange,
+  retryingFailed,
+  processingStatus,
+  onRetryFailed,
+  applications,
+  applicationsMeta,
   search,
   onSearchChange,
   activeStatus,
   onStatusChange,
   sortBy,
   onSortByChange,
-  showAdvanced,
-  onToggleAdvanced,
-  minMatchScore,
-  onMinMatchScoreChange,
-  selectedSkills,
-  onToggleSkill,
-  expRange,
-  onExpRangeChange,
-  education,
-  onEducationChange,
-  location,
-  onLocationChange,
-  activeFilterCount,
-  filteredSortedCandidates,
-  selectedIds,
-  onToggleSelect,
-  onSelectAllPage,
-  onToggleShortlist,
-  onToggleBookmark,
-  onReject,
-  onUndoReject,
-  onBulkShortlist,
-  onBulkReject,
+  sortOrder,
+  onSortOrderChange,
   page,
   onPageChange,
-  sortKey,
-  sortDirection,
-  onSortChange,
 }: RecruiterApplicantsWorkspaceProps) {
+  const failedCount = processingStatus?.progress.failed ?? 0;
+  const processingCount = processingStatus?.progress.processing ?? 0;
+  const completedCount = processingStatus?.progress.completed ?? 0;
+  const retryCount = processingStatus?.retryCount ?? 0;
+  const statusLabel = processingStatus
+    ? formatProcessingStatus(processingStatus.status)
+    : "Idle";
+  const currentTaskLabel = processingStatus
+    ? formatProcessingTask(processingStatus.currentTask)
+    : "No active task";
+
   if (!selectedJobId) {
     return (
       <section className="rounded-xl border border-slate/20 bg-white p-8 text-center shadow-sm">
@@ -131,122 +129,153 @@ export default function RecruiterApplicantsWorkspace({
     );
   }
 
-  if (loadingApplications) {
+  if (loadingApplications && applications.length === 0) {
     return (
-      <section className="flex items-center justify-center rounded-xl border border-slate/20 bg-white p-12 shadow-sm">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-slate">Loading applications...</p>
-        </div>
+      <section className="rounded-xl border border-secondary/20 bg-white p-8 text-center shadow-sm">
+        <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+        <p className="mt-3 text-sm text-slate">Loading applications...</p>
       </section>
     );
   }
 
   return (
-    <>
-      <ApplicantFilters
-        search={search}
-        onSearchChange={onSearchChange}
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
-        statuses={[
-          "All",
-          "New",
-          "AI Screened",
-          "Shortlisted",
-          "Interview",
-          "Rejected",
-        ]}
-        activeStatus={activeStatus}
-        onStatusChange={onStatusChange}
-        sortBy={sortBy}
-        onSortChange={onSortByChange}
-        showAdvanced={showAdvanced}
-        onToggleAdvanced={onToggleAdvanced}
-        minMatchScore={minMatchScore}
-        onMinMatchScoreChange={onMinMatchScoreChange}
-        skills={allSkills}
-        selectedSkills={selectedSkills}
-        onToggleSkill={onToggleSkill}
-        expRange={expRange}
-        onExpRangeChange={onExpRangeChange}
-        education={education}
-        onEducationChange={onEducationChange}
-        location={location}
-        onLocationChange={onLocationChange}
-        activeFilterCount={activeFilterCount}
-      />
+    <div className="space-y-5">
+      <section className="rounded-xl border border-secondary/20 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-syne text-xl font-semibold text-midnight">
+              AI Processing
+            </h2>
+            <p className="mt-1 text-sm text-slate">Status: {statusLabel}</p>
+          </div>
 
-      {viewMode === "cards" ? (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredSortedCandidates.length > 0 ? (
-            filteredSortedCandidates.map((candidate) => (
-              <CandidateCard
-                key={candidate.id}
-                candidate={candidate}
-                onToggleShortlist={onToggleShortlist}
-                onToggleBookmark={onToggleBookmark}
-                onReject={onReject}
-                onUndoReject={onUndoReject}
-              />
-            ))
-          ) : (
-            <div className="rounded-xl border border-slate/20 bg-white p-8 text-center text-slate shadow-sm md:col-span-2 xl:col-span-3">
-              No applications match the current filters.
-            </div>
-          )}
-        </section>
-      ) : (
-        <>
-          {selectedIds.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3">
-              <p className="text-sm font-medium text-primary">
-                {selectedIds.length} selected
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={onBulkShortlist}
-                  className="inline-flex items-center gap-1 rounded-lg bg-warning px-3 py-1.5 text-sm font-semibold text-white"
-                >
-                  <Star className="h-4 w-4" />
-                  Shortlist Selected
-                </button>
-                <button
-                  type="button"
-                  onClick={onBulkReject}
-                  className="inline-flex items-center gap-1 rounded-lg border border-danger/30 px-3 py-1.5 text-sm font-medium text-danger"
-                >
-                  <X className="h-4 w-4" />
-                  Reject Selected
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate/20 px-3 py-1.5 text-sm font-medium text-midnight"
-                >
-                  <Download className="h-4 w-4" />
-                  Export Selected
-                </button>
-              </div>
-            </div>
-          )}
+          <div className="flex flex-col items-end gap-1">
+            <button
+              type="button"
+              onClick={onRetryFailed}
+              className="inline-flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm font-medium text-warning disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={failedCount === 0 || retryingFailed}
+            >
+              {retryingFailed ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {failedCount > 0 ? `Retry ${failedCount} Failed` : "Retry Failed"}
+            </button>
+            <span className="text-xs text-slate">
+              Retry count: {retryCount}
+            </span>
+          </div>
+        </div>
 
-          <ApplicantTable
-            candidates={filteredSortedCandidates}
-            selectedIds={selectedIds}
-            onToggleSelect={onToggleSelect}
-            onSelectAllPage={onSelectAllPage}
-            onToggleShortlist={onToggleShortlist}
-            onReject={onReject}
-            page={page}
-            pageSize={20}
-            onPageChange={onPageChange}
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSortChange={onSortChange}
-          />
-        </>
-      )}
-    </>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="rounded-lg border border-success/20 bg-success/5 p-3">
+            <p className="text-xs uppercase tracking-wide text-slate">
+              Completed
+            </p>
+            <p className="mt-2 text-2xl font-bold text-success">
+              {completedCount}
+            </p>
+          </div>
+          <div className="rounded-lg border border-warning/20 bg-warning/5 p-3">
+            <p className="text-xs uppercase tracking-wide text-slate">
+              Processing
+            </p>
+            <p className="mt-2 text-2xl font-bold text-warning">
+              {processingCount}
+            </p>
+          </div>
+          <div className="rounded-lg border border-danger/20 bg-danger/5 p-3">
+            <p className="text-xs uppercase tracking-wide text-slate">Failed</p>
+            <p className="mt-2 text-2xl font-bold text-danger">{failedCount}</p>
+          </div>
+        </div>
+
+        <div className="mt-3 text-sm text-slate">
+          <span className="font-medium text-midnight">Current Task:</span>{" "}
+          {currentTaskLabel}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-secondary/20 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative flex-1 lg:max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate" />
+            <input
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search candidate name or email..."
+              className="h-10 w-full rounded-lg border border-secondary/30 bg-white pl-10 pr-3 text-sm text-midnight outline-none transition-all hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={activeStatus}
+              onChange={(event) =>
+                onStatusChange(event.target.value as StatusFilter)
+              }
+              className="h-10 rounded-lg border border-secondary/30 bg-white px-3 text-sm text-midnight outline-none transition-all hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="All">Status: All</option>
+              <option value="APPLIED">Applied</option>
+              <option value="SHORTLISTED">Shortlisted</option>
+              <option value="INTERVIEW">Interview</option>
+              <option value="OFFER">Offer</option>
+              <option value="HIRED">Hired</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="WITHDRAWN">Withdrawn</option>
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(event) =>
+                onSortByChange(event.target.value as TableSortKey)
+              }
+              className="h-10 rounded-lg border border-secondary/30 bg-white px-3 text-sm text-midnight outline-none transition-all hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="rankPosition">Sort: Rank</option>
+              <option value="matchScore">Sort: Match Score</option>
+              <option value="appliedAt">Sort: Applied</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() =>
+                onSortOrderChange(sortOrder === "asc" ? "desc" : "asc")
+              }
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-secondary/30 bg-white px-3 text-sm font-medium text-midnight transition-all hover:border-primary/40 hover:bg-surface"
+              aria-label="Toggle sort order"
+            >
+              {sortOrder === "asc" ? "Asc" : "Desc"}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div className="rounded-xl border border-secondary/20 bg-white shadow-sm">
+        <div className="border-b border-secondary/20 px-4 py-3">
+          <h2 className="font-syne text-xl font-semibold text-midnight">
+            Applications
+          </h2>
+          <p className="mt-1 text-sm text-slate">
+            {applicationsMeta.total} applications loaded from the API.
+          </p>
+        </div>
+
+        <ApplicantTable
+          applications={applications}
+          total={applicationsMeta.total}
+          totalPages={applicationsMeta.totalPages}
+          pageSize={applicationsMeta.limit}
+          page={page}
+          onPageChange={onPageChange}
+          sortKey={sortBy}
+          sortDirection={sortOrder}
+          onSortChange={onSortByChange}
+        />
+      </div>
+    </div>
   );
 }

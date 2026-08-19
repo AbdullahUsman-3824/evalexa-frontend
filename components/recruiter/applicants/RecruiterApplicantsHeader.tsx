@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Download, Sparkles, Briefcase, Users, ArrowRight } from "lucide-react";
+import { Upload, Briefcase, Users, ArrowRight } from "lucide-react";
 import { JobTitleRecord } from "@/types/job.types";
 
 interface RecruiterApplicantsHeaderProps {
@@ -9,7 +9,7 @@ interface RecruiterApplicantsHeaderProps {
   selectedJobId: string;
   selectedJobTitle: string | null;
   applicationCount: number;
-  loadingApplications: boolean;
+  jobOpenings: number | null;
   onJobChange: (jobId: string) => void;
 }
 
@@ -18,7 +18,7 @@ export default function RecruiterApplicantsHeader({
   selectedJobId,
   selectedJobTitle,
   applicationCount,
-  loadingApplications,
+  jobOpenings,
   onJobChange,
 }: RecruiterApplicantsHeaderProps) {
   return (
@@ -34,22 +34,19 @@ export default function RecruiterApplicantsHeader({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan to-primary px-4 py-2 text-sm font-semibold text-white transition-all hover:shadow-md hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-            disabled={!selectedJobId || loadingApplications}
+          <Link
+            href={selectedJobId ? "/recruiter/applicants/bulk-upload" : "#"}
+            className="inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-cyan to-primary px-4 py-2 text-sm font-semibold text-white transition-all hover:shadow-md hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+            aria-disabled={!selectedJobId}
+            onClick={(event) => {
+              if (!selectedJobId) {
+                event.preventDefault();
+              }
+            }}
           >
-            <Sparkles className="h-4 w-4" />
-            AI Rank All
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-secondary/30 px-4 py-2 text-sm font-medium text-midnight transition-all hover:bg-surface hover:border-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!selectedJobId || loadingApplications}
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </button>
+            <Upload className="h-4 w-4" />
+            Bulk Upload
+          </Link>
         </div>
       </div>
 
@@ -86,27 +83,22 @@ export default function RecruiterApplicantsHeader({
 
       {selectedJobTitle && (
         <div className="mt-4 rounded-xl border border-secondary/15 bg-surface/50 px-4 py-3 text-sm text-midnight transition-all">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="font-medium text-midnight">
-              {selectedJobTitle}
-            </span>
-            <span className="h-4 w-px bg-secondary/30" />
-            <span className="flex items-center gap-1.5 text-slate">
-              <Users className="h-4 w-4 text-slate/60" />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="font-semibold text-midnight">
-                {applicationCount}
+                Job: {selectedJobTitle}
               </span>
-              application{applicationCount !== 1 ? "s" : ""} loaded
-            </span>
-            {loadingApplications && (
-              <>
-                <span className="h-4 w-px bg-secondary/30" />
-                <span className="flex items-center gap-1.5 text-cyan">
-                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-cyan border-t-transparent" />
-                  Loading...
-                </span>
-              </>
-            )}
+              <span className="h-4 w-px bg-secondary/30" />
+              <span className="font-medium text-slate">
+                {applicationCount} Applications
+              </span>
+              <span className="h-4 w-px bg-secondary/30" />
+              <span className="font-medium text-slate">
+                {jobOpenings !== null
+                  ? `${jobOpenings} Openings`
+                  : "Openings unavailable"}
+              </span>
+            </div>
           </div>
         </div>
       )}
