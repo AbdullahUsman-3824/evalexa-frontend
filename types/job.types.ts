@@ -563,7 +563,12 @@ export type PublicJobCompany = {
   name: string;
   slug: string;
   logo: string | null;
+  banner: string | null;
   industry: string;
+  /** Raw size value returned by the API (e.g. "SMALL", "MEDIUM"). */
+  size: string;
+  /** Raw company type returned by the API (e.g. "STARTUP", "ENTERPRISE"). */
+  type: string;
   companySize: string;
   website: string | null;
   location: string;
@@ -576,16 +581,21 @@ export type PublicJob = {
   id: string;
   title: string;
   slug: string;
+  department: string;
   description: string;
   responsibilities?: string | string[];
   jobType: BackendJobType;
   experienceLevel: BackendExperienceLevel;
-  salaryMin: number | null;
-  salaryMax: number | null;
+  educationLevel: BackendEducationLevel;
+  salaryMin: number;
+  salaryMax: number;
+  salaryCurrency: BackendCurrency;
+  salaryPeriod: BackendSalaryPeriod;
   location: string;
   workModel: BackendWorkModel;
   status: BackendJobStatus;
   applicationDeadline: string;
+  totalOpenings: number;
   createdAt: string;
   updatedAt: string;
   company: PublicJobCompany;

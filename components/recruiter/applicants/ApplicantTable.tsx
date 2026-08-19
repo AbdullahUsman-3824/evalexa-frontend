@@ -4,16 +4,24 @@ import Link from "next/link";
 import {
   ChevronLeft,
   ChevronRight,
-  Loader2,
   Search,
   ArrowUpDown,
   ArrowDown,
   ArrowUp,
 } from "lucide-react";
 import { Eye } from "lucide-react";
-import type { Application } from "@/types/job.types";
-
-type SortKey = "rankPosition" | "matchScore" | "appliedAt";
+import type {
+  Application,
+  ApplicationListSortBy,
+  ApplicationListSortOrder,
+} from "@/types/job.types";
+import {
+  formatAppliedDate,
+  formatAiStatus,
+  statusTone,
+  matchLabel,
+  scoreTone,
+} from "./helpers";
 
 interface ApplicantTableProps {
   applications: Application[];
@@ -22,58 +30,12 @@ interface ApplicantTableProps {
   pageSize: number;
   page: number;
   onPageChange: (page: number) => void;
-  sortKey: SortKey;
-  sortDirection: "asc" | "desc";
-  onSortChange: (key: SortKey) => void;
+  sortKey: ApplicationListSortBy;
+  sortDirection: ApplicationListSortOrder;
+  onSortChange: (key: ApplicationListSortBy) => void;
 }
 
-function formatAppliedDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatAiStatus(stage: Application["screeningStage"]) {
-  switch (stage) {
-    case "NOT_STARTED":
-      return "Pending";
-    case "IN_PROGRESS":
-      return "Processing";
-    case "COMPLETED":
-      return "Done";
-    default:
-      return "Pending";
-  }
-}
-
-function statusTone(stage: Application["screeningStage"]) {
-  switch (stage) {
-    case "COMPLETED":
-      return "bg-success/10 text-success border border-success/20";
-    case "IN_PROGRESS":
-      return "bg-warning/15 text-warning border border-warning/20";
-    default:
-      return "bg-slate/10 text-slate border border-slate/20";
-  }
-}
-
-function matchLabel(score: number | null) {
-  if (score === null) return "--";
-  if (score >= 85) return "High";
-  if (score >= 65) return "Medium";
-  return "Low";
-}
-
-function scoreTone(score: number | null) {
-  if (score === null) return "text-slate";
-  if (score >= 85) return "text-success";
-  if (score >= 65) return "text-warning";
-  return "text-danger";
-}
-
-function sortIcon(active: boolean, direction: "asc" | "desc") {
+function sortIcon(active: boolean, direction: ApplicationListSortOrder) {
   if (!active) return <ArrowUpDown className="h-3.5 w-3.5 text-slate" />;
   return direction === "asc" ? (
     <ArrowUp className="h-3.5 w-3.5 text-primary" />

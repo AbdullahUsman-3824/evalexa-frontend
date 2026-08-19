@@ -3,156 +3,31 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import {
+  Banknote,
+  Briefcase,
+  Building2,
+  Calendar,
+  GraduationCap,
+  Globe,
+  MapPin,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import JobApplyHeader from "@/components/public/jobs/apply/JobApplyHeader";
 import JobOverviewSection from "@/components/public/jobs/apply/JobOverviewSection";
 import { getPublicJobBySlug } from "@/repositories/job.repository";
+import { type PublicJob } from "@/types/job.types";
+import {
+  formatEducationLevel,
+  formatExperienceLevel,
+  formatJobType,
+  formatSalary,
+  formatWorkMode,
+  normalizeResponsibilities,
+  timeAgo,
+} from "./helpers";
 import JobApplicationForm, { type JobDetailData } from "./JobApplicationForm";
-
-function normalizeResponsibilities(responsibilities?: string | string[]) {
-  if (Array.isArray(responsibilities)) {
-    return responsibilities.map((item) => item.trim()).filter(Boolean);
-  }
-  if (typeof responsibilities === "string") {
-    return responsibilities
-      .split(/\r?\n/)
-      .map((item) => item.replace(/^[-*\u2022]\s*/, "").trim())
-      .filter(Boolean);
-  }
-  return [];
-}
-
-function timeAgo(dateStr: string): string {
-  const now = new Date();
-  const past = new Date(dateStr);
-  const diffMs = now.getTime() - past.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "Posted today";
-  if (diffDays === 1) return "Posted 1 day ago";
-  if (diffDays < 7) return `Posted ${diffDays} days ago`;
-  if (diffDays < 14) return "Posted 1 week ago";
-  if (diffDays < 30) return `Posted ${Math.floor(diffDays / 7)} weeks ago`;
-  if (diffDays < 60) return "Posted 1 month ago";
-  return `Posted ${Math.floor(diffDays / 30)} months ago`;
-}
-
-function formatWorkMode(workModel: string): string {
-  switch (workModel) {
-    case "ONSITE": return "On-site";
-    case "REMOTE": return "Remote";
-    case "HYBRID": return "Hybrid";
-    default: return workModel;
-  }
-}
-
-function formatJobType(jobType: string): string {
-  switch (jobType) {
-    case "FULL_TIME": return "Full-time";
-    case "PART_TIME": return "Part-time";
-    case "CONTRACT": return "Contract";
-    default: return jobType;
-  }
-}
-
-function formatExperienceLevel(level: string): string {
-  switch (level) {
-    case "JUNIOR": return "Junior";
-    case "MID": return "Mid-level";
-    case "SENIOR": return "Senior";
-    case "LEAD": return "Lead";
-    default: return level;
-  }
-}
-
-function formatEducationLevel(level: string): string {
-  switch (level) {
-    case "BACHELOR": return "Bachelor's degree";
-    case "MASTER": return "Master's degree";
-    case "PHD": return "PhD";
-    case "HIGH_SCHOOL": return "High school";
-    default: return level;
-  }
-}
-
-function formatSalary(
-  min: number,
-  max: number,
-  currency: string,
-  period: string,
-): string {
-  const fmt = (n: number) => n.toLocaleString();
-  const per = period === "MONTHLY" ? "/mo" : "/yr";
-  return `${currency} ${fmt(min)} – ${fmt(max)}${per}`;
-}
-
-/* ---------- Icons for job detail rows ---------- */
-const DetailIcon = ({ path }: { path: string }) => (
-  <svg
-    className="h-4 w-4 shrink-0 text-[#9BA3B2]"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d={path} />
-  </svg>
-);
-
-const ICONS = {
-  salary: "M2 8h20M2 8v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8M2 8l2-4h16l2 4M8 14h.01",
-  type: "M8 2v3M16 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z",
-  mode: "M4 22V8l8-5 8 5v14M4 22h16M9 22v-6h6v6M9 12h.01M15 12h.01M9 16h.01M15 16h.01",
-  experience: "M3 21h18M6 21V10M12 21V6M18 21v-8",
-  education: "M22 10 12 5 2 10l10 5 10-5zM6 12v5c0 1 3 3 6 3s6-2 6-3v-5",
-  department: "M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
-  location: "M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 1 1 18 0zM12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
-  openings: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
-  deadline: "M8 2v3M16 2v3M3 9h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z",
-};
-
-interface PublicJob {
-  id: string;
-  title: string;
-  slug: string;
-  department: string;
-  description: string;
-  responsibilities?: string | string[];
-  jobType: string;
-  experienceLevel: string;
-  educationLevel: string;
-  salaryMin: number;
-  salaryMax: number;
-  salaryCurrency: string;
-  salaryPeriod: string;
-  location: string;
-  workModel: string;
-  applicationDeadline: string;
-  totalOpenings: number;
-  createdAt?: string;
-  company: {
-    id: string;
-    name: string;
-    slug: string;
-    logo: string | null;
-    banner: string | null;
-    industry: string;
-    size: string;
-    type: string;
-    website: string;
-    location: string;
-    description: string;
-  };
-  jobSkills: {
-    importance: string;
-    weight: number;
-    skill: {
-      id: string;
-      name: string;
-      category: string;
-    };
-  }[];
-}
 
 export default function JobDetailPage() {
   const params = useParams<{ jobSlug: string }>();
@@ -228,16 +103,18 @@ export default function JobDetailPage() {
     year: "numeric",
   });
 
+  const iconClass = "h-4 w-4 shrink-0 text-[#9BA3B2]";
+
   const jobDetailRows = [
-    { label: "Salary", value: formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency, job.salaryPeriod), icon: ICONS.salary },
-    { label: "Type", value: formatJobType(job.jobType), icon: ICONS.type },
-    { label: "Mode", value: formatWorkMode(job.workModel), icon: ICONS.mode },
-    { label: "Experience", value: formatExperienceLevel(job.experienceLevel), icon: ICONS.experience },
-    { label: "Education", value: formatEducationLevel(job.educationLevel), icon: ICONS.education },
-    { label: "Department", value: job.department, icon: ICONS.department },
-    { label: "Location", value: job.location, icon: ICONS.location },
-    { label: "Openings", value: String(job.totalOpenings), icon: ICONS.openings },
-    { label: "Deadline", value: deadline, icon: ICONS.deadline },
+    { label: "Salary",     value: formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency, job.salaryPeriod), icon: <Banknote className={iconClass} /> },
+    { label: "Type",       value: formatJobType(job.jobType),                 icon: <Briefcase className={iconClass} /> },
+    { label: "Mode",       value: formatWorkMode(job.workModel),              icon: <Building2 className={iconClass} /> },
+    { label: "Experience", value: formatExperienceLevel(job.experienceLevel), icon: <TrendingUp className={iconClass} /> },
+    { label: "Education",  value: formatEducationLevel(job.educationLevel),   icon: <GraduationCap className={iconClass} /> },
+    { label: "Department", value: job.department,                             icon: <Users className={iconClass} /> },
+    { label: "Location",   value: job.location,                               icon: <MapPin className={iconClass} /> },
+    { label: "Openings",   value: String(job.totalOpenings),                  icon: <Users className={iconClass} /> },
+    { label: "Deadline",   value: deadline,                                   icon: <Calendar className={iconClass} /> },
   ];
 
   return (
@@ -249,7 +126,7 @@ export default function JobDetailPage() {
         companyLogo={job.company.logo}
         companyIndustry={job.company.industry}
         companyLocation={job.company.location}
-        companyWebsite={job.company.website}
+        companyWebsite={job.company.website ?? ""}
         title={job.title}
         workMode={formatWorkMode(job.workModel)}
         jobType={formatJobType(job.jobType)}
@@ -322,7 +199,7 @@ export default function JobDetailPage() {
                         className="flex items-start justify-between gap-3 border-b border-[#F0F0F0] py-3 text-[13px] last:border-0"
                       >
                         <span className="flex shrink-0 items-center gap-2 text-[#9BA3B2]">
-                          <DetailIcon path={icon} />
+                          {icon}
                           {label}
                         </span>
                         <span className="text-right font-semibold text-[#0D1B2A]">
@@ -374,7 +251,7 @@ export default function JobDetailPage() {
               <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-[#6B7A99]">
                 {job.company.location && (
                   <span className="flex items-center gap-1.5">
-                    <DetailIcon path={ICONS.location} />
+                    <MapPin className="h-4 w-4 text-[#9BA3B2]" />
                     {job.company.location}
                   </span>
                 )}
@@ -385,10 +262,7 @@ export default function JobDetailPage() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-[#1E6FFF] hover:underline"
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />
-                    </svg>
+                    <Globe className="h-4 w-4" />
                     {job.company.website.replace(/^https?:\/\//, "")}
                   </Link>
                 )}
