@@ -297,11 +297,19 @@ export type ApplicationStatus =
   | "INTERVIEW"
   | "OFFER"
   | "REJECTED"
-  | "HIRED";
+  | "HIRED"
+  | "WITHDRAWN";
 
 export type ScreeningStage = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
 
-export type ApplicationSource = "FORM_FILL" | "RESUME" | "BULK_UPLOAD";
+export type ApplicationSource =
+  | "FORM_FILL"
+  | "RESUME"
+  | "BULK_UPLOAD"
+  | "RESUME_UPLOAD"
+  | "REFERRAL"
+  | "IMPORT"
+  | "API";
 
 export interface ApplicationCandidate {
   id: string;
@@ -627,3 +635,80 @@ export type PublicJobsQuery = {
   skills?: string; // comma-separated
   sort?: "newest" | "oldest" | "deadline" | "salary-high" | "salary-low";
 };
+
+/* =========================
+   Application Detail (API 7)
+========================= */
+
+export type AiRecommendation =
+  | "STRONG_MATCH"
+  | "GOOD_MATCH"
+  | "AVERAGE_MATCH"
+  | "WEAK_MATCH";
+
+export interface ApplicationDetailApplication {
+  id: string;
+  status: ApplicationStatus;
+  source: ApplicationSource;
+  matchScore: number | null;
+  rankPosition: number | null;
+  isAutoShortlisted: boolean;
+  appliedAt: string;
+  updatedAt: string;
+}
+
+export interface ApplicationDetailJob {
+  id: string;
+  title: string;
+  slug: string;
+}
+
+export interface ApplicationDetailCandidate {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  linkedinUrl: string | null;
+  portfolioUrl: string | null;
+  location: string | null;
+}
+
+export interface ApplicationDetailResume {
+  id: string;
+  resumeUrl: string;
+  fileName: string;
+  description: string | null;
+  extractedSkills: Array<{ name: string; category?: string }>;
+  extractedExperience: number | null;
+  extractedEducation: string | null;
+  isPrimary: boolean;
+  uploadedAt: string;
+}
+
+export interface ApplicationDetailAnalysis {
+  skillMatchScore: number;
+  experienceScore: number;
+  educationScore: number;
+  overallScore: number;
+  matchedSkills: Array<{ name: string; category?: string }>;
+  missingSkills: Array<{ name: string; category?: string }>;
+  strengths: string[];
+  weaknesses: string[];
+  aiSummary: string | null;
+  recommendation: AiRecommendation;
+  analyzedAt: string;
+}
+
+export interface ApplicationDetailProcessing {
+  resumeParse: ProcessingStatusValue | null;
+  resumeAnalysis: ProcessingStatusValue | null;
+}
+
+export interface ApplicationDetail {
+  application: ApplicationDetailApplication;
+  job: ApplicationDetailJob;
+  candidate: ApplicationDetailCandidate;
+  resume: ApplicationDetailResume | null;
+  analysis: ApplicationDetailAnalysis | null;
+  processing: ApplicationDetailProcessing;
+}

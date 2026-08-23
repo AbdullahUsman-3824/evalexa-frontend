@@ -21,6 +21,7 @@ import type {
   JobProcessingStatusResponse,
   BulkUploadResponse,
   RetryFailedApplicationsResponse,
+  ApplicationDetail,
 } from "@/types/job.types";
 
 // ...buildSkillsQueryString / buildJobsQueryString / buildPublicJobsQueryString unchanged...
@@ -173,6 +174,7 @@ export async function getApplicationsForJob(
 export async function bulkUploadApplicantsForJob(
   jobId: string,
   files: File[],
+  onUploadProgress?: (progressPercent: number) => void,
 ): Promise<BulkUploadResponse> {
   if (!files.length) {
     throw new Error("At least one resume file is required.");
@@ -186,6 +188,16 @@ export async function bulkUploadApplicantsForJob(
   return apiRequest<BulkUploadResponse>(API.jobs.bulkUploadApplicants(jobId), {
     method: "POST",
     data: formData,
+    onUploadProgress: onUploadProgress
+      ? (progressEvent) => {
+          if (progressEvent.total && progressEvent.total > 0) {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            onUploadProgress(percent);
+          }
+        }
+      : undefined,
   });
 }
 
@@ -216,6 +228,15 @@ export async function retryFailedApplicationsForJob(
     {
       method: "POST",
     },
+  );
+}
+
+export async function getApplicationDetail(
+  applicationId: string,
+): Promise<ApplicationDetail> {
+  return apiRequest<ApplicationDetail>(
+    API.jobs.applicationById(applicationId),
+    { method: "GET" },
   );
 }
 

@@ -86,6 +86,7 @@ export const {
   getJobProcessingStatus,
   retryFailedApplicationsForJob,
   getCandidateDetails,
+  getApplicationDetail,
   getPublicJobs,
   getPublicFeaturedJobs,
   getPublicJobBySlug,
