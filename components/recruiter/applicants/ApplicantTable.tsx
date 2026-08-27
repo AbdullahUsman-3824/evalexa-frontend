@@ -127,7 +127,7 @@ export default function ApplicantTable({
                 >
                   <td className="px-4 py-3">
                     <Link
-                      href={`/recruiter/applicants/${application.candidate.id}`}
+                      href={`/recruiter/applicants/${application.id}`}
                       className="font-medium text-midnight hover:text-primary transition-colors"
                     >
                       {application.candidate.fullName}
@@ -158,7 +158,7 @@ export default function ApplicantTable({
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1.5">
                       <Link
-                        href={`/recruiter/applicants/${application.candidate.id}`}
+                        href={`/recruiter/applicants/${application.id}`}
                         className="rounded-lg p-1.5 text-slate transition-all hover:bg-primary/10 hover:text-primary"
                         aria-label="View profile"
                       >
