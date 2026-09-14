@@ -91,14 +91,14 @@ export default function InterviewDetailsPage() {
 
       {/* Main Detail Card - Dark Gradient */}
       <motion.div
-        className="rounded-2xl bg-gradient-to-br from-midnight via-midnight/95 to-midnight/90 p-8 text-white shadow-xl"
+        className="rounded-2xl bg-linear-to-br from-midnight via-midnight/95 to-midnight/90 p-8 text-white shadow-xl"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
         {/* Company & Job */}
         <div className="flex items-start gap-4 mb-6">
           <div
-            className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
             style={{ backgroundColor: INTERVIEW_DATA.companyColor }}
           >
             {INTERVIEW_DATA.companyInitials}

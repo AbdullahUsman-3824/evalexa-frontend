@@ -129,9 +129,8 @@ const textareaBaseClass =
 function FieldError({ message }: { message?: string }) {
   return (
     <p
-      className={`mt-1 text-xs text-[#DC2626] transition-opacity duration-150 ${
-        message ? "opacity-100" : "opacity-0"
-      }`}
+      className={`mt-1 text-xs text-danger transition-opacity duration-150 ${message ? "opacity-100" : "opacity-0"
+        }`}
       aria-live="polite"
     >
       {message ?? "placeholder"}
@@ -673,7 +672,7 @@ export default function JobApplicationForm({
   return (
     <section className="space-y-4 px-0 sm:px-4">
       {toastMessage ? (
-        <div className="fixed right-6 top-6 z-50 w-[340px]">
+        <div className="fixed right-6 top-6 z-50 w-85">
           <div className="rounded-lg bg-white/95 p-4 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="h-2.5 w-2.5 rounded-full bg-[#1E6FFF]" />
@@ -790,7 +789,7 @@ export default function JobApplicationForm({
                 value={firstName}
                 disabled={submitting}
                 onChange={(e) => setFirstName(e.target.value)}
-                className={`${inputBaseClass} ${errors.firstName ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
+                className={`${inputBaseClass} ${errors.firstName ? "border-danger ring-2 ring-danger/20" : ""}`}
               />
               <FieldError message={errors.firstName} />
             </div>
@@ -803,7 +802,7 @@ export default function JobApplicationForm({
                 value={lastName}
                 disabled={submitting}
                 onChange={(e) => setLastName(e.target.value)}
-                className={`${inputBaseClass} ${errors.lastName ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
+                className={`${inputBaseClass} ${errors.lastName ? "border-danger ring-2 ring-danger/20" : ""}`}
               />
               <FieldError message={errors.lastName} />
             </div>
@@ -819,7 +818,7 @@ export default function JobApplicationForm({
               value={email}
               disabled={submitting}
               onChange={(e) => setEmail(e.target.value)}
-              className={`${inputBaseClass} ${errors.email ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
+              className={`${inputBaseClass} ${errors.email ? "border-danger ring-2 ring-danger/20" : ""}`}
             />
             <FieldError message={errors.email} />
           </div>
@@ -848,7 +847,7 @@ export default function JobApplicationForm({
                 value={countryCode}
                 disabled={submitting}
                 onChange={(e) => setCountryCode(e.target.value)}
-                className="h-[46px] min-w-[90px] rounded-[10px] border-[1.5px] border-[#E2E8F4] bg-[#EEF2F7] px-3 text-[14px] text-[#0D1B2A] outline-none transition focus:border-[#1E6FFF] disabled:cursor-not-allowed disabled:opacity-60"
+                className="h-11.5 min-w-22.5 rounded-[10px] border-[1.5px] border-[#E2E8F4] bg-[#EEF2F7] px-3 text-[14px] text-[#0D1B2A] outline-none transition focus:border-[#1E6FFF] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {countryCodes.map((country) => (
                   <option key={country.code} value={country.code}>
@@ -861,7 +860,7 @@ export default function JobApplicationForm({
                 value={phone}
                 disabled={submitting}
                 onChange={(e) => setPhone(e.target.value)}
-                className={`${inputBaseClass} flex-1 ${errors.phone ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
+                className={`${inputBaseClass} flex-1 ${errors.phone ? "border-danger ring-2 ring-danger/20" : ""}`}
               />
             </div>
             <p className="mt-1 text-xs text-slate">
@@ -884,7 +883,7 @@ export default function JobApplicationForm({
               value={address}
               disabled={submitting}
               onChange={(e) => setAddress(e.target.value)}
-              className={`${inputBaseClass} ${errors.address ? "border-[#DC2626] ring-2 ring-[#DC2626]/20" : ""}`}
+              className={`${inputBaseClass} ${errors.address ? "border-danger ring-2 ring-danger/20" : ""}`}
             />
             <p className="mt-1 text-xs text-slate">
               Include your city, region, and country, so that employers can
@@ -1051,7 +1050,7 @@ export default function JobApplicationForm({
                             prev.filter((item) => item.id !== entry.id),
                           )
                         }
-                        className="text-slate transition hover:text-[#DC2626]"
+                        className="text-slate transition hover:text-danger"
                         aria-label="Remove education"
                       >
                         <X size={15} />
@@ -1267,7 +1266,7 @@ export default function JobApplicationForm({
                             prev.filter((item) => item.id !== entry.id),
                           )
                         }
-                        className="text-slate transition hover:text-[#DC2626]"
+                        className="text-slate transition hover:text-danger"
                         aria-label="Remove experience"
                       >
                         <X size={15} />
@@ -1293,7 +1292,7 @@ export default function JobApplicationForm({
                   onChange={(e) => setSkillInput(e.target.value)}
                   onKeyDown={handleSkillKeyDown}
                   placeholder="Skill name"
-                  className={`${inputBaseClass} flex-1 min-w-[120px]`}
+                  className={`${inputBaseClass} flex-1 min-w-30`}
                   disabled={submitting}
                 />
                 <input
@@ -1301,14 +1300,14 @@ export default function JobApplicationForm({
                   value={skillCategory}
                   onChange={(e) => setSkillCategory(e.target.value)}
                   placeholder="Category (optional)"
-                  className={`${inputBaseClass} flex-1 min-w-[120px]`}
+                  className={`${inputBaseClass} flex-1 min-w-30`}
                   disabled={submitting}
                 />
                 <button
                   type="button"
                   onClick={addSkill}
                   disabled={submitting || !skillInput.trim()}
-                  className="h-[46px] rounded-[10px] bg-primary px-4 text-sm font-medium text-white transition hover:bg-[#185dde] disabled:opacity-60"
+                  className="h-11.5 rounded-[10px] bg-primary px-4 text-sm font-medium text-white transition hover:bg-[#185dde] disabled:opacity-60"
                 >
                   Add
                 </button>
@@ -1329,7 +1328,7 @@ export default function JobApplicationForm({
                       <button
                         type="button"
                         onClick={() => removeSkill(skill.name)}
-                        className="text-slate hover:text-[#DC2626]"
+                        className="text-slate hover:text-danger"
                         aria-label={`Remove ${skill.name}`}
                       >
                         <X size={14} />
@@ -1390,13 +1389,12 @@ export default function JobApplicationForm({
                   if (isBusy) return;
                   handleResumeSelected(e.dataTransfer.files?.[0] ?? null);
                 }}
-                className={`flex min-h-[130px] flex-col items-center justify-center gap-2 rounded-[12px] border-2 border-dashed p-8 text-center transition-transform duration-150 ${
-                  isDragOver
-                    ? "scale-105 border-[#1E6FFF] bg-[#EEF4FF]"
-                    : resumeFile
-                      ? "border-[1.5px] border-[#00B37E] bg-[#F0FBF6]"
-                      : "border-[#C5D5F0] bg-[#F5F8FF]"
-                } ${isBusy ? "pointer-events-none opacity-75" : ""}`}
+                className={`flex min-h-32.5 flex-col items-center justify-center gap-2 rounded-[12px] border-2 border-dashed p-8 text-center transition-transform duration-150 ${isDragOver
+                  ? "scale-105 border-[#1E6FFF] bg-[#EEF4FF]"
+                  : resumeFile
+                    ? "border-[1.5px] border-[#00B37E] bg-[#F0FBF6]"
+                    : "border-[#C5D5F0] bg-[#F5F8FF]"
+                  } ${isBusy ? "pointer-events-none opacity-75" : ""}`}
               >
                 {isParsing ? (
                   <div className="flex items-center justify-center gap-2 text-sm text-[#1E6FFF]">

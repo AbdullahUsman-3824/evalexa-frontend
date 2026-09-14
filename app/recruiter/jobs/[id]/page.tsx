@@ -158,7 +158,9 @@ export default function JobDetailsPage() {
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Link
-                    href={`/recruiter/jobs/preview?jobId=${job.id}`}
+                    href={`/jobs/${job.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="rounded-lg border border-primary px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/10"
                   >
                     Preview as Candidate
