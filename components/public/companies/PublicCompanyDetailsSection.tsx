@@ -76,7 +76,7 @@ export default function PublicCompanyDetailsSection({
         <section className="overflow-hidden rounded-2xl border border-slate/20 bg-white shadow-sm">
           <div className="border-b border-slate/10 bg-surface p-6 sm:p-8">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xl font-semibold text-primary">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xl font-semibold text-primary">
                 {getCompanyInitials(company)}
               </div>
               <div>

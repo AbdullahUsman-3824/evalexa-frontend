@@ -71,9 +71,8 @@ export default function InterviewCard({
 
   return (
     <article
-      className={`rounded-xl border border-[#6B7A99]/20 bg-white p-4 shadow-sm ${
-        interview.status === "cancelled" ? "opacity-80" : ""
-      }`}
+      className={`rounded-xl border border-[#6B7A99]/20 bg-white p-4 shadow-sm ${interview.status === "cancelled" ? "opacity-80" : ""
+        }`}
     >
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="lg:col-span-3">
@@ -84,14 +83,13 @@ export default function InterviewCard({
 
         <div className="lg:col-span-6">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#1E6FFF] to-[#00C2D1] text-xs font-semibold text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-[#1E6FFF] to-[#00C2D1] text-xs font-semibold text-white">
               {interview.candidateAvatar}
             </div>
             <div>
               <p
-                className={`text-sm font-semibold text-[#0D1B2A] ${
-                  interview.status === "cancelled" ? "line-through decoration-[#E63946]" : ""
-                }`}
+                className={`text-sm font-semibold text-[#0D1B2A] ${interview.status === "cancelled" ? "line-through decoration-[#E63946]" : ""
+                  }`}
               >
                 {interview.candidateName}
               </p>

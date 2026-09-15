@@ -182,11 +182,10 @@ export default function CompanyInfoTab({
                 key={value}
                 type="button"
                 onClick={() => onChange({ type: selected ? null : value })}
-                className={`relative flex items-center justify-center p-3 border-2 rounded-lg transition-all text-sm font-medium ${
-                  selected
+                className={`relative flex items-center justify-center p-3 border-2 rounded-lg transition-all text-sm font-medium ${selected
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-gray-300 text-slate hover:border-primary/50 hover:text-midnight"
-                }`}
+                  }`}
               >
                 {label}
               </button>
@@ -279,7 +278,7 @@ export default function CompanyInfoTab({
                 className="flex items-center justify-between bg-surface border border-gray-200 rounded-lg px-4 py-2.5 text-sm"
               >
                 <span className="text-midnight truncate">{file.name}</span>
-                <div className="flex items-center gap-3 ml-3 flex-shrink-0">
+                <div className="flex items-center gap-3 ml-3 shrink-0">
                   <span className="text-slate text-xs">
                     {(file.size / 1024).toFixed(0)} KB
                   </span>
@@ -310,7 +309,7 @@ export default function CompanyInfoTab({
               onChange={handleDocsChange}
             />
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-primary/5 transition-colors">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shrink-0 group-hover:bg-primary/5 transition-colors">
                 <Upload className="w-5 h-5 text-slate group-hover:text-primary transition-colors" />
               </div>
               <div>

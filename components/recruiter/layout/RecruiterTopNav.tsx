@@ -147,22 +147,20 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                         className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
                       >
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            color === "primary"
+                          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${color === "primary"
                               ? "bg-primary/10"
                               : color === "cyan"
                                 ? "bg-cyan/10"
                                 : "bg-green-500/10"
-                          }`}
+                            }`}
                         >
                           <Bell
-                            className={`w-4 h-4 ${
-                              color === "primary"
+                            className={`w-4 h-4 ${color === "primary"
                                 ? "text-primary"
                                 : color === "cyan"
                                   ? "text-cyan"
                                   : "text-green-500"
-                            }`}
+                              }`}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -194,7 +192,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
               className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-xl transition-colors"
             >
               {/* Avatar: company logo or initials */}
-              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+              <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
                 {showLogo ? (
                   <Image
                     src={logoSrc!}
@@ -206,7 +204,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                     onError={() => setLogoErrorSrc(logoSrc)}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
+                  <div className="w-full h-full bg-linear-to-br from-primary to-cyan flex items-center justify-center">
                     <span className="text-white font-semibold text-xs">
                       {company
                         ? company.name.slice(0, 2).toUpperCase()
@@ -242,9 +240,8 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
               </div>
 
               <ChevronDown
-                className={`hidden md:block w-4 h-4 text-slate/60 transition-transform ${
-                  showProfileDropdown ? "rotate-180" : ""
-                }`}
+                className={`hidden md:block w-4 h-4 text-slate/60 transition-transform ${showProfileDropdown ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -259,7 +256,7 @@ export default function RecruiterTopNav({ onMenuClick }: RecruiterTopNavProps) {
                   {/* Company header */}
                   <div className="px-4 py-3 border-b border-gray-100">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-cyan flex items-center justify-center flex-shrink-0">
+                      <div className="w-9 h-9 rounded-lg bg-linear-to-br from-primary to-cyan flex items-center justify-center shrink-0">
                         <span className="text-white font-semibold text-xs">
                           {accountInitials}
                         </span>

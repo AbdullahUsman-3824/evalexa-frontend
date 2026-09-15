@@ -129,7 +129,7 @@ export default function RecentApplications() {
           >
             {/* Avatar */}
             <div
-              className={`flex-shrink-0 w-11 h-11 ${application.avatarColor} rounded-full flex items-center justify-center text-white font-semibold text-sm`}
+              className={`shrink-0 w-11 h-11 ${application.avatarColor} rounded-full flex items-center justify-center text-white font-semibold text-sm`}
             >
               {application.initials}
             </div>
@@ -144,7 +144,7 @@ export default function RecentApplications() {
 
             {/* Match Score Badge */}
             <div
-              className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold border ${getMatchScoreColor(
+              className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold border ${getMatchScoreColor(
                 application.matchScore,
               )}`}
             >
@@ -153,7 +153,7 @@ export default function RecentApplications() {
 
             {/* Status Badge */}
             <span
-              className={`flex-shrink-0 px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(
+              className={`shrink-0 px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(
                 application.status,
               )}`}
             >
@@ -161,7 +161,7 @@ export default function RecentApplications() {
             </span>
 
             {/* Applied Time */}
-            <span className="hidden sm:block flex-shrink-0 text-slate text-xs">
+            <span className="hidden sm:block shrink-0 text-slate text-xs">
               {application.appliedTime}
             </span>
 
@@ -170,7 +170,7 @@ export default function RecentApplications() {
               onClick={() =>
                 router.push(`/recruiter/applicants/${application.id}`)
               }
-              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-colors"
             >
               <FileText className="w-3.5 h-3.5" />
               Review

@@ -126,7 +126,7 @@ export default function InterviewsPage() {
 
   return (
     <div className="min-h-screen bg-[#F4F7FF] p-6">
-      <div className="mx-auto max-w-[1600px] space-y-5">
+      <div className="mx-auto max-w-400 space-y-5">
         <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="font-syne text-2xl font-bold text-[#0D1B2A]">Interviews</h1>
@@ -167,9 +167,8 @@ export default function InterviewsPage() {
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`rounded-lg px-3 py-2 text-sm font-semibold ${
-                activeTab === tab ? "bg-[#1E6FFF] text-white" : "bg-white text-[#6B7A99] hover:bg-[#EAF0FF]"
-              }`}
+              className={`rounded-lg px-3 py-2 text-sm font-semibold ${activeTab === tab ? "bg-[#1E6FFF] text-white" : "bg-white text-[#6B7A99] hover:bg-[#EAF0FF]"
+                }`}
             >
               {tab}
             </button>
@@ -199,18 +198,18 @@ export default function InterviewsPage() {
             prev.map((item) =>
               item.id === selectedInterviewId
                 ? {
-                    ...item,
-                    date: new Date(`${payload.date}T00:00:00`).toLocaleDateString(undefined, {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    }),
-                    time: new Date(`2025-01-01T${payload.hour}:${payload.minute}:00`).toLocaleTimeString(undefined, {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    }),
-                    status: "upcoming",
-                  }
+                  ...item,
+                  date: new Date(`${payload.date}T00:00:00`).toLocaleDateString(undefined, {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  }),
+                  time: new Date(`2025-01-01T${payload.hour}:${payload.minute}:00`).toLocaleTimeString(undefined, {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  }),
+                  status: "upcoming",
+                }
                 : item,
             ),
           );

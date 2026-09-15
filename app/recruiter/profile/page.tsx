@@ -23,7 +23,7 @@ export default function RecruiterProfile() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="max-w-[1400px] mx-auto p-6 space-y-6">
+      <div className="max-w-350 mx-auto p-6 space-y-6">
         {/* Company Header */}
         <CompanyHeader isLoading={isLoading} company={company} stats={stats} />
 

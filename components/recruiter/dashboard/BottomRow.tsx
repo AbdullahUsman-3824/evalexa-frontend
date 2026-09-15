@@ -179,7 +179,7 @@ export default function BottomRow() {
                         router.push(`/recruiter/interviews/${interview.id}`);
                       }
                     }}
-                    className="flex-shrink-0 px-4 py-2 bg-primary hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-colors"
+                    className="shrink-0 px-4 py-2 bg-primary hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-colors"
                   >
                     Join
                   </button>

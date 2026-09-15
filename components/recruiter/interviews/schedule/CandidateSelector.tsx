@@ -101,7 +101,7 @@ export default function CandidateSelector({
         <div className="rounded-xl border border-[#6B7A99]/25 bg-white p-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#1E6FFF] to-[#00C2D1] text-sm font-semibold text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-[#1E6FFF] to-[#00C2D1] text-sm font-semibold text-white">
                 {selectedCandidate.avatar || getInitials(selectedCandidate.name)}
               </div>
               <div>

@@ -21,7 +21,7 @@ export default function RecruiterLayout({
           onClose={() => setSidebarOpen(false)}
         />
         {/* Main Content Area */}
-        <div className="lg:ml-[240px] min-h-screen flex flex-col">
+        <div className="lg:ml-60 min-h-screen flex flex-col">
           {/* Top Navigation */}
           <RecruiterTopNav onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
           {/* Page Content */}

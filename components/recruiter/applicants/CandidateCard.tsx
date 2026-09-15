@@ -95,11 +95,10 @@ export default function CandidateCard({
 
   return (
     <article
-      className={`relative rounded-xl border bg-white p-5 shadow-sm transition-all hover:shadow-md ${
-        candidate.shortlisted
+      className={`relative rounded-xl border bg-white p-5 shadow-sm transition-all hover:shadow-md ${candidate.shortlisted
           ? "border-warning/40 border-l-4"
           : "border-secondary/30"
-      } ${isRejected ? "opacity-60" : ""}`}
+        } ${isRejected ? "opacity-60" : ""}`}
     >
       {/* Tier 1: Name + status + bookmark — the primary identity row */}
       <div className="flex items-start justify-between gap-2">
@@ -147,27 +146,27 @@ export default function CandidateCard({
       {/* Tier 3: skills — only real, present-day data */}
       {(candidate.matchedSkills.length > 0 ||
         candidate.missingSkills.length > 0) && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {candidate.matchedSkills.slice(0, 3).map((skill) => (
-            <span
-              key={skill}
-              className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
-            >
-              <CheckCircle2 className="h-3 w-3" />
-              {skill}
-            </span>
-          ))}
-          {candidate.missingSkills.slice(0, 2).map((skill) => (
-            <span
-              key={skill}
-              className="inline-flex items-center gap-1 rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger"
-            >
-              <XCircle className="h-3 w-3" />
-              {skill}
-            </span>
-          ))}
-        </div>
-      )}
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {candidate.matchedSkills.slice(0, 3).map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
+              >
+                <CheckCircle2 className="h-3 w-3" />
+                {skill}
+              </span>
+            ))}
+            {candidate.missingSkills.slice(0, 2).map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex items-center gap-1 rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger"
+              >
+                <XCircle className="h-3 w-3" />
+                {skill}
+              </span>
+            ))}
+          </div>
+        )}
 
       {/* Tier 4: actions — icon-only, expand on hover */}
       <div className="mt-4 flex items-center gap-2 border-t border-secondary/15 pt-3">
@@ -176,7 +175,7 @@ export default function CandidateCard({
           className="group flex shrink-0 items-center overflow-hidden rounded-lg bg-primary-dark px-2.5 py-2 text-white transition-all duration-300 ease-out hover:px-4"
         >
           <Eye className="h-4 w-4 shrink-0" />
-          <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 ease-out group-hover:ml-2 group-hover:max-w-[120px] group-hover:opacity-100">
+          <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 ease-out group-hover:ml-2 group-hover:max-w-30 group-hover:opacity-100">
             View Profile
           </span>
         </Link>
@@ -184,16 +183,15 @@ export default function CandidateCard({
         <button
           type="button"
           onClick={() => onToggleShortlist(candidate.id)}
-          className={`group flex shrink-0 items-center overflow-hidden rounded-lg border px-2.5 py-2 transition-all duration-300 ease-out hover:px-4 ${
-            candidate.shortlisted
+          className={`group flex shrink-0 items-center overflow-hidden rounded-lg border px-2.5 py-2 transition-all duration-300 ease-out hover:px-4 ${candidate.shortlisted
               ? "border-warning/40 bg-warning/15 text-warning"
               : "border-secondary/30 text-midnight hover:bg-surface"
-          }`}
+            }`}
         >
           <Star
             className={`h-4 w-4 shrink-0 ${candidate.shortlisted ? "fill-warning" : ""}`}
           />
-          <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 ease-out group-hover:ml-2 group-hover:max-w-[100px] group-hover:opacity-100">
+          <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 ease-out group-hover:ml-2 group-hover:max-w-25 group-hover:opacity-100">
             Shortlist
           </span>
         </button>
@@ -213,7 +211,7 @@ export default function CandidateCard({
             className="group flex shrink-0 items-center overflow-hidden rounded-lg border border-danger/25 px-2.5 py-2 text-danger transition-all duration-300 ease-out hover:px-4 hover:bg-danger/5"
           >
             <X className="h-4 w-4 shrink-0" />
-            <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 ease-out group-hover:ml-2 group-hover:max-w-[100px] group-hover:opacity-100">
+            <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 ease-out group-hover:ml-2 group-hover:max-w-25 group-hover:opacity-100">
               Reject
             </span>
           </button>

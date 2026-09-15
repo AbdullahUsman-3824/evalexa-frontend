@@ -90,11 +90,11 @@ export default function CandidateHero({
   resumeScore,
 }: CandidateHeroProps) {
   return (
-    <section className="rounded-2xl bg-gradient-to-br from-midnight to-[#132a42] p-6 text-white shadow-lg">
+    <section className="rounded-2xl bg-linear-to-br from-midnight to-[#132a42] p-6 text-white shadow-lg">
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div>
           <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan text-xl font-semibold">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-primary to-cyan text-xl font-semibold">
               {initials(name)}
             </div>
             <div>
@@ -102,15 +102,15 @@ export default function CandidateHero({
               <p className="text-sm text-cyan">
                 {role} at {company}
               </p>
-               <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-300">
-                 <MapPin className="h-3.5 w-3.5" />
-                 {location}
-               </p>
-               {openToWork && (
-                 <span className="mt-2 inline-flex items-center whitespace-nowrap rounded-full bg-success px-2.5 py-1 text-xs font-semibold leading-none text-white">
-                   Open to Work
-                 </span>
-               )}
+              <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-300">
+                <MapPin className="h-3.5 w-3.5" />
+                {location}
+              </p>
+              {openToWork && (
+                <span className="mt-2 inline-flex items-center whitespace-nowrap rounded-full bg-success px-2.5 py-1 text-xs font-semibold leading-none text-white">
+                  Open to Work
+                </span>
+              )}
             </div>
           </div>
 

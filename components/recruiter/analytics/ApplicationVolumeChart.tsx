@@ -39,7 +39,7 @@ export default function ApplicationVolumeChart() {
         </p>
       </div>
 
-      <div className="h-[300px] w-full">
+      <div className="h-75 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 12, right: 18, left: 0, bottom: 0 }}>
             <defs>

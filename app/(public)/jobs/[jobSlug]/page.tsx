@@ -106,15 +106,15 @@ export default function JobDetailPage() {
   const iconClass = "h-4 w-4 shrink-0 text-[#9BA3B2]";
 
   const jobDetailRows = [
-    { label: "Salary",     value: formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency, job.salaryPeriod), icon: <Banknote className={iconClass} /> },
-    { label: "Type",       value: formatJobType(job.jobType),                 icon: <Briefcase className={iconClass} /> },
-    { label: "Mode",       value: formatWorkMode(job.workModel),              icon: <Building2 className={iconClass} /> },
+    { label: "Salary", value: formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency, job.salaryPeriod), icon: <Banknote className={iconClass} /> },
+    { label: "Type", value: formatJobType(job.jobType), icon: <Briefcase className={iconClass} /> },
+    { label: "Mode", value: formatWorkMode(job.workModel), icon: <Building2 className={iconClass} /> },
     { label: "Experience", value: formatExperienceLevel(job.experienceLevel), icon: <TrendingUp className={iconClass} /> },
-    { label: "Education",  value: formatEducationLevel(job.educationLevel),   icon: <GraduationCap className={iconClass} /> },
-    { label: "Department", value: job.department,                             icon: <Users className={iconClass} /> },
-    { label: "Location",   value: job.location,                               icon: <MapPin className={iconClass} /> },
-    { label: "Openings",   value: String(job.totalOpenings),                  icon: <Users className={iconClass} /> },
-    { label: "Deadline",   value: deadline,                                   icon: <Calendar className={iconClass} /> },
+    { label: "Education", value: formatEducationLevel(job.educationLevel), icon: <GraduationCap className={iconClass} /> },
+    { label: "Department", value: job.department, icon: <Users className={iconClass} /> },
+    { label: "Location", value: job.location, icon: <MapPin className={iconClass} /> },
+    { label: "Openings", value: String(job.totalOpenings), icon: <Users className={iconClass} /> },
+    { label: "Deadline", value: deadline, icon: <Calendar className={iconClass} /> },
   ];
 
   return (
@@ -142,22 +142,20 @@ export default function JobDetailPage() {
           <button
             type="button"
             onClick={() => setActiveTab("overview")}
-            className={`w-1/2 border-b-[3px] px-8 py-4 text-[13px] font-semibold tracking-[0.05em] transition ${
-              activeTab === "overview"
-                ? "mb-[-2px] border-[#1E6FFF] text-[#1E6FFF]"
-                : "border-transparent text-[#9BA3B2] hover:text-[#6B7A99]"
-            }`}
+            className={`w-1/2 border-b-[3px] px-8 py-4 text-[13px] font-semibold tracking-[0.05em] transition ${activeTab === "overview"
+              ? "-mb-0.5 border-[#1E6FFF] text-[#1E6FFF]"
+              : "border-transparent text-[#9BA3B2] hover:text-[#6B7A99]"
+              }`}
           >
             OVERVIEW
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("application")}
-            className={`w-1/2 border-b-[3px] px-8 py-4 text-[13px] font-semibold tracking-[0.05em] transition ${
-              activeTab === "application"
-                ? "mb-[-2px] border-[#1E6FFF] text-[#1E6FFF]"
-                : "border-transparent text-[#9BA3B2] hover:text-[#6B7A99]"
-            }`}
+            className={`w-1/2 border-b-[3px] px-8 py-4 text-[13px] font-semibold tracking-[0.05em] transition ${activeTab === "application"
+              ? "-mb-0.5 border-[#1E6FFF] text-[#1E6FFF]"
+              : "border-transparent text-[#9BA3B2] hover:text-[#6B7A99]"
+              }`}
           >
             APPLICATION
           </button>

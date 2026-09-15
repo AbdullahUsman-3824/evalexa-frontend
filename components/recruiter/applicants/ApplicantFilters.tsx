@@ -129,11 +129,10 @@ export default function ApplicantFilters({
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
             placeholder="Search candidates by name or skill... (CTRL+K)"
-            className={`h-10 w-full rounded-lg border bg-white pl-10 pr-3 text-sm text-midnight outline-none transition-all duration-200 placeholder:text-slate/60 ${
-              searchFocused
+            className={`h-10 w-full rounded-lg border bg-white pl-10 pr-3 text-sm text-midnight outline-none transition-all duration-200 placeholder:text-slate/60 ${searchFocused
                 ? "border-primary ring-2 ring-primary/20"
                 : "border-secondary/30 hover:border-primary/40"
-            }`}
+              }`}
           />
           {search && (
             <button
@@ -152,11 +151,10 @@ export default function ApplicantFilters({
             <button
               type="button"
               onClick={() => onViewModeChange("cards")}
-              className={`rounded-md p-1.5 transition-all ${
-                viewMode === "cards"
+              className={`rounded-md p-1.5 transition-all ${viewMode === "cards"
                   ? "bg-primary text-white shadow-sm"
                   : "text-slate hover:bg-white/50 hover:text-midnight"
-              }`}
+                }`}
               aria-label="Card view"
               title="Card view"
             >
@@ -165,11 +163,10 @@ export default function ApplicantFilters({
             <button
               type="button"
               onClick={() => onViewModeChange("table")}
-              className={`rounded-md p-1.5 transition-all ${
-                viewMode === "table"
+              className={`rounded-md p-1.5 transition-all ${viewMode === "table"
                   ? "bg-primary text-white shadow-sm"
                   : "text-slate hover:bg-white/50 hover:text-midnight"
-              }`}
+                }`}
               aria-label="Table view"
               title="Table view"
             >
@@ -198,23 +195,21 @@ export default function ApplicantFilters({
           <button
             type="button"
             onClick={onToggleAdvanced}
-            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${
-              showAdvanced || hasActiveFilters
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${showAdvanced || hasActiveFilters
                 ? "border-primary/40 bg-primary/10 text-primary-dark hover:bg-primary/20"
                 : "border-secondary/30 bg-white text-slate hover:bg-surface hover:text-midnight"
-            }`}
+              }`}
           >
             <Filter className="h-4 w-4" />
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
-              <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary-dark px-1.5 text-xs font-semibold text-white">
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-dark px-1.5 text-xs font-semibold text-white">
                 {activeFilterCount}
               </span>
             )}
             <ChevronDown
-              className={`h-4 w-4 transition-transform duration-200 ${
-                showAdvanced ? "rotate-180" : ""
-              }`}
+              className={`h-4 w-4 transition-transform duration-200 ${showAdvanced ? "rotate-180" : ""
+                }`}
             />
           </button>
         </div>
@@ -230,11 +225,10 @@ export default function ApplicantFilters({
             <button
               key={status}
               onClick={() => onStatusChange(status)}
-              className={`group relative rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 ${
-                active
+              className={`group relative rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 ${active
                   ? statusActiveColors[statusKey] || statusActiveColors.All
                   : statusColors[statusKey] || statusColors.All
-              } ${!active && "hover:scale-105"} focus:outline-none focus:ring-2 focus:ring-primary/20`}
+                } ${!active && "hover:scale-105"} focus:outline-none focus:ring-2 focus:ring-primary/20`}
             >
               {status}
               {/* We don't have counts for applicants, but keeping the structure consistent */}
@@ -307,11 +301,10 @@ export default function ApplicantFilters({
                         key={skill}
                         type="button"
                         onClick={() => onToggleSkill(skill)}
-                        className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                          selected
+                        className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${selected
                             ? "bg-cyan text-white shadow-sm hover:bg-cyan/80"
                             : "bg-white text-slate border border-secondary/30 hover:border-primary/40 hover:text-midnight"
-                        }`}
+                          }`}
                       >
                         {skill}
                       </button>

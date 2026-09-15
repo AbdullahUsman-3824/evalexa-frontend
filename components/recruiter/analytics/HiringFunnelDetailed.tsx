@@ -61,7 +61,7 @@ export default function HiringFunnelDetailed() {
             transition={{ duration: 0.3, delay: index * 0.1 }}
           >
             <div
-              className="relative h-[62px]"
+              className="relative h-15.2"
               style={{
                 clipPath: `polygon(${item.topInset}% 0%, ${100 - item.topInset}% 0%, ${100 - item.bottomInset}% 100%, ${item.bottomInset}% 100%)`,
                 backgroundColor: item.color,

@@ -181,7 +181,7 @@ function InfoRow({
 }) {
   return (
     <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:gap-4">
-      <span className="min-w-[160px] text-xs font-semibold uppercase tracking-wide text-slate">
+      <span className="min-w-40 text-xs font-semibold uppercase tracking-wide text-slate">
         {label}
       </span>
       <span className="text-sm text-midnight">{value ?? "—"}</span>

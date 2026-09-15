@@ -205,7 +205,7 @@ export default function PublicJobsSection() {
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={index}
-                className="h-[200px] animate-pulse rounded-xl border border-slate-200 bg-white p-4"
+                className="h-50 animate-pulse rounded-xl border border-slate-200 bg-white p-4"
               />
             ))}
           </div>

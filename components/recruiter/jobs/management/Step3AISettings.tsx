@@ -26,18 +26,16 @@ function Toggle({
       role="switch"
       aria-checked={enabled}
       onClick={onToggle}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-        enabled
+      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${enabled
           ? accent === "cyan"
             ? "bg-cyan-500"
             : "bg-primary"
           : "bg-slate/25"
-      }`}
+        }`}
     >
       <span
-        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-all ${
-          enabled ? "left-5" : "left-0.5"
-        }`}
+        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-all ${enabled ? "left-5" : "left-0.5"
+          }`}
       />
     </button>
   );
@@ -130,9 +128,8 @@ function SettingCard({
 
   return (
     <div
-      className={`flex h-full flex-col rounded-2xl border bg-white p-5 shadow-sm transition ${
-        enabled ? `ring-1 ${accentRing}` : "border-slate/15 opacity-95"
-      }`}
+      className={`flex h-full flex-col rounded-2xl border bg-white p-5 shadow-sm transition ${enabled ? `ring-1 ${accentRing}` : "border-slate/15 opacity-95"
+        }`}
     >
       {/* Header */}
       <div className="flex items-start gap-3">
@@ -180,7 +177,7 @@ export default function Step3AISettings({
   return (
     <div className="space-y-6 text-midnight">
       {/* Page intro */}
-      <div className="rounded-2xl border border-slate/10 bg-gradient-to-br from-white via-white to-surface/80 p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate/10 bg-linear-to-br from-white via-white to-surface/80 p-5 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="rounded-2xl bg-primary/10 p-3 text-primary">
             <Sparkles className="h-6 w-6" />

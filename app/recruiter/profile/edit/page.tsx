@@ -329,11 +329,10 @@ export default function EditProfileContent() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
-                    activeTab === tab.id
+                  className={`relative px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
                       ? "text-primary"
                       : "text-slate hover:text-midnight"
-                  }`}
+                    }`}
                 >
                   {tab.label}
                   {activeTab === tab.id && (
@@ -381,7 +380,7 @@ export default function EditProfileContent() {
             <button
               onClick={handleSave}
               disabled={isSaving || isUpdating}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/80 disabled:bg-gray-300 disabled:cursor-not-allowed text-midnight rounded-lg font-medium text-sm transition-colors min-w-[130px] justify-center"
+              className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/80 disabled:bg-gray-300 disabled:cursor-not-allowed text-midnight rounded-lg font-medium text-sm transition-colors min-w-32.5 justify-center"
             >
               {isSaving || isUpdating ? (
                 <>

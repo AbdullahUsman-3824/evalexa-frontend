@@ -48,11 +48,10 @@ export default function ConversationView({
           </button>
 
           <div className="relative">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-cyan" />
+            <div className="h-10 w-10 rounded-full bg-linear-to-br from-primary to-cyan" />
             <span
-              className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
-                online ? "bg-success" : "bg-slate/40"
-              }`}
+              className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${online ? "bg-success" : "bg-slate/40"
+                }`}
             />
           </div>
 
@@ -99,11 +98,10 @@ export default function ConversationView({
                 <div className={message.sender === "recruiter" ? "flex justify-end" : "flex justify-start"}>
                   <div className="max-w-[75%]">
                     <div
-                      className={`rounded-2xl px-4 py-2 text-sm ${
-                        message.sender === "recruiter"
+                      className={`rounded-2xl px-4 py-2 text-sm ${message.sender === "recruiter"
                           ? "rounded-br-md bg-primary text-white"
                           : "rounded-bl-md border border-slate/20 bg-white text-midnight"
-                      }`}
+                        }`}
                     >
                       {message.text}
                     </div>

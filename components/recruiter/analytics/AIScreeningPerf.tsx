@@ -49,7 +49,7 @@ export default function AIScreeningPerf() {
           <p className="mt-2 text-sm text-slate">
             Candidates hired from AI top-10 recommendations
           </p>
-          <div className="mt-4 h-[140px]">
+          <div className="mt-4 h-35">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={history}>
                 <XAxis dataKey="month" tick={{ fill: "#6B7A99", fontSize: 12 }} />

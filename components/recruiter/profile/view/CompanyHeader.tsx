@@ -66,7 +66,7 @@ export default function CompanyHeader({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-midnight to-[#1A2E45] p-8"
+      className="relative overflow-hidden rounded-2xl bg-linear-to-br from-midnight to-[#1A2E45] p-8"
     >
       <div className="relative z-10">
         {/* Top Section - Company Info & Actions */}
@@ -91,7 +91,7 @@ export default function CompanyHeader({
                   className="w-20 h-20 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center">
+                <div className="w-20 h-20 rounded-full bg-linear-to-br from-primary to-cyan flex items-center justify-center">
                   <span className="text-white font-syne font-bold text-2xl uppercase">
                     {company.name.substring(0, 2)}
                   </span>

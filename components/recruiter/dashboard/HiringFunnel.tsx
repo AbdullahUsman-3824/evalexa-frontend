@@ -61,14 +61,14 @@ export default function HiringFunnel() {
             <div key={stage.stage} className="space-y-2">
               {/* Stage Label and Stats */}
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-midnight min-w-[100px]">
+                <span className="font-medium text-midnight min-w-50">
                   {stage.stage}
                 </span>
                 <div className="flex items-center gap-3 text-xs">
                   <span className="text-slate font-medium">
                     {percentage.toFixed(1)}%
                   </span>
-                  <span className="font-semibold text-midnight min-w-[40px] text-right">
+                  <span className="font-semibold text-midnight min-w-10 text-right">
                     {stage.count}
                   </span>
                 </div>

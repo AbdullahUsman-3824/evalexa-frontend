@@ -16,7 +16,7 @@ import {
   PieChart,
   LogOut,
 } from "lucide-react";
-import {logout} from "@/repositories/auth.repository";
+import { logout } from "@/repositories/auth.repository";
 
 interface NavItem {
   label: string;
@@ -133,13 +133,13 @@ export default function RecruiterSidebar({
       {/* Sidebar */}
       <aside
         className={`
-          fixed left-0 top-0 h-screen w-[240px] bg-[#0D1B2A] z-50
+          fixed left-0 top-0 h-screen w-60 bg-[#0D1B2A] z-50
           flex flex-col transition-transform duration-300
           ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
         {/* Logo Section */}
-        <div className="flex-shrink-0 px-6 py-6 border-b border-white/10">
+        <div className="shrink-0 px-6 py-6 border-b border-white/10">
           <Link href="/recruiter/dashboard" className="block">
             <h1 className="font-syne font-bold text-xl mb-2">
               <span className="text-white">Eval</span>
@@ -178,10 +178,9 @@ export default function RecruiterSidebar({
                       className={`
                         group relative flex items-center gap-3 px-3 py-2.5 rounded-r-lg
                         transition-all duration-200
-                        ${
-                          active
-                            ? "bg-[#1E6FFF]/15 text-white font-medium"
-                            : "text-[#B0B8C8] hover:bg-white/5 hover:text-white"
+                        ${active
+                          ? "bg-[#1E6FFF]/15 text-white font-medium"
+                          : "text-[#B0B8C8] hover:bg-white/5 hover:text-white"
                         }
                         ${item.special && !active ? "text-[#4A9EFF]" : ""}
                       `}
@@ -191,7 +190,7 @@ export default function RecruiterSidebar({
                     >
                       {/* Active indicator */}
                       {active && (
-                        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#00C2D1] rounded-r-full" />
+                        <div className="absolute left-0 top-0 bottom-0 w-0.75 bg-[#00C2D1] rounded-r-full" />
                       )}
 
                       {/* Special item indicator (Post a Job) */}
@@ -200,9 +199,8 @@ export default function RecruiterSidebar({
                       )}
 
                       <Icon
-                        className={`flex-shrink-0 w-5 h-5 ${
-                          isCyanItem && !active ? "text-[#00C2D1]" : ""
-                        }`}
+                        className={`shrink-0 w-5 h-5 ${isCyanItem && !active ? "text-[#00C2D1]" : ""
+                          }`}
                       />
                       <span className="text-[14px]">{item.label}</span>
 
@@ -211,10 +209,9 @@ export default function RecruiterSidebar({
                         <span
                           className={`
                             ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded
-                            ${
-                              item.badge === "AI"
-                                ? "bg-[#00C2D1] text-[#0D1B2A]"
-                                : "bg-[#E63946] text-white"
+                            ${item.badge === "AI"
+                              ? "bg-[#00C2D1] text-[#0D1B2A]"
+                              : "bg-[#E63946] text-white"
                             }
                           `}
                         >
@@ -240,7 +237,7 @@ export default function RecruiterSidebar({
         </nav>
 
         {/* Bottom spacing */}
-        <div className="h-2 flex-shrink-0">
+        <div className="h-2 shrink-0">
           <button className="hidden" aria-hidden="true" />
         </div>
       </aside>

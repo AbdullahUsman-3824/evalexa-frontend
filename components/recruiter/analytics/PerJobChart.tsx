@@ -55,7 +55,7 @@ export default function PerJobChart() {
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h3 className="font-syne text-xl font-semibold text-midnight">Per Job Performance</h3>
-        <div className="mt-5 h-[280px]">
+        <div className="mt-5 h-70">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={jobs}>
               <XAxis dataKey="name" tick={{ fill: "#6B7A99", fontSize: 12 }} />
@@ -78,7 +78,7 @@ export default function PerJobChart() {
         <h3 className="font-syne text-xl font-semibold text-midnight">
           Where Candidates Come From
         </h3>
-        <div className="mt-3 h-[220px]">
+        <div className="mt-3 h-55">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

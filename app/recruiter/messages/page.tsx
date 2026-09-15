@@ -83,12 +83,11 @@ export default function MessagesPage() {
 
   return (
     <div className="min-h-screen bg-surface p-4 md:p-6">
-      <div className="mx-auto h-[calc(100vh-7rem)] max-w-[1600px] overflow-hidden rounded-2xl border border-slate/15 bg-white shadow-sm shadow-midnight/5">
+      <div className="mx-auto h-[calc(100vh-7rem)] max-w-400 overflow-hidden rounded-2xl border border-slate/15 bg-white shadow-sm shadow-midnight/5">
         <div className="flex h-full">
           <div
-            className={`h-full w-full md:w-[320px] md:min-w-[320px] md:max-w-[320px] ${
-              mobileConversationOpen ? "hidden md:block" : "block"
-            }`}
+            className={`h-full w-full md:w-[320px] md:min-w-[320px] md:max-w-[320px] ${mobileConversationOpen ? "hidden md:block" : "block"
+              }`}
           >
             <ConversationList
               conversations={filteredConversations}
@@ -107,9 +106,8 @@ export default function MessagesPage() {
           </div>
 
           <div
-            className={`h-full flex-1 ${
-              mobileConversationOpen ? "block" : "hidden md:block"
-            }`}
+            className={`h-full flex-1 ${mobileConversationOpen ? "block" : "hidden md:block"
+              }`}
           >
             {activeConversation ? (
               <ConversationView

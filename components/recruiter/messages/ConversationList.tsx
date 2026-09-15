@@ -65,15 +65,14 @@ export default function ConversationList({
               key={conversation.id}
               type="button"
               onClick={() => onSelectConversation(conversation.id)}
-              className={`relative w-full border-b border-slate/10 px-4 py-3 text-left transition hover:bg-surface ${
-                isActive ? "bg-[#EEF4FF]" : ""
-              }`}
+              className={`relative w-full border-b border-slate/10 px-4 py-3 text-left transition hover:bg-surface ${isActive ? "bg-[#EEF4FF]" : ""
+                }`}
             >
               {isActive && <span className="absolute left-0 top-0 h-full w-1 bg-primary" />}
 
               <div className="flex items-start gap-3">
                 <div className="relative">
-                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-primary to-cyan" />
+                  <div className="h-11 w-11 rounded-full bg-linear-to-br from-primary to-cyan" />
                   {isUnread && (
                     <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-primary" />
                   )}
@@ -82,9 +81,8 @@ export default function ConversationList({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p
-                      className={`truncate text-sm ${
-                        isUnread ? "font-bold text-midnight" : "font-semibold text-midnight"
-                      }`}
+                      className={`truncate text-sm ${isUnread ? "font-bold text-midnight" : "font-semibold text-midnight"
+                        }`}
                     >
                       {conversation.candidateName}
                     </p>

@@ -203,7 +203,7 @@ export default function PublicCompaniesSection() {
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={index}
-                className="h-[200px] animate-pulse rounded-xl border border-slate-200 bg-white p-4"
+                className="h-50 animate-pulse rounded-xl border border-slate-200 bg-white p-4"
               />
             ))}
           </div>
@@ -226,7 +226,7 @@ export default function PublicCompaniesSection() {
                   className="group flex h-full flex-col rounded-2xl border border-slate/20 bg-white p-5 shadow-sm transition hover:shadow-md"
                 >
                   <div className="mb-3 flex items-center gap-3">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
                       {getCompanyInitials(company)}
                     </div>
                     <div className="min-w-0 flex-1">

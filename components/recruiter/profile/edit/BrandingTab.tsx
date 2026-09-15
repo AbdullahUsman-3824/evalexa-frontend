@@ -118,7 +118,7 @@ export default function BrandingTab({
                 className="w-28 h-28 rounded-full object-cover shadow-md border-4 border-white"
               />
             ) : (
-              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary to-cyan flex items-center justify-center shadow-md border-4 border-white">
+              <div className="w-28 h-28 rounded-full bg-linear-to-br from-primary to-cyan flex items-center justify-center shadow-md border-4 border-white">
                 <span className="text-white font-syne font-bold text-3xl">
                   CO
                 </span>
@@ -183,7 +183,7 @@ export default function BrandingTab({
             onChange={handleBannerChange}
           />
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-primary/5 transition-colors">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shrink-0 group-hover:bg-primary/5 transition-colors">
               <Upload className="w-5 h-5 text-slate group-hover:text-primary transition-colors" />
             </div>
             <div>

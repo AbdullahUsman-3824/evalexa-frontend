@@ -134,7 +134,7 @@ export default function SocialLinksTab() {
             className="flex items-center gap-4"
           >
             {/* Platform Icon */}
-            <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-surface flex items-center justify-center text-primary">
+            <div className="shrink-0 w-12 h-12 rounded-lg bg-surface flex items-center justify-center text-primary">
               {link.icon}
             </div>
 
@@ -159,7 +159,7 @@ export default function SocialLinksTab() {
             </div>
 
             {/* Verify Button & Status */}
-            <div className="flex-shrink-0 w-32">
+            <div className="shrink-0 w-32">
               {link.url ? (
                 link.verified ? (
                   <div className="flex items-center gap-2 text-success text-sm font-medium">
@@ -216,7 +216,7 @@ export default function SocialLinksTab() {
                 </div>
                 <button
                   onClick={() => handleDeleteCustomLink(link.id)}
-                  className="flex-shrink-0 p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors"
+                  className="shrink-0 p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -287,7 +287,7 @@ export default function SocialLinksTab() {
       {/* Info Box */}
       <div className="p-4 bg-cyan/5 border border-cyan/20 rounded-lg">
         <div className="flex gap-3">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <div className="w-8 h-8 rounded-full bg-cyan/20 flex items-center justify-center">
               <svg
                 className="w-4 h-4 text-cyan"

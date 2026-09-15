@@ -96,7 +96,7 @@ export default function RankedCandidateRow({
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.05fr_1.45fr_1.1fr]">
           <div className="flex items-center gap-3">
             <p className={`min-w-11 font-syne font-bold leading-none ${rankTone(rank)}`}>#{rank}</p>
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan font-semibold text-white">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-linear-to-br from-primary to-cyan font-semibold text-white">
               {candidate.name
                 .split(" ")
                 .map((part) => part[0])
@@ -112,8 +112,8 @@ export default function RankedCandidateRow({
 
           <div className="grid gap-3 sm:grid-cols-[82px_1fr]">
             <div className="flex justify-center sm:justify-start">
-              <div className="relative h-[60px] w-[60px]">
-                <svg className="h-[60px] w-[60px] -rotate-90">
+              <div className="relative h-15 w-15">
+                <svg className="h-15 w-15 -rotate-90">
                   <circle cx="30" cy="30" r="25" stroke="rgba(30,111,255,0.16)" strokeWidth="6" fill="none" />
                   <motion.circle
                     cx="30"
@@ -200,11 +200,10 @@ export default function RankedCandidateRow({
                   event.stopPropagation();
                   onToggleShortlist();
                 }}
-                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold ${
-                  shortlisted
+                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold ${shortlisted
                     ? "border-warning/35 bg-warning/12 text-warning"
                     : "border-slate/20 text-midnight hover:bg-surface"
-                }`}
+                  }`}
               >
                 <Star className={`h-3.5 w-3.5 ${shortlisted ? "fill-warning" : ""}`} />
                 Shortlist
