@@ -1,369 +1,261 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { CalendarPlus, LayoutGrid, Table2 } from "lucide-react";
-import BulkActions from "@/components/recruiter/shortlisted/BulkActions";
-import ShortlistedCard, {
-  type ShortlistedCandidate,
-} from "@/components/recruiter/shortlisted/ShortlistedCard";
-
-type SortOption = "Match Score" | "Shortlisted Date" | "Name";
-
-const candidatesSeed: ShortlistedCandidate[] = [
-  {
-    id: "sl-1",
-    name: "Ayesha Khan",
-    role: "Senior Frontend Engineer",
-    job: "Frontend Developer",
-    shortlistedDate: "Shortlisted March 18",
-    matchScore: 91,
-    skillsMatched: ["React", "TypeScript", "Next.js"],
-    status: "Awaiting Interview",
-  },
-  {
-    id: "sl-2",
-    name: "Bilal Ahmed",
-    role: "React Engineer",
-    job: "Frontend Developer",
-    shortlistedDate: "Shortlisted March 15",
-    matchScore: 88,
-    skillsMatched: ["React", "Tailwind", "REST APIs"],
-    status: "Interview Scheduled",
-  },
-  {
-    id: "sl-3",
-    name: "Mariam Yousuf",
-    role: "UI Engineer",
-    job: "Product Designer",
-    shortlistedDate: "Shortlisted March 12",
-    matchScore: 86,
-    skillsMatched: ["Design Systems", "Figma", "Prototyping"],
-    status: "Awaiting Interview",
-  },
-  {
-    id: "sl-4",
-    name: "Usman Tariq",
-    role: "Frontend Developer",
-    job: "Frontend Developer",
-    shortlistedDate: "Shortlisted March 10",
-    matchScore: 84,
-    skillsMatched: ["JavaScript", "Next.js", "Testing"],
-    status: "Offer Extended",
-  },
-  {
-    id: "sl-5",
-    name: "Hira Iqbal",
-    role: "Software Engineer",
-    job: "Data Engineer",
-    shortlistedDate: "Shortlisted March 08",
-    matchScore: 82,
-    skillsMatched: ["SQL", "Python", "Data Modeling"],
-    status: "Interview Scheduled",
-  },
-];
-
-const allJobs = [
-  "All Jobs",
-  "Frontend Developer",
-  "Product Designer",
-  "Data Engineer",
-];
-
-function sortCandidates(
-  candidates: ShortlistedCandidate[],
-  sortBy: SortOption,
-) {
-  return [...candidates].sort((a, b) => {
-    if (sortBy === "Match Score") return b.matchScore - a.matchScore;
-    if (sortBy === "Name") return a.name.localeCompare(b.name);
-    return b.shortlistedDate.localeCompare(a.shortlistedDate);
-  });
-}
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, Star, CheckCircle, ChevronDown } from "lucide-react";
+import { useShortlist } from "@/hooks/useShortlist";
+import { SORT_OPTIONS } from "@/lib/constants/shortlist.constants";
+import ShortlistedCard from "@/components/recruiter/shortlisted/ShortlistedCard";
+import RejectedPanel from "@/components/recruiter/shortlisted/RejectedPanel";
+import FinalizeBar from "@/components/recruiter/shortlisted/FinalizeBar";
+import FinalizeModal from "@/components/recruiter/shortlisted/FinalizeModal";
+import RemoveConfirmModal from "@/components/recruiter/shortlisted/RemoveConfirmModal";
+import SummaryBanner from "@/components/recruiter/shortlisted/SummaryBanner";
+import JobContextBar from "@/components/recruiter/shortlisted/JobContextBar";
 
 export default function ShortlistedPage() {
-  const [candidates, setCandidates] =
-    useState<ShortlistedCandidate[]>(candidatesSeed);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [search, setSearch] = useState("");
-  const [jobFilter, setJobFilter] = useState("All Jobs");
-  const [sortBy, setSortBy] = useState<SortOption>("Match Score");
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
-  const [removeTarget, setRemoveTarget] = useState<ShortlistedCandidate | null>(
-    null,
-  );
+  const {
+    job,
+    jobs,
+    selectedJobId,
+    setSelectedJobId,
+    isJobsLoading,
+    jobsError,
+    shortlisted,
+    rejected,
+    stats,
+    showRejectedPanel,
+    setShowRejectedPanel,
+    selectedRejected,
+    toggleSelectRejected,
+    clearSelectedRejected,
+    topNValue,
+    setTopNValue,
+    showFinalizeModal,
+    setShowFinalizeModal,
+    removeConfirmId,
+    setRemoveConfirmId,
+    removeConfirmName,
+    sortBy,
+    setSortBy,
+    isFinalized,
+    toast,
+    handleRemoveFromShortlist,
+    handleManualShortlist,
+    handleTopNShortlist,
+    handleBulkShortlist,
+    handleFinalize,
+    handleSaveDraft,
+  } = useShortlist();
 
-  const filtered = useMemo(() => {
-    const normalized = search.trim().toLowerCase();
-    const searched = candidates.filter((candidate) => {
-      const haystack =
-        `${candidate.name} ${candidate.role} ${candidate.job}`.toLowerCase();
-      return haystack.includes(normalized);
-    });
-    const byJob =
-      jobFilter === "All Jobs"
-        ? searched
-        : searched.filter((candidate) => candidate.job === jobFilter);
-    return sortCandidates(byJob, sortBy);
-  }, [candidates, jobFilter, search, sortBy]);
-
-  const allSelected =
-    filtered.length > 0 &&
-    filtered.every((candidate) => selectedIds.includes(candidate.id));
-
-  const activeJobs = useMemo(
-    () => Array.from(new Set(candidates.map((candidate) => candidate.job))),
-    [candidates],
-  );
-
-  const subtitle = `${Math.max(candidates.length, 38)} candidates across ${Math.max(
-    activeJobs.length,
-    5,
-  )} active jobs`;
-
-  const handleSelect = (id: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected
-        ? Array.from(new Set([...prev, id]))
-        : prev.filter((item) => item !== id),
-    );
-  };
-
-  const handleToggleAll = (checked: boolean) => {
-    const visibleIds = filtered.map((candidate) => candidate.id);
-    setSelectedIds((prev) =>
-      checked
-        ? Array.from(new Set([...prev, ...visibleIds]))
-        : prev.filter((id) => !visibleIds.includes(id)),
-    );
-  };
-
-  const openRemoveModal = (candidate: ShortlistedCandidate) => {
-    setRemoveTarget(candidate);
-  };
-
-  const confirmRemove = () => {
-    if (!removeTarget) return;
-    setCandidates((prev) =>
-      prev.filter((candidate) => candidate.id !== removeTarget.id),
-    );
-    setSelectedIds((prev) => prev.filter((id) => id !== removeTarget.id));
-    setRemoveTarget(null);
-  };
+  const activeJobLabel =
+    jobs.find((candidateJob) => candidateJob.id === selectedJobId)?.title ??
+    job.title;
 
   return (
-    <div className="min-h-screen bg-surface p-6">
-      <div className="mx-auto max-w-7xl space-y-5">
-        <header className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="font-syne text-2xl font-bold text-midnight">
-              Shortlisted Candidates
-            </h1>
-            <p className="mt-1 text-slate">{subtitle}</p>
-          </div>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white hover:bg-success/90"
+    <div className="min-h-screen bg-[#F4F7FF] pb-28">
+      {/* ── Toast ──────────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key="toast"
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 100, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className={`fixed top-5 right-5 z-60 flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-white text-[13px] font-medium max-w-xs ${
+              toast.type === "error"
+                ? "bg-[#E63946]"
+                : toast.type === "info"
+                  ? "bg-[#1E6FFF]"
+                  : "bg-[#00B37E]"
+            }`}
           >
-            <CalendarPlus className="h-4 w-4" />
-            Schedule Bulk Interviews
-          </button>
-        </header>
+            <CheckCircle size={15} className="shrink-0" />
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <section className="rounded-xl border border-slate/20 bg-white p-4">
-          <div className="grid gap-3 lg:grid-cols-4">
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by name or job..."
-              className="h-10 rounded-lg border border-slate/25 px-3 text-sm text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 lg:col-span-2"
-            />
-            <select
-              value={jobFilter}
-              onChange={(event) => setJobFilter(event.target.value)}
-              className="h-10 rounded-lg border border-slate/25 px-3 text-sm text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            >
-              {[
-                ...allJobs,
-                ...activeJobs.filter((job) => !allJobs.includes(job)),
-              ].map((job) => (
-                <option key={job}>{job}</option>
-              ))}
-            </select>
-            <div className="flex gap-2">
+      {/* ── Page header ────────────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-[#E2E8F0] px-6 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <button className="flex items-center gap-1 text-[#6B7A99] text-[12px] hover:text-[#0D1B2A] mb-2 transition-colors w-fit">
+              <ChevronLeft size={14} />
+              Back to {activeJobLabel}
+            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="font-syne text-[20px] font-bold text-[#0D1B2A]">
+                Shortlisted Candidates
+              </h1>
+              {jobsError && (
+                <span className="rounded-full bg-[#FFF3E0] px-3 py-1 text-[11px] font-medium text-[#854F0B]">
+                  {jobsError}
+                </span>
+              )}
+            </div>
+            <span className="text-[#6B7A99] text-[13px]">
+              {job.company} · {job.department}
+            </span>
+          </div>
+
+          <label className="flex min-w-65 flex-col gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-[#6B7A99]">
+              Select job
+            </span>
+            <div className="relative">
               <select
-                value={sortBy}
-                onChange={(event) =>
-                  setSortBy(event.target.value as SortOption)
+                value={
+                  jobs.some((candidateJob) => candidateJob.id === selectedJobId)
+                    ? selectedJobId
+                    : ""
                 }
-                className="h-10 w-full rounded-lg border border-slate/25 px-3 text-sm text-midnight outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(event) => setSelectedJobId(event.target.value)}
+                className="h-11 w-full appearance-none rounded-xl border border-[#E2E8F0] bg-white px-4 pr-10 text-sm font-medium text-[#0D1B2A] outline-none transition-colors hover:border-[#1E6FFF] focus:border-[#1E6FFF]"
+                disabled={isJobsLoading && jobs.length === 0}
               >
-                <option>Match Score</option>
-                <option>Shortlisted Date</option>
-                <option>Name</option>
-              </select>
-              <div className="flex items-center gap-1 rounded-lg border border-slate/25 p-1">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("cards")}
-                  className={`rounded p-1.5 ${viewMode === "cards" ? "bg-primary text-white" : "text-slate"}`}
-                  aria-label="Cards view"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("table")}
-                  className={`rounded p-1.5 ${viewMode === "table" ? "bg-primary text-white" : "text-slate"}`}
-                  aria-label="Table view"
-                >
-                  <Table2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {selectedIds.length > 0 && (
-          <BulkActions
-            selectedCount={selectedIds.length}
-            allSelected={allSelected}
-            onToggleAll={handleToggleAll}
-            onScheduleInterviews={() => undefined}
-            onSendBulkMessage={() => undefined}
-            onExportList={() => undefined}
-          />
-        )}
-
-        {filtered.length === 0 ? (
-          <section className="rounded-xl border border-slate/15 bg-white p-12 text-center">
-            <div className="mx-auto mb-4 h-16 w-16">
-              <div className="relative h-full w-full">
-                <div className="absolute inset-0 rounded-full bg-warning/15" />
-                <div className="absolute left-2 top-2 h-10 w-10 rounded-full border-2 border-warning/50" />
-                <div className="absolute right-1 top-1 h-2 w-2 rounded-full bg-warning" />
-              </div>
-            </div>
-            <h3 className="font-syne text-lg font-semibold text-midnight">
-              No shortlisted candidates yet
-            </h3>
-            <Link
-              href="/recruiter/applicants"
-              className="mt-2 inline-block text-sm font-medium text-primary"
-            >
-              Go to Applicants →
-            </Link>
-          </section>
-        ) : viewMode === "cards" ? (
-          <section className="grid gap-4 md:grid-cols-2">
-            {filtered.map((candidate) => (
-              <ShortlistedCard
-                key={candidate.id}
-                candidate={candidate}
-                selected={selectedIds.includes(candidate.id)}
-                onSelect={handleSelect}
-                onSchedule={() => undefined}
-                onMessage={() => undefined}
-                onViewProfile={() => undefined}
-                onRemove={openRemoveModal}
-              />
-            ))}
-          </section>
-        ) : (
-          <section className="overflow-hidden rounded-xl border border-slate/20 bg-white">
-            <table className="min-w-full text-sm">
-              <thead className="bg-surface text-left text-slate">
-                <tr>
-                  <th className="px-3 py-3">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={(event) =>
-                        handleToggleAll(event.target.checked)
-                      }
-                      aria-label="Select all shortlisted"
-                    />
-                  </th>
-                  <th className="px-3 py-3 font-medium">Candidate</th>
-                  <th className="px-3 py-3 font-medium">Job</th>
-                  <th className="px-3 py-3 font-medium">Shortlisted</th>
-                  <th className="px-3 py-3 font-medium">AI Match</th>
-                  <th className="px-3 py-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((candidate, idx) => (
-                  <tr
-                    key={candidate.id}
-                    className={`${idx % 2 === 0 ? "bg-white" : "bg-surface/50"} border-t border-slate/10`}
-                  >
-                    <td className="px-3 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(candidate.id)}
-                        onChange={(event) =>
-                          handleSelect(candidate.id, event.target.checked)
-                        }
-                        aria-label={`Select ${candidate.name}`}
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <p className="font-medium text-midnight">
-                        {candidate.name}
-                      </p>
-                      <p className="text-xs text-slate">{candidate.role}</p>
-                    </td>
-                    <td className="px-3 py-3 text-midnight">{candidate.job}</td>
-                    <td className="px-3 py-3 text-slate">
-                      {candidate.shortlistedDate}
-                    </td>
-                    <td className="px-3 py-3">
-                      <span className="rounded-full bg-success px-2.5 py-1 text-xs font-semibold text-white">
-                        {candidate.matchScore}%
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 text-slate">{candidate.status}</td>
-                  </tr>
+                {jobs.length === 0 && (
+                  <option value="" disabled>
+                    Loading jobs...
+                  </option>
+                )}
+                {jobs.map((candidateJob) => (
+                  <option key={candidateJob.id} value={candidateJob.id}>
+                    {candidateJob.title} · {candidateJob.applications}{" "}
+                    applicants
+                  </option>
                 ))}
-              </tbody>
-            </table>
-          </section>
+              </select>
+              <ChevronDown
+                size={15}
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7A99]"
+              />
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {/* ── Content ────────────────────────────────────────────────────────── */}
+      <div className="px-6 pt-4 pb-2 space-y-3">
+        {/* Job context + finalize status */}
+        <JobContextBar
+          job={job}
+          stats={stats}
+          rejectedCount={rejected.length}
+          showRejectedPanel={showRejectedPanel}
+          onViewRejected={() => setShowRejectedPanel(!showRejectedPanel)}
+        />
+
+        {/* Status banner — only shows when finalized */}
+        {isFinalized && (
+          <SummaryBanner stats={stats} isFinalized={isFinalized} />
         )}
 
-        {removeTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-midnight/50 p-4">
-            <div className="w-full max-w-md rounded-xl bg-white p-5">
-              <h3 className="font-syne text-lg font-semibold text-midnight">
-                Remove from shortlist?
-              </h3>
-              <p className="mt-2 text-sm text-slate">
-                This will move{" "}
-                <span className="font-semibold text-midnight">
-                  {removeTarget.name}
-                </span>{" "}
-                to rejected.
-              </p>
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRemoveTarget(null)}
-                  className="rounded-lg border border-slate/25 px-3 py-2 text-sm font-medium text-midnight"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmRemove}
-                  className="rounded-lg bg-danger px-3 py-2 text-sm font-semibold text-white"
-                >
-                  Confirm
-                </button>
+        {/* Main columns */}
+        <div className="flex gap-4 items-start">
+          {/* ── Candidate list ──────────────────────────────────────────────── */}
+          <div className="flex-1 min-w-0">
+            {/* Sort + count row */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[#0D1B2A] text-[13px] font-medium">
+                {shortlisted.length} candidate
+                {shortlisted.length !== 1 ? "s" : ""}
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[#6B7A99] text-[12px]">Sort:</span>
+                {SORT_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSortBy(opt.value)}
+                    className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150 ${
+                      sortBy === opt.value
+                        ? "bg-[#1E6FFF] text-white"
+                        : "bg-white border border-[#E2E8F0] text-[#6B7A99] hover:border-[#1E6FFF] hover:text-[#1E6FFF]"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             </div>
+
+            {/* Cards */}
+            {shortlisted.length === 0 ? (
+              <div className="bg-white rounded-xl border border-[#E2E8F0] py-16 text-center">
+                <div className="w-12 h-12 bg-[#F4F7FF] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Star size={22} className="text-[#CBD5E1]" />
+                </div>
+                <p className="font-syne text-[15px] font-semibold text-[#0D1B2A]">
+                  No candidates shortlisted yet
+                </p>
+                <p className="text-[#6B7A99] text-[13px] mt-1.5 max-w-xs mx-auto">
+                  Open the rejected panel to manually add candidates the AI
+                  missed
+                </p>
+                <button
+                  onClick={() => setShowRejectedPanel(true)}
+                  className="mt-5 inline-flex items-center gap-1.5 bg-[#1E6FFF] text-white text-[13px] font-medium px-5 py-2.5 rounded-xl hover:bg-[#1660E0] transition-colors"
+                >
+                  View Rejected Candidates
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {shortlisted.map((candidate, i) => (
+                  <ShortlistedCard
+                    key={candidate.id}
+                    candidate={candidate}
+                    onRemove={setRemoveConfirmId}
+                    isFinalized={isFinalized}
+                    index={i}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* ── Rejected panel ──────────────────────────────────────────────── */}
+          <AnimatePresence>
+            {showRejectedPanel && (
+              <RejectedPanel
+                rejected={rejected}
+                selectedIds={selectedRejected}
+                topNValue={topNValue}
+                onClose={() => setShowRejectedPanel(false)}
+                onTopNChange={setTopNValue}
+                onApplyTopN={handleTopNShortlist}
+                onToggleSelect={toggleSelectRejected}
+                onBulkShortlist={handleBulkShortlist}
+                onClearSelection={clearSelectedRejected}
+                onManualShortlist={handleManualShortlist}
+              />
+            )}
+          </AnimatePresence>
+        </div>
       </div>
+
+      {/* ── Modals ─────────────────────────────────────────────────────────── */}
+      <RemoveConfirmModal
+        candidateId={removeConfirmId}
+        candidateName={removeConfirmName}
+        onConfirm={handleRemoveFromShortlist}
+        onCancel={() => setRemoveConfirmId(null)}
+      />
+
+      <FinalizeModal
+        isOpen={showFinalizeModal}
+        stats={stats}
+        onConfirm={handleFinalize}
+        onCancel={() => setShowFinalizeModal(false)}
+      />
+
+      {/* ── Finalize bar ───────────────────────────────────────────────────── */}
+      <FinalizeBar
+        stats={stats}
+        isFinalized={isFinalized}
+        onSaveDraft={handleSaveDraft}
+        onFinalize={() => setShowFinalizeModal(true)}
+      />
     </div>
   );
 }

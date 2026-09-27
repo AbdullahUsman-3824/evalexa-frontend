@@ -8,9 +8,7 @@ import {
   PlusCircle,
   Briefcase,
   Users,
-  Sparkles,
   Star,
-  XCircle,
   CalendarCheck,
   MessageSquare,
   PieChart,
@@ -59,14 +57,7 @@ const navSections: NavSection[] = [
   {
     label: "CANDIDATES",
     items: [
-      {
-        label: "AI Ranking",
-        href: "/recruiter/ranking",
-        icon: Sparkles,
-        badge: "AI",
-      },
       { label: "Shortlisted", href: "/recruiter/shortlisted", icon: Star },
-      { label: "Rejected", href: "/recruiter/rejected", icon: XCircle },
     ],
   },
   {
@@ -178,9 +169,10 @@ export default function RecruiterSidebar({
                       className={`
                         group relative flex items-center gap-3 px-3 py-2.5 rounded-r-lg
                         transition-all duration-200
-                        ${active
-                          ? "bg-[#1E6FFF]/15 text-white font-medium"
-                          : "text-[#B0B8C8] hover:bg-white/5 hover:text-white"
+                        ${
+                          active
+                            ? "bg-[#1E6FFF]/15 text-white font-medium"
+                            : "text-[#B0B8C8] hover:bg-white/5 hover:text-white"
                         }
                         ${item.special && !active ? "text-[#4A9EFF]" : ""}
                       `}
@@ -199,8 +191,9 @@ export default function RecruiterSidebar({
                       )}
 
                       <Icon
-                        className={`shrink-0 w-5 h-5 ${isCyanItem && !active ? "text-[#00C2D1]" : ""
-                          }`}
+                        className={`shrink-0 w-5 h-5 ${
+                          isCyanItem && !active ? "text-[#00C2D1]" : ""
+                        }`}
                       />
                       <span className="text-[14px]">{item.label}</span>
 
@@ -209,9 +202,10 @@ export default function RecruiterSidebar({
                         <span
                           className={`
                             ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded
-                            ${item.badge === "AI"
-                              ? "bg-[#00C2D1] text-[#0D1B2A]"
-                              : "bg-[#E63946] text-white"
+                            ${
+                              item.badge === "AI"
+                                ? "bg-[#00C2D1] text-[#0D1B2A]"
+                                : "bg-[#E63946] text-white"
                             }
                           `}
                         >
