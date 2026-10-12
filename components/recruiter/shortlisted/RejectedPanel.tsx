@@ -1,9 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { X, Search, CheckCircle } from 'lucide-react'
+import { X, Search, CheckCircle, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { filterRejected } from '@/lib/helpers/shortlist.helpers'
 import type { RejectedPanelProps } from '@/lib/types/shortlist.types'
 import RejectedCandidateRow from './RejectedCandidateRow'
 import BulkSelector from './BulkSelector'
@@ -12,6 +10,8 @@ export default function RejectedPanel({
   rejected,
   selectedIds,
   topNValue,
+  search,
+  isLoading,
   onClose,
   onTopNChange,
   onApplyTopN,
@@ -19,10 +19,8 @@ export default function RejectedPanel({
   onBulkShortlist,
   onClearSelection,
   onManualShortlist,
+  onSearchChange,
 }: RejectedPanelProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const filtered = filterRejected(rejected, searchQuery)
-
   return (
     <motion.div
       initial={{ x: 380, opacity: 0 }}
@@ -36,9 +34,9 @@ export default function RejectedPanel({
         <div>
           <div className="flex items-center gap-2">
             <span className="font-syne text-[14px] font-semibold text-[#0D1B2A]">
-              Rejected Candidates
+              Candidate Pool
             </span>
-            <span className="bg-[#FFF0F0] text-[#E63946] text-[11px] rounded-full px-2 py-0.5 font-medium">
+            <span className="bg-[#F4F7FF] text-[#6B7A99] text-[11px] rounded-full px-2 py-0.5 font-medium">
               {rejected.length}
             </span>
           </div>
@@ -61,9 +59,9 @@ export default function RejectedPanel({
           <Search size={14} className="text-[#6B7A99] shrink-0" />
           <input
             type="text"
-            placeholder="Search by name, role or skill..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={e => onSearchChange(e.target.value)}
             className="text-[13px] bg-transparent outline-none w-full text-[#0D1B2A] placeholder:text-[#9AA5B8]"
           />
         </div>
@@ -83,16 +81,23 @@ export default function RejectedPanel({
 
       {/* Candidate rows */}
       <div className="flex-1 overflow-y-auto px-3 py-2.5 space-y-2">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="py-10 flex flex-col items-center justify-center">
+            <Loader2 size={20} className="animate-spin text-[#1E6FFF]" />
+            <p className="text-[#6B7A99] text-[12px] mt-3">Loading pool…</p>
+          </div>
+        ) : rejected.length === 0 ? (
           <div className="py-10 text-center">
             <div className="w-10 h-10 bg-[#E1F5EE] rounded-full flex items-center justify-center mx-auto mb-3">
               <CheckCircle size={18} className="text-[#00B37E]" />
             </div>
             <p className="text-[#0D1B2A] text-[13px] font-medium">All caught up</p>
-            <p className="text-[#6B7A99] text-[12px] mt-1">No candidates match your search</p>
+            <p className="text-[#6B7A99] text-[12px] mt-1">
+              {search ? 'No candidates match your search' : 'No candidates in the pool'}
+            </p>
           </div>
         ) : (
-          filtered.map(candidate => (
+          rejected.map(candidate => (
             <RejectedCandidateRow
               key={candidate.id}
               candidate={candidate}

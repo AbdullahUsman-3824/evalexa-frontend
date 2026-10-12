@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Star, CheckCircle, ChevronDown } from "lucide-react";
+import { ChevronLeft, Star, CheckCircle, ChevronDown, Loader2 } from "lucide-react";
 import { useShortlist } from "@/hooks/useShortlist";
 import { SORT_OPTIONS } from "@/lib/constants/shortlist.constants";
 import ShortlistedCard from "@/components/recruiter/shortlisted/ShortlistedCard";
@@ -39,6 +39,11 @@ export default function ShortlistedPage() {
     setSortBy,
     isFinalized,
     toast,
+    isLoadingShortlisted,
+    isLoadingRejected,
+    rejectedSearch,
+    setRejectedSearch,
+    shortlistedError,
     handleRemoveFromShortlist,
     handleManualShortlist,
     handleTopNShortlist,
@@ -141,7 +146,7 @@ export default function ShortlistedPage() {
         <JobContextBar
           job={job}
           stats={stats}
-          rejectedCount={rejected.length}
+          rejectedCount={stats.totalRejected}
           showRejectedPanel={showRejectedPanel}
           onViewRejected={() => setShowRejectedPanel(!showRejectedPanel)}
         />
@@ -180,7 +185,21 @@ export default function ShortlistedPage() {
             </div>
 
             {/* Cards */}
-            {shortlisted.length === 0 ? (
+            {isLoadingShortlisted ? (
+              <div className="bg-white rounded-xl border border-[#E2E8F0] py-16 flex flex-col items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-[#1E6FFF]" />
+                <p className="text-[#6B7A99] text-[13px] mt-3">
+                  Loading shortlisted candidates…
+                </p>
+              </div>
+            ) : shortlistedError ? (
+              <div className="bg-white rounded-xl border border-[#E63946]/30 py-12 px-6 text-center">
+                <p className="font-syne text-[15px] font-semibold text-[#E63946]">
+                  Failed to load shortlisted candidates
+                </p>
+                <p className="text-[#6B7A99] text-[13px] mt-1.5">{shortlistedError}</p>
+              </div>
+            ) : shortlisted.length === 0 ? (
               <div className="bg-white rounded-xl border border-[#E2E8F0] py-16 text-center">
                 <div className="w-12 h-12 bg-[#F4F7FF] rounded-full flex items-center justify-center mx-auto mb-4">
                   <Star size={22} className="text-[#CBD5E1]" />
@@ -189,14 +208,14 @@ export default function ShortlistedPage() {
                   No candidates shortlisted yet
                 </p>
                 <p className="text-[#6B7A99] text-[13px] mt-1.5 max-w-xs mx-auto">
-                  Open the rejected panel to manually add candidates the AI
+                  Open the candidate pool to manually add candidates the AI
                   missed
                 </p>
                 <button
                   onClick={() => setShowRejectedPanel(true)}
                   className="mt-5 inline-flex items-center gap-1.5 bg-[#1E6FFF] text-white text-[13px] font-medium px-5 py-2.5 rounded-xl hover:bg-[#1660E0] transition-colors"
                 >
-                  View Rejected Candidates
+                  View Candidate Pool
                 </button>
               </div>
             ) : (
@@ -221,6 +240,8 @@ export default function ShortlistedPage() {
                 rejected={rejected}
                 selectedIds={selectedRejected}
                 topNValue={topNValue}
+                search={rejectedSearch}
+                isLoading={isLoadingRejected}
                 onClose={() => setShowRejectedPanel(false)}
                 onTopNChange={setTopNValue}
                 onApplyTopN={handleTopNShortlist}
@@ -228,6 +249,7 @@ export default function ShortlistedPage() {
                 onBulkShortlist={handleBulkShortlist}
                 onClearSelection={clearSelectedRejected}
                 onManualShortlist={handleManualShortlist}
+                onSearchChange={setRejectedSearch}
               />
             )}
           </AnimatePresence>

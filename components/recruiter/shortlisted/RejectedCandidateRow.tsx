@@ -43,13 +43,7 @@ export default function RejectedCandidateRow({
           {candidate.name}
         </p>
         <p className="text-[11px] text-[#6B7A99] truncate mt-0.5">{candidate.role}</p>
-        <span
-          className={`inline-block mt-1 px-1.5 py-px rounded text-[10px] font-medium ${
-            candidate.rejectedSource === 'ai_rejected'
-              ? 'bg-[#F4F7FF] text-[#6B7A99]'
-              : 'bg-[#FFF0F0] text-[#A32D2D]'
-          }`}
-        >
+        <span className="inline-block mt-1 px-1.5 py-px rounded text-[10px] font-medium bg-[#F4F7FF] text-[#6B7A99]">
           {REJECTED_SOURCE_LABELS[candidate.rejectedSource]}
         </span>
       </div>

@@ -59,4 +59,16 @@ export const API = {
       `/processing/jobs/${jobId}/retry-failed`,
     reprocessJob: (jobId: string) => `/processing/jobs/${jobId}/reprocess`,
   },
+  application: {
+    shortlistedForJob: (jobId: string) =>
+      `/application/jobs/${jobId}/shortlisted`,
+    rejectedForJob: (jobId: string) => `/application/jobs/${jobId}/rejected`,
+    shortlistOne: (applicationId: string) =>
+      `/application/${applicationId}/shortlist`,
+    unshortlistOne: (applicationId: string) =>
+      `/application/${applicationId}/unshortlist`,
+    shortlistTop: (jobId: string) => `/application/jobs/${jobId}/shortlist-top`,
+    bulkShortlist: (jobId: string) =>
+      `/application/jobs/${jobId}/bulk-shortlist`,
+  },
 };
