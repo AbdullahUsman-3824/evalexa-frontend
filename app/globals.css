@@ -84,6 +84,24 @@
   }
 }
 
+@keyframes interview-critical-blink {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.98);
+  }
+}
+
+.critical-timer {
+  animation-name: interview-critical-blink;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

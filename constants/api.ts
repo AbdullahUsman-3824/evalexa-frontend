@@ -40,8 +40,7 @@ export const API = {
     skillById: (id: string) => `/skills/${id}`,
     applicationsForJob: (jobId: string) => `/application/jobs/${jobId}`,
     bulkUploadApplicants: (jobId: string) => `/application/job/${jobId}/bulk`,
-    applicationById: (applicationId: string) =>
-      `/application/${applicationId}`,
+    applicationById: (applicationId: string) => `/application/${applicationId}`,
     candidateById: (candidateId: string) => `/candidate/${candidateId}`,
     publicJobs: "/public/jobs",
     publicFeaturedJobs: "/public/jobs/featured",
@@ -70,5 +69,28 @@ export const API = {
     shortlistTop: (jobId: string) => `/application/jobs/${jobId}/shortlist-top`,
     bulkShortlist: (jobId: string) =>
       `/application/jobs/${jobId}/bulk-shortlist`,
+  },
+  interviews: {
+    eligibleCandidates: "/interviews/candidates",
+    sendInvite: (applicationId: string) =>
+      `/interviews/candidates/${applicationId}/invite`,
+    reinviteRequests: "/interviews/reinvites",
+    reinviteById: (id: string) => `/interviews/reinvites/${id}`,
+    publicInvite: (token: string) => `/interviews/public/${token}`,
+    validateInvite: (token: string) => `/interviews/public/${token}/validate`,
+    sessionByToken: (token: string) => `/interviews/public/${token}/session`,
+    reinviteRequestByToken: (token: string) =>
+      `/interviews/public/${token}/reinvite-request`,
+    reinviteStatusByToken: (token: string) =>
+      `/interviews/public/${token}/reinvite-status`,
+    sessionById: (sessionId: string) => `/interviews/sessions/${sessionId}`,
+    answerQuestion: (sessionId: string, questionId: string) =>
+      `/interviews/sessions/${sessionId}/questions/${questionId}/answer`,
+    submitSession: (sessionId: string) =>
+      `/interviews/sessions/${sessionId}/submit`,
+    terminateSession: (sessionId: string) =>
+      `/interviews/sessions/${sessionId}/terminate`,
+    securityEvents: (sessionId: string) =>
+      `/interviews/sessions/${sessionId}/events`,
   },
 };

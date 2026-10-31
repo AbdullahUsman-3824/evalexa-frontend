@@ -1,10 +1,21 @@
 "use client";
 
-import { CalendarPlus, ExternalLink, MapPin, Phone, Sparkles, Video } from "lucide-react";
+import {
+  CalendarPlus,
+  ExternalLink,
+  MapPin,
+  Phone,
+  Sparkles,
+  Video,
+} from "lucide-react";
 import { type ComponentType, useEffect, useMemo, useState } from "react";
 import CandidateSelector, { CandidateOption } from "./CandidateSelector";
 
-export type InterviewType = "AI Interview" | "Video Call" | "Phone Call" | "In-Person";
+export type InterviewType =
+  | "AI Interview"
+  | "Video Call"
+  | "Phone Call"
+  | "In-Person";
 
 export interface Interviewer {
   name: string;
@@ -42,10 +53,26 @@ const interviewTypeCards: {
   icon: ComponentType<{ className?: string }>;
   tone: string;
 }[] = [
-  { label: "AI Interview", icon: Sparkles, tone: "border-[#00C2D1] bg-[#00C2D1]/10 text-[#00C2D1]" },
-  { label: "Video Call", icon: Video, tone: "border-[#1E6FFF] bg-[#1E6FFF]/10 text-[#1E6FFF]" },
-  { label: "Phone Call", icon: Phone, tone: "border-[#00B37E] bg-[#00B37E]/10 text-[#00B37E]" },
-  { label: "In-Person", icon: MapPin, tone: "border-[#FF9500] bg-[#FF9500]/10 text-[#FF9500]" },
+  {
+    label: "AI Interview",
+    icon: Sparkles,
+    tone: "border-[#00C2D1] bg-[#00C2D1]/10 text-[#00C2D1]",
+  },
+  {
+    label: "Video Call",
+    icon: Video,
+    tone: "border-[#1E6FFF] bg-[#1E6FFF]/10 text-[#1E6FFF]",
+  },
+  {
+    label: "Phone Call",
+    icon: Phone,
+    tone: "border-[#00B37E] bg-[#00B37E]/10 text-[#00B37E]",
+  },
+  {
+    label: "In-Person",
+    icon: MapPin,
+    tone: "border-[#FF9500] bg-[#FF9500]/10 text-[#FF9500]",
+  },
 ];
 
 const durationOptions = ["30 min", "45 min", "1 hour", "1.5 hours", "2 hours"];
@@ -73,13 +100,25 @@ export default function ScheduleForm({
 
   const timezoneOptions = useMemo(() => {
     const autoZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-    return [autoZone, "UTC", "Asia/Kuala_Lumpur", "Asia/Singapore", "Europe/London", "America/New_York"];
+    return [
+      autoZone,
+      "UTC",
+      "Asia/Kuala_Lumpur",
+      "Asia/Singapore",
+      "Europe/London",
+      "America/New_York",
+    ];
   }, []);
 
   useEffect(() => {
     if (!value.candidate) return;
+
     const generatedTitle = `Interview — ${value.candidate.name} — ${value.candidate.jobTitle}`;
-    if (!value.title || value.title.startsWith("Interview —")) {
+    const shouldAutoFillTitle =
+      (value.title.trim() === "" || value.title.startsWith("Interview —")) &&
+      value.title !== generatedTitle;
+
+    if (shouldAutoFillTitle) {
       onChange({ ...value, title: generatedTitle });
     }
   }, [value, onChange]);
@@ -88,7 +127,10 @@ export default function ScheduleForm({
     if (!interviewerName.trim() || !interviewerEmail.trim()) return;
     onChange({
       ...value,
-      interviewers: [...value.interviewers, { name: interviewerName.trim(), email: interviewerEmail.trim() }],
+      interviewers: [
+        ...value.interviewers,
+        { name: interviewerName.trim(), email: interviewerEmail.trim() },
+      ],
     });
     setInterviewerName("");
     setInterviewerEmail("");
@@ -96,9 +138,12 @@ export default function ScheduleForm({
 
   function isFormValid() {
     if (!value.candidate) return false;
-    if (!value.title.trim() || !value.date || !value.hour || !value.minute) return false;
-    if (value.interviewType === "Video Call" && !value.meetingLink.trim()) return false;
-    if (value.interviewType === "In-Person" && !value.location.trim()) return false;
+    if (!value.title.trim() || !value.date || !value.hour || !value.minute)
+      return false;
+    if (value.interviewType === "Video Call" && !value.meetingLink.trim())
+      return false;
+    if (value.interviewType === "In-Person" && !value.location.trim())
+      return false;
     return true;
   }
 
@@ -113,20 +158,28 @@ export default function ScheduleForm({
         />
 
         <section className="space-y-4">
-          <h2 className="font-syne text-lg font-semibold text-[#0D1B2A]">Interview Details</h2>
+          <h2 className="font-syne text-lg font-semibold text-[#0D1B2A]">
+            Interview Details
+          </h2>
 
           <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">Interview Title</label>
+            <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">
+              Interview Title
+            </label>
             <input
               type="text"
               value={value.title}
-              onChange={(event) => onChange({ ...value, title: event.target.value })}
+              onChange={(event) =>
+                onChange({ ...value, title: event.target.value })
+              }
               className="h-11 w-full rounded-lg border border-[#6B7A99]/30 px-3 text-sm text-[#0D1B2A] placeholder:text-[#6B7A99]/70 focus:border-[#1E6FFF] focus:outline-none focus:ring-2 focus:ring-[#1E6FFF]/20"
             />
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-semibold text-[#0D1B2A]">Interview Type *</p>
+            <p className="mb-2 text-sm font-semibold text-[#0D1B2A]">
+              Interview Type *
+            </p>
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               {interviewTypeCards.map((item) => {
                 const Icon = item.icon;
@@ -135,9 +188,13 @@ export default function ScheduleForm({
                   <button
                     key={item.label}
                     type="button"
-                    onClick={() => onChange({ ...value, interviewType: item.label })}
+                    onClick={() =>
+                      onChange({ ...value, interviewType: item.label })
+                    }
                     className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition ${
-                      active ? item.tone : "border-[#6B7A99]/30 text-[#6B7A99] hover:bg-[#F4F7FF]"
+                      active
+                        ? item.tone
+                        : "border-[#6B7A99]/30 text-[#6B7A99] hover:bg-[#F4F7FF]"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -150,27 +207,37 @@ export default function ScheduleForm({
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">Date *</label>
+              <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">
+                Date *
+              </label>
               <input
                 type="date"
                 min={getTomorrowISODate()}
                 value={value.date}
-                onChange={(event) => onChange({ ...value, date: event.target.value })}
+                onChange={(event) =>
+                  onChange({ ...value, date: event.target.value })
+                }
                 className="h-11 w-full rounded-lg border border-[#6B7A99]/30 px-3 text-sm text-[#0D1B2A] focus:border-[#1E6FFF] focus:outline-none focus:ring-2 focus:ring-[#1E6FFF]/20"
               />
             </div>
 
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-2">
-                <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">Time *</label>
+                <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">
+                  Time *
+                </label>
                 <div className="grid grid-cols-2 gap-2">
                   <select
                     value={value.hour}
-                    onChange={(event) => onChange({ ...value, hour: event.target.value })}
+                    onChange={(event) =>
+                      onChange({ ...value, hour: event.target.value })
+                    }
                     className="h-11 rounded-lg border border-[#6B7A99]/30 px-2 text-sm text-[#0D1B2A] focus:border-[#1E6FFF] focus:outline-none"
                   >
                     <option value="">Hour</option>
-                    {Array.from({ length: 24 }, (_, idx) => String(idx).padStart(2, "0")).map((hour) => (
+                    {Array.from({ length: 24 }, (_, idx) =>
+                      String(idx).padStart(2, "0"),
+                    ).map((hour) => (
                       <option key={hour} value={hour}>
                         {hour}
                       </option>
@@ -178,7 +245,9 @@ export default function ScheduleForm({
                   </select>
                   <select
                     value={value.minute}
-                    onChange={(event) => onChange({ ...value, minute: event.target.value })}
+                    onChange={(event) =>
+                      onChange({ ...value, minute: event.target.value })
+                    }
                     className="h-11 rounded-lg border border-[#6B7A99]/30 px-2 text-sm text-[#0D1B2A] focus:border-[#1E6FFF] focus:outline-none"
                   >
                     <option value="">Minute</option>
@@ -192,10 +261,14 @@ export default function ScheduleForm({
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">TZ</label>
+                <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">
+                  TZ
+                </label>
                 <select
                   value={value.timezone}
-                  onChange={(event) => onChange({ ...value, timezone: event.target.value })}
+                  onChange={(event) =>
+                    onChange({ ...value, timezone: event.target.value })
+                  }
                   className="h-11 w-full rounded-lg border border-[#6B7A99]/30 px-2 text-xs text-[#0D1B2A] focus:border-[#1E6FFF] focus:outline-none"
                 >
                   {timezoneOptions.map((zone) => (
@@ -209,10 +282,14 @@ export default function ScheduleForm({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">Duration</label>
+            <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">
+              Duration
+            </label>
             <select
               value={value.duration}
-              onChange={(event) => onChange({ ...value, duration: event.target.value })}
+              onChange={(event) =>
+                onChange({ ...value, duration: event.target.value })
+              }
               className="h-11 w-full rounded-lg border border-[#6B7A99]/30 px-3 text-sm text-[#0D1B2A] focus:border-[#1E6FFF] focus:outline-none"
             >
               {durationOptions.map((duration) => (
@@ -224,7 +301,9 @@ export default function ScheduleForm({
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-[#0D1B2A]">Interviewer(s)</p>
+            <p className="text-sm font-semibold text-[#0D1B2A]">
+              Interviewer(s)
+            </p>
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               <input
                 type="text"
@@ -258,7 +337,9 @@ export default function ScheduleForm({
                       onChange({
                         ...value,
                         interviewers: value.interviewers.filter(
-                          (item) => item.email !== interviewer.email || item.name !== interviewer.name,
+                          (item) =>
+                            item.email !== interviewer.email ||
+                            item.name !== interviewer.name,
                         ),
                       })
                     }
@@ -273,12 +354,16 @@ export default function ScheduleForm({
 
           {value.interviewType === "Video Call" && (
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-[#0D1B2A]">Meeting Link</label>
+              <label className="block text-sm font-semibold text-[#0D1B2A]">
+                Meeting Link
+              </label>
               <input
                 type="url"
                 placeholder="https://meet.google.com/..."
                 value={value.meetingLink}
-                onChange={(event) => onChange({ ...value, meetingLink: event.target.value })}
+                onChange={(event) =>
+                  onChange({ ...value, meetingLink: event.target.value })
+                }
                 className="h-11 w-full rounded-lg border border-[#6B7A99]/30 px-3 text-sm text-[#0D1B2A] placeholder:text-[#6B7A99]/70 focus:border-[#1E6FFF] focus:outline-none"
               />
               <button
@@ -293,34 +378,49 @@ export default function ScheduleForm({
 
           {value.interviewType === "In-Person" && (
             <div>
-              <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">Location</label>
+              <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">
+                Location
+              </label>
               <textarea
                 rows={3}
                 placeholder="Enter full office address"
                 value={value.location}
-                onChange={(event) => onChange({ ...value, location: event.target.value })}
+                onChange={(event) =>
+                  onChange({ ...value, location: event.target.value })
+                }
                 className="w-full rounded-lg border border-[#6B7A99]/30 px-3 py-2 text-sm text-[#0D1B2A] placeholder:text-[#6B7A99]/70 focus:border-[#1E6FFF] focus:outline-none"
               />
             </div>
           )}
 
           <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">Instructions for Candidate</label>
+            <label className="mb-1 block text-sm font-semibold text-[#0D1B2A]">
+              Instructions for Candidate
+            </label>
             <textarea
               rows={4}
               placeholder="Please bring your portfolio..."
               value={value.instructions}
-              onChange={(event) => onChange({ ...value, instructions: event.target.value })}
+              onChange={(event) =>
+                onChange({ ...value, instructions: event.target.value })
+              }
               className="w-full rounded-lg border border-[#6B7A99]/30 px-3 py-2 text-sm text-[#0D1B2A] placeholder:text-[#6B7A99]/70 focus:border-[#1E6FFF] focus:outline-none"
             />
           </div>
 
           <div className="rounded-lg border border-[#6B7A99]/25 bg-[#F4F7FF] p-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-[#0D1B2A]">Send email notification to candidate</p>
+              <p className="text-sm font-semibold text-[#0D1B2A]">
+                Send email notification to candidate
+              </p>
               <button
                 type="button"
-                onClick={() => onChange({ ...value, sendNotification: !value.sendNotification })}
+                onClick={() =>
+                  onChange({
+                    ...value,
+                    sendNotification: !value.sendNotification,
+                  })
+                }
                 className={`relative h-6 w-11 rounded-full transition ${
                   value.sendNotification ? "bg-[#1E6FFF]" : "bg-[#6B7A99]/40"
                 }`}
@@ -334,7 +434,8 @@ export default function ScheduleForm({
               </button>
             </div>
             <div className="mt-2 rounded-md bg-white p-2 text-xs text-[#6B7A99]">
-              Subject: Interview Invitation — {value.candidate?.jobTitle || "Selected Role"}
+              Subject: Interview Invitation —{" "}
+              {value.candidate?.jobTitle || "Selected Role"}
               <br />
               Body preview includes date, time, format, and preparation notes.
             </div>
@@ -370,4 +471,3 @@ export default function ScheduleForm({
     </div>
   );
 }
-

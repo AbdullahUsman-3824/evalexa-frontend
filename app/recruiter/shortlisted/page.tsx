@@ -1,7 +1,14 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Star, CheckCircle, ChevronDown, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  Star,
+  CheckCircle,
+  ChevronDown,
+  Loader2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useShortlist } from "@/hooks/useShortlist";
 import { SORT_OPTIONS } from "@/lib/constants/shortlist.constants";
 import ShortlistedCard from "@/components/recruiter/shortlisted/ShortlistedCard";
@@ -13,6 +20,7 @@ import SummaryBanner from "@/components/recruiter/shortlisted/SummaryBanner";
 import JobContextBar from "@/components/recruiter/shortlisted/JobContextBar";
 
 export default function ShortlistedPage() {
+  const router = useRouter();
   const {
     job,
     jobs,
@@ -197,7 +205,9 @@ export default function ShortlistedPage() {
                 <p className="font-syne text-[15px] font-semibold text-[#E63946]">
                   Failed to load shortlisted candidates
                 </p>
-                <p className="text-[#6B7A99] text-[13px] mt-1.5">{shortlistedError}</p>
+                <p className="text-[#6B7A99] text-[13px] mt-1.5">
+                  {shortlistedError}
+                </p>
               </div>
             ) : shortlisted.length === 0 ? (
               <div className="bg-white rounded-xl border border-[#E2E8F0] py-16 text-center">
@@ -277,6 +287,9 @@ export default function ShortlistedPage() {
         isFinalized={isFinalized}
         onSaveDraft={handleSaveDraft}
         onFinalize={() => setShowFinalizeModal(true)}
+        onScheduleInterviews={() =>
+          router.push("/recruiter/interviews/invites")
+        }
       />
     </div>
   );

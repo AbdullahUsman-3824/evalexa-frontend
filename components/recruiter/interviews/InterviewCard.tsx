@@ -2,10 +2,26 @@
 
 import { CheckCircle2, Clock3, ExternalLink, MoreVertical } from "lucide-react";
 import { useMemo, useState } from "react";
+import type { InviteStatus } from "@/types/interview.types";
 
-export type InterviewTab = "Upcoming" | "Today" | "Completed" | "All" | "Cancelled";
-export type InterviewType = "AI Interview" | "Video Call" | "Phone Call" | "In-Person";
-export type InterviewStatus = "upcoming" | "starting-soon" | "in-progress" | "completed" | "cancelled";
+export type InterviewTab =
+  | "Invited"
+  | "In progress"
+  | "Completed"
+  | "Terminated"
+  | "Expired"
+  | "All";
+export type InterviewType =
+  | "AI Interview"
+  | "Video Call"
+  | "Phone Call"
+  | "In-Person";
+export type InterviewStatus =
+  | "invited"
+  | "in_progress"
+  | "completed"
+  | "terminated"
+  | "expired";
 export type InterviewOutcome = "Passed" | "Failed" | "On Hold" | "Hired" | null;
 
 export interface InterviewItem {
@@ -22,6 +38,8 @@ export interface InterviewItem {
   interviewers: string[];
   rating?: number;
   outcome: InterviewOutcome;
+  score?: number | null;
+  recommendation?: string | null;
 }
 
 interface InterviewCardProps {
@@ -30,6 +48,26 @@ interface InterviewCardProps {
   onCancel: (interview: InterviewItem) => void;
   onSendReminder: (interview: InterviewItem) => void;
   onMarkCompleted: (interview: InterviewItem) => void;
+  onViewFeedback?: (interview: InterviewItem) => void;
+}
+
+export function mapInviteStatusToInterviewStatus(
+  status: InviteStatus,
+): InterviewStatus {
+  switch (status) {
+    case "SENT":
+      return "invited";
+    case "STARTED":
+      return "in_progress";
+    case "COMPLETED":
+      return "completed";
+    case "TERMINATED":
+      return "terminated";
+    case "EXPIRED":
+      return "expired";
+    default:
+      return "invited";
+  }
 }
 
 function typeTone(type: InterviewType) {
@@ -40,10 +78,10 @@ function typeTone(type: InterviewType) {
 }
 
 function statusTone(status: InterviewStatus) {
-  if (status === "starting-soon") return "bg-[#FF9500] animate-pulse";
-  if (status === "in-progress") return "bg-[#00B37E] animate-pulse";
+  if (status === "in_progress") return "bg-[#00B37E] animate-pulse";
   if (status === "completed") return "bg-[#6B7A99]";
-  if (status === "cancelled") return "bg-[#E63946]";
+  if (status === "terminated") return "bg-[#E63946]";
+  if (status === "expired") return "bg-[#FF9500]";
   return "bg-[#1E6FFF]";
 }
 
@@ -61,8 +99,10 @@ export default function InterviewCard({
   onCancel,
   onSendReminder,
   onMarkCompleted,
+  onViewFeedback,
 }: InterviewCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const isAiInterview = interview.type === "AI Interview";
 
   const stars = useMemo(() => {
     if (!interview.rating) return null;
@@ -71,12 +111,17 @@ export default function InterviewCard({
 
   return (
     <article
-      className={`rounded-xl border border-[#6B7A99]/20 bg-white p-4 shadow-sm ${interview.status === "cancelled" ? "opacity-80" : ""
-        }`}
+      className={`rounded-xl border border-[#6B7A99]/20 bg-white p-4 shadow-sm ${
+        interview.status === "terminated" || interview.status === "expired"
+          ? "opacity-80"
+          : ""
+      }`}
     >
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="lg:col-span-3">
-          <p className="font-syne text-[20px] font-semibold text-[#1E6FFF]">{interview.time}</p>
+          <p className="font-syne text-[20px] font-semibold text-[#1E6FFF]">
+            {interview.time}
+          </p>
           <p className="text-xs text-[#6B7A99]">{interview.duration}</p>
           <p className="mt-1 text-xs text-[#6B7A99]">{interview.date}</p>
         </div>
@@ -88,8 +133,12 @@ export default function InterviewCard({
             </div>
             <div>
               <p
-                className={`text-sm font-semibold text-[#0D1B2A] ${interview.status === "cancelled" ? "line-through decoration-[#E63946]" : ""
-                  }`}
+                className={`text-sm font-semibold text-[#0D1B2A] ${
+                  interview.status === "terminated" ||
+                  interview.status === "expired"
+                    ? "line-through decoration-[#E63946]"
+                    : ""
+                }`}
               >
                 {interview.candidateName}
               </p>
@@ -101,12 +150,16 @@ export default function InterviewCard({
             <span className="rounded-full bg-[#1E6FFF]/10 px-2 py-1 text-xs font-semibold text-[#1E6FFF]">
               {interview.jobTitle}
             </span>
-            <span className={`rounded-full px-2 py-1 text-xs font-semibold ${typeTone(interview.type)}`}>
+            <span
+              className={`rounded-full px-2 py-1 text-xs font-semibold ${typeTone(interview.type)}`}
+            >
               {interview.type}
             </span>
             <span className="inline-flex items-center gap-1 text-xs text-[#6B7A99]">
-              <span className={`h-2 w-2 rounded-full ${statusTone(interview.status)}`} />
-              {interview.status.replace("-", " ")}
+              <span
+                className={`h-2 w-2 rounded-full ${statusTone(interview.status)}`}
+              />
+              {interview.status.replace("_", " ")}
             </span>
           </div>
 
@@ -130,7 +183,9 @@ export default function InterviewCard({
 
           {interview.status === "completed" && (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className={`rounded-full px-2 py-1 font-semibold ${outcomeTone(interview.outcome)}`}>
+              <span
+                className={`rounded-full px-2 py-1 font-semibold ${outcomeTone(interview.outcome)}`}
+              >
                 {interview.outcome || "Outcome not set"}
               </span>
               {!interview.outcome && (
@@ -138,8 +193,12 @@ export default function InterviewCard({
                   Add Outcome
                 </button>
               )}
-              {interview.type === "AI Interview" && (
-                <button className="rounded-lg border border-[#00C2D1]/30 px-2 py-1 font-semibold text-[#00C2D1] hover:bg-[#00C2D1]/10">
+              {isAiInterview && onViewFeedback && (
+                <button
+                  type="button"
+                  onClick={() => onViewFeedback(interview)}
+                  className="rounded-lg border border-[#00C2D1]/30 px-2 py-1 font-semibold text-[#00C2D1] hover:bg-[#00C2D1]/10"
+                >
                   View Feedback
                 </button>
               )}
@@ -150,17 +209,19 @@ export default function InterviewCard({
 
         <div className="lg:col-span-3">
           <div className="flex items-center justify-end gap-2">
-            {interview.type === "Video Call" && interview.meetingLink && (
-              <a
-                href={interview.meetingLink}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg bg-[#00B37E] px-3 py-2 text-xs font-semibold text-white hover:bg-[#00B37E]/90"
-              >
-                Join
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            )}
+            {!isAiInterview &&
+              interview.type === "Video Call" &&
+              interview.meetingLink && (
+                <a
+                  href={interview.meetingLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg bg-[#00B37E] px-3 py-2 text-xs font-semibold text-white hover:bg-[#00B37E]/90"
+                >
+                  Join
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
             <button className="rounded-lg border border-[#6B7A99]/30 px-3 py-2 text-xs font-semibold text-[#6B7A99] hover:bg-[#F4F7FF]">
               View Details
             </button>
@@ -175,16 +236,18 @@ export default function InterviewCard({
               </button>
               {menuOpen && (
                 <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-[#6B7A99]/20 bg-white p-1 shadow-lg">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onReschedule(interview);
-                    }}
-                    className="block w-full rounded-md px-2 py-1.5 text-left text-xs text-[#0D1B2A] hover:bg-[#F4F7FF]"
-                  >
-                    Reschedule
-                  </button>
+                  {!isAiInterview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onReschedule(interview);
+                      }}
+                      className="block w-full rounded-md px-2 py-1.5 text-left text-xs text-[#0D1B2A] hover:bg-[#F4F7FF]"
+                    >
+                      Reschedule
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
@@ -205,22 +268,25 @@ export default function InterviewCard({
                   >
                     Send Reminder to Candidate
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onMarkCompleted(interview);
-                    }}
-                    className="inline-flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left text-xs text-[#00B37E] hover:bg-[#00B37E]/10"
-                  >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Mark as Completed
-                  </button>
+                  {!isAiInterview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onMarkCompleted(interview);
+                      }}
+                      className="inline-flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left text-xs text-[#00B37E] hover:bg-[#00B37E]/10"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Mark as Completed
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           </div>
-          {(interview.status === "upcoming" || interview.status === "starting-soon") && (
+          {(interview.status === "invited" ||
+            interview.status === "in_progress") && (
             <div className="mt-3 flex items-center justify-end gap-1 text-xs text-[#6B7A99]">
               <Clock3 className="h-3.5 w-3.5" />
               Reminder enabled
@@ -231,4 +297,3 @@ export default function InterviewCard({
     </article>
   );
 }
-
