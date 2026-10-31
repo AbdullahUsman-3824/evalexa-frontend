@@ -39,8 +39,9 @@ export const API = {
     skillCategories: "/skills/categories",
     skillById: (id: string) => `/skills/${id}`,
     applicationsForJob: (jobId: string) => `/application/jobs/${jobId}`,
-    bulkUploadApplicants: (jobId: string) => `/application/job/${jobId}/bulk`,
-    applicationById: (applicationId: string) => `/application/${applicationId}`,
+    bulkUploadApplicants: (jobId: string) => `/application/jobs/${jobId}/bulk`,
+    applicationById: (applicationId: string) =>
+      `/application/${applicationId}`,
     candidateById: (candidateId: string) => `/candidate/${candidateId}`,
     publicJobs: "/public/jobs",
     publicFeaturedJobs: "/public/jobs/featured",
