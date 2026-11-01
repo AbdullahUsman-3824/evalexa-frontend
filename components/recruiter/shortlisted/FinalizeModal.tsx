@@ -1,16 +1,21 @@
 'use client'
 
-import { CheckCircle, AlertTriangle } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { FinalizeModalProps } from '@/lib/types/shortlist.types'
 
 export default function FinalizeModal({
   isOpen,
   stats,
+  isLoading = false,
   onConfirm,
   onCancel,
 }: FinalizeModalProps) {
   if (!isOpen) return null
+
+  const handleCancel = () => {
+    if (!isLoading) onCancel()
+  }
 
   return (
     <AnimatePresence>
@@ -20,7 +25,7 @@ export default function FinalizeModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
-        onClick={onCancel}
+        onClick={handleCancel}
       >
         <motion.div
           key="finalize-card"
@@ -44,7 +49,7 @@ export default function FinalizeModal({
             This will send email notifications to all shortlisted candidates.
           </p>
 
-          {/* Stats — horizontal, compact */}
+          {/* Stats */}
           <div className="mt-5 grid grid-cols-4 gap-0 bg-[#F8FAFF] rounded-xl overflow-hidden border border-[#EEF2FF]">
             {[
               { value: stats.totalShortlisted, label: 'Total', color: 'text-[#1E6FFF]' },
@@ -73,17 +78,30 @@ export default function FinalizeModal({
           {/* Buttons */}
           <div className="mt-5 flex gap-2.5">
             <button
-              onClick={onCancel}
-              className="flex-1 h-11 bg-white border border-[#E2E8F0] text-[#6B7A99] rounded-xl text-[13px] hover:border-[#CBD5E1] hover:text-[#0D1B2A] transition-colors"
+              type="button"
+              onClick={handleCancel}
+              disabled={isLoading}
+              className="flex-1 h-11 bg-white border border-[#E2E8F0] text-[#6B7A99] rounded-xl text-[13px] hover:border-[#CBD5E1] hover:text-[#0D1B2A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Go Back
             </button>
             <button
+              type="button"
               onClick={onConfirm}
-              className="flex-1 h-11 bg-[#00B37E] text-white rounded-xl font-syne text-[14px] font-semibold flex items-center justify-center gap-2 hover:bg-[#009E6E] transition-colors"
+              disabled={isLoading}
+              className="flex-1 h-11 bg-[#00B37E] text-white rounded-xl font-syne text-[14px] font-semibold flex items-center justify-center gap-2 hover:bg-[#009E6E] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <CheckCircle size={15} />
-              Confirm
+              {isLoading ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  Finalizing...
+                </>
+              ) : (
+                <>
+                  <CheckCircle size={15} />
+                  Confirm
+                </>
+              )}
             </button>
           </div>
         </motion.div>

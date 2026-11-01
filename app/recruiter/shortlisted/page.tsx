@@ -46,6 +46,7 @@ export default function ShortlistedPage() {
     sortBy,
     setSortBy,
     isFinalized,
+    isFinalizing,
     toast,
     isLoadingShortlisted,
     isLoadingRejected,
@@ -277,6 +278,7 @@ export default function ShortlistedPage() {
       <FinalizeModal
         isOpen={showFinalizeModal}
         stats={stats}
+        isLoading={isFinalizing}
         onConfirm={handleFinalize}
         onCancel={() => setShowFinalizeModal(false)}
       />

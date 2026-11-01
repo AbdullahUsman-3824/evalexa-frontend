@@ -70,6 +70,8 @@ export const API = {
     shortlistTop: (jobId: string) => `/application/jobs/${jobId}/shortlist-top`,
     bulkShortlist: (jobId: string) =>
       `/application/jobs/${jobId}/bulk-shortlist`,
+    finalizeShortlist: (jobId: string) =>
+      `/application/jobs/${jobId}/finalize-shortlist`,
   },
   interviews: {
     eligibleCandidates: "/interviews/candidates",

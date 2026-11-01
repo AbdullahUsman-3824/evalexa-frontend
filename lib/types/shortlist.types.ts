@@ -91,6 +91,20 @@ export interface ShortlistPagination {
   totalPages: number;
 }
 
+export interface FinalizeShortlistResponse {
+  success?: boolean;
+  message?: string;
+  [key: string]: unknown;
+}
+
+export interface FinalizeModalProps {
+  isOpen: boolean;
+  stats: ShortlistStats;
+  isLoading?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
 /** Raw candidate row from GET /application/jobs/:jobId/shortlisted */
 export interface ShortlistedCandidateApi {
   applicationId: string;

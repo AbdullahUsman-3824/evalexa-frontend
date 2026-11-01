@@ -7,6 +7,7 @@ import type {
   ShortlistOneResponse,
   ShortlistTopResponse,
   BulkShortlistResponse,
+  FinalizeShortlistResponse,
   SortOrder,
   SortOption,
 } from "@/lib/types/shortlist.types";
@@ -105,6 +106,19 @@ export async function bulkShortlistCandidates(
       method: "POST",
       data: JSON.stringify({ applicationIds }),
     },
+  );
+}
+
+/**
+ * POST /application/jobs/:jobId/finalize-shortlist
+ * Finalizes the shortlist for a job (candidates get notified by the backend).
+ */
+export async function finalizeShortlist(
+  jobId: string,
+): Promise<FinalizeShortlistResponse> {
+  return apiRequest<FinalizeShortlistResponse>(
+    API.application.finalizeShortlist(jobId),
+    { method: "POST" },
   );
 }
 

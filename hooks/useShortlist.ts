@@ -5,6 +5,7 @@ import { getJobs } from "@/services/job.service";
 import {
   bulkShortlistCandidates,
   getRejectedPoolForJob,
+  finalizeShortlist,
   getShortlistedForJob,
   shortlistCandidate,
   shortlistSortParams,
@@ -64,9 +65,7 @@ export function useShortlist() {
   const [job, setJob] = useState<JobContext>(MOCK_JOB);
   const [stats, setStats] = useState<ShortlistStats>(EMPTY_STATS);
   const [isLoadingShortlisted, setIsLoadingShortlisted] = useState(false);
-  const [shortlistedError, setShortlistedError] = useState<string | null>(
-    null,
-  );
+  const [shortlistedError, setShortlistedError] = useState<string | null>(null);
 
   // ── Rejected / pool list (API) ─────────────────────────────────────
   const [rejected, setRejected] = useState<RejectedCandidate[]>([]);
@@ -85,9 +84,10 @@ export function useShortlist() {
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   /**
-   * No finalize endpoint is exposed on the controller yet, so this local
-   * flag drives the finalized UX until the backend reports `isFinalized`.
+   * Set right after a successful finalize call so the UI flips immediately.
+   * Once the refetch returns, `stats.isFinalized` from the backend takes over.
    */
   const [locallyFinalized, setLocallyFinalized] = useState(false);
 
@@ -186,33 +186,30 @@ export function useShortlist() {
   );
 
   // ── Fetch rejected / pool list ────────────────────────────────────
-  const fetchRejected = useCallback(
-    async (jobId: string, search: string) => {
-      setIsLoadingRejected(true);
-      setRejectedError(null);
-      try {
-        const res = await getRejectedPoolForJob(jobId, {
-          page: 1,
-          limit: SHORTLIST_PAGE_LIMIT,
-          sortBy: "match_score",
-          order: "desc",
-          search: search.trim() || undefined,
-        });
+  const fetchRejected = useCallback(async (jobId: string, search: string) => {
+    setIsLoadingRejected(true);
+    setRejectedError(null);
+    try {
+      const res = await getRejectedPoolForJob(jobId, {
+        page: 1,
+        limit: SHORTLIST_PAGE_LIMIT,
+        sortBy: "match_score",
+        order: "desc",
+        search: search.trim() || undefined,
+      });
 
-        const jobTitle = jobTitleRef.current || "Candidate";
-        setRejected(
-          res.data.candidates.map((c) => mapRejectedCandidate(c, jobTitle)),
-        );
-        setRejectedPagination(res.data.pagination);
-      } catch (error) {
-        setRejectedError(errMsg(error));
-        setRejected([]);
-      } finally {
-        setIsLoadingRejected(false);
-      }
-    },
-    [],
-  );
+      const jobTitle = jobTitleRef.current || "Candidate";
+      setRejected(
+        res.data.candidates.map((c) => mapRejectedCandidate(c, jobTitle)),
+      );
+      setRejectedPagination(res.data.pagination);
+    } catch (error) {
+      setRejectedError(errMsg(error));
+      setRejected([]);
+    } finally {
+      setIsLoadingRejected(false);
+    }
+  }, []);
 
   // Refetch shortlisted when the job or sort changes.
   useEffect(() => {
@@ -330,7 +327,10 @@ export function useShortlist() {
     if (selectedRejected.length === 0) return;
     setActionLoading(true);
     try {
-      const res = await bulkShortlistCandidates(selectedJobId, selectedRejected);
+      const res = await bulkShortlistCandidates(
+        selectedJobId,
+        selectedRejected,
+      );
       showToast(res.message, res.failedCount > 0 ? "info" : "success");
       setSelectedRejected([]);
       refresh();
@@ -341,14 +341,31 @@ export function useShortlist() {
     }
   }, [refresh, selectedJobId, selectedRejected, showToast]);
 
-  const handleFinalize = useCallback(() => {
-    setShowFinalizeModal(false);
-    setShowRejectedPanel(false);
-    setLocallyFinalized(true);
-    showToast(
-      `Shortlist finalized! ${shortlisted.length} candidate${shortlisted.length === 1 ? "" : "s"} notified.`,
-    );
-  }, [shortlisted.length, showToast]);
+  const handleFinalize = useCallback(async () => {
+    if (!selectedJobId || isFinalizing) return;
+
+    setIsFinalizing(true);
+    try {
+      const res = await finalizeShortlist(selectedJobId);
+
+      setShowFinalizeModal(false);
+      setShowRejectedPanel(false);
+      setLocallyFinalized(true);
+
+      const count = shortlisted.length;
+      showToast(
+        res?.message ||
+          `Shortlist finalized! ${count} candidate${count === 1 ? "" : "s"} notified.`,
+      );
+
+      refresh(); // pull isFinalized / finalizedAt from the backend
+    } catch (error) {
+      // Keep the modal open so the recruiter can retry.
+      showToast(errMsg(error) || "Failed to finalize shortlist", "error");
+    } finally {
+      setIsFinalizing(false);
+    }
+  }, [isFinalizing, refresh, selectedJobId, shortlisted.length, showToast]);
 
   const handleSaveDraft = useCallback(() => {
     showToast(`Draft saved for ${job.title || "this job"}`);
@@ -378,9 +395,11 @@ export function useShortlist() {
     setRejectedSearch,
 
     // stats + finalize
+    // stats + finalize
     stats,
     isFinalized,
     isFinalizeEnabled,
+    isFinalizing,
 
     // UI state
     showRejectedPanel,
