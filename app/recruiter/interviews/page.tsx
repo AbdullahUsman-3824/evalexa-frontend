@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, ShieldAlert } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import CancelModal from "@/components/recruiter/interviews/CancelModal";
 import ExpiredLinkRequestsPanel from "@/components/recruiter/interviews/ExpiredLinkRequestsPanel";
 import InterviewCard, {
@@ -16,6 +16,8 @@ import Toast from "@/components/ui/Toast";
 import { interviewService } from "@/services/interview.service";
 import type {
   EligibleCandidate,
+  ExtensionRequest,
+  ExtensionRequestStatus,
   InviteStatus,
   ReinviteRequest,
 } from "@/types/interview.types";
@@ -27,6 +29,13 @@ const tabs: InterviewTab[] = [
   "Terminated",
   "Expired",
   "All",
+];
+
+const requestStatusTabs: { label: string; value: ExtensionRequestStatus | "ALL" }[] = [
+  { label: "All", value: "ALL" },
+  { label: "Pending", value: "PENDING" },
+  { label: "Approved", value: "APPROVED" },
+  { label: "Rejected", value: "REJECTED" },
 ];
 
 function getInitials(name: string) {
@@ -89,6 +98,23 @@ function mapCandidatesToInterviews(
   }));
 }
 
+function mapExtensionRequestToReinviteRequest(
+  request: ExtensionRequest,
+): ReinviteRequest {
+  return {
+    id: request.id,
+    interviewId: request.interviewId,
+    candidate: request.candidateName,
+    jobApplicationId: request.interviewId,
+    jobTitle: request.jobTitle,
+    reason: request.reason,
+    requestedAt: request.requestedAt,
+    status: request.status,
+    reviewerNote: request.decisionNote,
+    token: null,
+  };
+}
+
 export default function InterviewsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<InterviewTab>("Invited");
@@ -105,6 +131,9 @@ export default function InterviewsPage() {
   const [showRequestsPanel, setShowRequestsPanel] = useState(false);
   const [expiredRequests, setExpiredRequests] = useState<ReinviteRequest[]>([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(true);
+  const [requestStatusFilter, setRequestStatusFilter] = useState<
+    ExtensionRequestStatus | "ALL"
+  >("ALL");
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error" | "info">(
@@ -117,31 +146,48 @@ export default function InterviewsPage() {
     setToastVisible(true);
   }
 
+  const loadCandidates = useCallback(async () => {
+    try {
+      const candidates = await interviewService.listEligibleCandidates();
+      setInterviews(mapCandidatesToInterviews(candidates));
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Unable to load interviews.",
+        "error",
+      );
+    }
+  }, []);
+
+  const loadRequests = useCallback(
+    async (status: ExtensionRequestStatus | "ALL") => {
+      setIsLoadingRequests(true);
+      try {
+        const result = await interviewService.listExtensionRequests(
+          status === "ALL" ? undefined : { status },
+        );
+        setExpiredRequests(
+          result.items.map(mapExtensionRequestToReinviteRequest),
+        );
+      } catch (error) {
+        showToast(
+          error instanceof Error ? error.message : "Unable to load requests.",
+          "error",
+        );
+      } finally {
+        setIsLoadingRequests(false);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     let active = true;
 
     async function loadData() {
-      try {
-        const [candidates, requests] = await Promise.all([
-          interviewService.listEligibleCandidates(),
-          interviewService.getReinviteRequests(),
-        ]);
+      await Promise.all([loadCandidates(), loadRequests("ALL")]);
 
-        if (!active) return;
-
-        setInterviews(mapCandidatesToInterviews(candidates));
-        setExpiredRequests(requests);
-      } catch (error) {
-        if (!active) return;
-        showToast(
-          error instanceof Error ? error.message : "Unable to load interviews.",
-          "error",
-        );
-      } finally {
-        if (active) {
-          setIsLoadingInterviews(false);
-          setIsLoadingRequests(false);
-        }
+      if (active) {
+        setIsLoadingInterviews(false);
       }
     }
 
@@ -150,7 +196,14 @@ export default function InterviewsPage() {
     return () => {
       active = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Reload requests when the status filter changes
+  useEffect(() => {
+    if (!showRequestsPanel) return;
+    void loadRequests(requestStatusFilter);
+  }, [requestStatusFilter, showRequestsPanel, loadRequests]);
 
   const invitedCount = interviews.filter(
     (item) => item.status === "invited",
@@ -185,7 +238,10 @@ export default function InterviewsPage() {
     }
   }, [activeTab, interviews]);
 
-  async function handleApproveRequest(request: ReinviteRequest) {
+  async function handleApproveRequest(
+    request: ReinviteRequest,
+    decisionNote?: string,
+  ) {
     const previous = expiredRequests;
     setExpiredRequests((items) =>
       items.map((item) =>
@@ -194,11 +250,17 @@ export default function InterviewsPage() {
     );
 
     try {
-      await interviewService.approveReinvite(request.id);
+      await interviewService.approveExtensionRequest(
+        request.interviewId,
+        request.id,
+        decisionNote,
+      );
       showToast(
-        "Request approved and candidate can be invited again.",
+        "Request approved and a new invitation has been sent to the candidate.",
         "success",
       );
+      // Refresh both lists so the invitation status updates
+      await Promise.all([loadCandidates(), loadRequests(requestStatusFilter)]);
     } catch (error) {
       setExpiredRequests(previous);
       showToast(
@@ -208,7 +270,10 @@ export default function InterviewsPage() {
     }
   }
 
-  async function handleRejectRequest(request: ReinviteRequest, note?: string) {
+  async function handleRejectRequest(
+    request: ReinviteRequest,
+    decisionNote?: string,
+  ) {
     const previous = expiredRequests;
     setExpiredRequests((items) =>
       items.map((item) =>
@@ -216,21 +281,25 @@ export default function InterviewsPage() {
           ? {
               ...item,
               status: "REJECTED",
-              reviewerNote: note?.trim() || null,
+              reviewerNote: decisionNote?.trim() || null,
             }
           : item,
       ),
     );
 
     try {
-      await interviewService.rejectReinvite(
+      await interviewService.rejectExtensionRequest(
+        request.interviewId,
         request.id,
-        note?.trim() || undefined,
+        decisionNote,
       );
       showToast(
-        note ? `Request rejected with note: ${note}` : "Request rejected.",
+        decisionNote
+          ? `Request rejected with note: ${decisionNote}`
+          : "Request rejected.",
         "info",
       );
+      await loadRequests(requestStatusFilter);
     } catch (error) {
       setExpiredRequests(previous);
       showToast(
@@ -256,7 +325,8 @@ export default function InterviewsPage() {
   }) {
     if (!selectedInterviewId) return;
 
-    const previous = interviews;
+    // Optimistic UI update only - no backend cancel endpoint in the
+    // interview contract. The CancelModal remains for local management.
     setInterviews((items) =>
       items.map((item) =>
         item.id === selectedInterviewId
@@ -265,25 +335,13 @@ export default function InterviewsPage() {
       ),
     );
 
-    try {
-      await interviewService.cancelInterview(
-        selectedInterviewId,
-        payload.reason,
-      );
-      showToast(
-        `Interview cancelled${payload.notifyCandidate ? " and candidate notified" : ""}`,
-        "error",
-      );
-    } catch (error) {
-      setInterviews(previous);
-      showToast(
-        error instanceof Error ? error.message : "Unable to cancel interview.",
-        "error",
-      );
-    } finally {
-      setCancelOpen(false);
-      setSelectedInterviewId(null);
-    }
+    showToast(
+      `Interview cancelled${payload.notifyCandidate ? " and candidate notified" : ""}`,
+      "error",
+    );
+
+    setCancelOpen(false);
+    setSelectedInterviewId(null);
   }
 
   return (
@@ -340,12 +398,31 @@ export default function InterviewsPage() {
         </header>
 
         {showRequestsPanel && (
-          <ExpiredLinkRequestsPanel
-            requests={expiredRequests}
-            isLoading={isLoadingRequests}
-            onApprove={handleApproveRequest}
-            onReject={handleRejectRequest}
-          />
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {requestStatusTabs.map((tab) => (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => setRequestStatusFilter(tab.value)}
+                  className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+                    requestStatusFilter === tab.value
+                      ? "bg-[#1E6FFF] text-white"
+                      : "bg-white text-[#6B7A99] hover:bg-[#EAF0FF]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <ExpiredLinkRequestsPanel
+              requests={expiredRequests}
+              isLoading={isLoadingRequests}
+              onApprove={handleApproveRequest}
+              onReject={handleRejectRequest}
+            />
+          </div>
         )}
 
         <div className="flex flex-wrap gap-2">

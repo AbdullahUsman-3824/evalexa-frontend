@@ -33,7 +33,7 @@ type RoomMode =
 type AdvanceReason = "next" | "skip" | "timeout";
 
 interface InterviewRoomProps {
-  token: string;
+  interviewId: string;
   sessionId: string;
   stream: MediaStream | null;
   candidateName?: string;

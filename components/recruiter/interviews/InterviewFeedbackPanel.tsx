@@ -110,6 +110,8 @@ export default function InterviewFeedbackPanel({
 
   useEffect(() => {
     if (!isOpen || !interviewId) {
+      // This panel intentionally resets its local demo state when closed.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFeedback(null);
       setIsAnalyzing(false);
       return;
@@ -142,27 +144,47 @@ export default function InterviewFeedbackPanel({
       ],
     };
 
-    if (record.overallScore === null) {
-      setIsAnalyzing(true);
-      const timer = window.setTimeout(() => {
-        setFeedback({
-          ...record,
-          overallScore: 91,
-          recommendation: "Strong fit",
-          questionFeedback: record.questionFeedback.map((item, index) => ({
-            ...item,
-            score: item.skipped ? null : 90 + index * 2,
-          })),
-        });
-        setIsAnalyzing(false);
-      }, 10000);
+    const applyFeedback = (
+      nextRecord: InterviewFeedbackRecord,
+      analyzing: boolean,
+    ) => {
+      setFeedback(nextRecord);
+      setIsAnalyzing(analyzing);
+    };
 
-      setFeedback({ ...record, overallScore: null, recommendation: null });
+    if (record.overallScore === null) {
+      const timer = window.setTimeout(() => {
+        applyFeedback(
+          { ...record, overallScore: null, recommendation: null },
+          true,
+        );
+
+        const analysisTimer = window.setTimeout(() => {
+          applyFeedback(
+            {
+              ...record,
+              overallScore: 91,
+              recommendation: "Strong fit",
+              questionFeedback: record.questionFeedback.map((item, index) => ({
+                ...item,
+                score: item.skipped ? null : 90 + index * 2,
+              })),
+            },
+            false,
+          );
+        }, 10000);
+
+        return () => window.clearTimeout(analysisTimer);
+      }, 0);
+
       return () => window.clearTimeout(timer);
     }
 
-    setFeedback(record);
-    setIsAnalyzing(false);
+    const timer = window.setTimeout(() => {
+      applyFeedback(record, false);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [candidateName, isOpen, interviewId, jobTitle]);
 
   if (!isOpen) return null;
@@ -184,7 +206,11 @@ export default function InterviewFeedbackPanel({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => {
+              setFeedback(null);
+              setIsAnalyzing(false);
+              onClose();
+            }}
             className="rounded-lg border border-slate/20 p-2 text-slate-600 hover:bg-slate-50"
           >
             <X className="h-4 w-4" />

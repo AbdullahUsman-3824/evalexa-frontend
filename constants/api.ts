@@ -40,8 +40,7 @@ export const API = {
     skillById: (id: string) => `/skills/${id}`,
     applicationsForJob: (jobId: string) => `/application/jobs/${jobId}`,
     bulkUploadApplicants: (jobId: string) => `/application/jobs/${jobId}/bulk`,
-    applicationById: (applicationId: string) =>
-      `/application/${applicationId}`,
+    applicationById: (applicationId: string) => `/application/${applicationId}`,
     candidateById: (candidateId: string) => `/candidate/${candidateId}`,
     publicJobs: "/public/jobs",
     publicFeaturedJobs: "/public/jobs/featured",
@@ -74,18 +73,23 @@ export const API = {
       `/application/jobs/${jobId}/finalize-shortlist`,
   },
   interviews: {
-    eligibleCandidates: "/interviews/candidates",
-    sendInvite: (applicationId: string) =>
-      `/interviews/candidates/${applicationId}/invite`,
-    reinviteRequests: "/interviews/reinvites",
-    reinviteById: (id: string) => `/interviews/reinvites/${id}`,
-    publicInvite: (token: string) => `/interviews/public/${token}`,
-    validateInvite: (token: string) => `/interviews/public/${token}/validate`,
-    sessionByToken: (token: string) => `/interviews/public/${token}/session`,
-    reinviteRequestByToken: (token: string) =>
-      `/interviews/public/${token}/reinvite-request`,
-    reinviteStatusByToken: (token: string) =>
-      `/interviews/public/${token}/reinvite-status`,
+    applications: "/interviews/applications",
+    sendInvitation: (interviewId: string) =>
+      `/interviews/${interviewId}/invitations/send`,
+    listExtensionRequests: "/interviews/invitation-extension-requests",
+    approveExtensionRequest: (interviewId: string, requestId: string) =>
+      `/interviews/${interviewId}/invitation-extension-requests/${requestId}/approve`,
+    rejectExtensionRequest: (interviewId: string, requestId: string) =>
+      `/interviews/${interviewId}/invitation-extension-requests/${requestId}/reject`,
+    publicPreview: (interviewId: string, token: string) =>
+      `/public/interviews/${interviewId}/preview?token=${encodeURIComponent(token)}`,
+    publicRequestOtp: (interviewId: string) =>
+      `/public/interviews/${interviewId}/request-otp`,
+    publicVerifyOtp: (interviewId: string) =>
+      `/public/interviews/${interviewId}/verify-otp`,
+    publicInvitationExtensionRequest: (interviewId: string) =>
+      `/public/interviews/${interviewId}/invitation-extension-requests`,
+    startInterview: (interviewId: string) => `/interviews/${interviewId}/start`,
     sessionById: (sessionId: string) => `/interviews/sessions/${sessionId}`,
     answerQuestion: (sessionId: string, questionId: string) =>
       `/interviews/sessions/${sessionId}/questions/${questionId}/answer`,

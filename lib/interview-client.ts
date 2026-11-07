@@ -1,50 +1,12 @@
 import axios, { AxiosError, AxiosHeaders, AxiosRequestConfig } from "axios";
 import { API_BASE_URL } from "@/lib/api-client";
 
-const INTERVIEW_TOKEN_STORAGE_KEY = "evalexa_interview_session_token";
-let inMemoryInterviewToken: string | null = null;
-
 type ApiErrorShape = {
   message?: string | string[];
   error?: string;
+  code?: string;
   statusCode?: number;
 };
-
-export function getInterviewSessionToken(): string | null {
-  if (typeof window !== "undefined") {
-    const sessionValue = sessionStorage.getItem(INTERVIEW_TOKEN_STORAGE_KEY);
-    if (sessionValue) {
-      inMemoryInterviewToken = sessionValue;
-      return sessionValue;
-    }
-
-    const localValue = localStorage.getItem(INTERVIEW_TOKEN_STORAGE_KEY);
-    if (localValue) {
-      inMemoryInterviewToken = localValue;
-      return localValue;
-    }
-  }
-
-  return inMemoryInterviewToken;
-}
-
-export function setInterviewSessionToken(token: string | null): void {
-  inMemoryInterviewToken = token;
-
-  if (typeof window === "undefined") return;
-
-  if (token) {
-    sessionStorage.setItem(INTERVIEW_TOKEN_STORAGE_KEY, token);
-    return;
-  }
-
-  sessionStorage.removeItem(INTERVIEW_TOKEN_STORAGE_KEY);
-  localStorage.removeItem(INTERVIEW_TOKEN_STORAGE_KEY);
-}
-
-export function clearInterviewSessionToken(): void {
-  setInterviewSessionToken(null);
-}
 
 export const interviewClient = axios.create({
   baseURL: API_BASE_URL,
@@ -61,18 +23,36 @@ interviewClient.interceptors.request.use((config) => {
     headers.delete("Content-Type");
   }
 
-  const token = getInterviewSessionToken();
-  if (token && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
   config.headers = headers;
-
   return config;
 });
 
 interviewClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const payload = response.data;
+
+    if (payload && typeof payload === "object" && "success" in payload) {
+      const envelope = payload as {
+        success: boolean;
+        data?: unknown;
+        message?: string;
+        code?: string;
+      };
+
+      if (envelope.success === false) {
+        const error = new Error(
+          envelope.message || envelope.code || "Request failed",
+        ) as Error & { code?: string; payload?: typeof envelope };
+        error.code = envelope.code;
+        error.payload = envelope;
+        throw error;
+      }
+
+      response.data = (envelope.data ?? null) as typeof response.data;
+    }
+
+    return response;
+  },
   (error: AxiosError<ApiErrorShape | string>) => {
     if (error.response) {
       const { status, data } = error.response;
@@ -85,9 +65,19 @@ interviewClient.interceptors.response.use(
         ? data.message.join(", ")
         : data?.message;
 
-      throw new Error(
-        parsedMessage || data?.error || `Request failed (${status})`,
-      );
+      const errorMessage =
+        parsedMessage ||
+        data?.error ||
+        data?.code ||
+        `Request failed (${status})`;
+
+      if (status === 429) {
+        throw new Error(
+          "Too many requests. Please wait a moment and try again.",
+        );
+      }
+
+      throw new Error(errorMessage);
     }
 
     throw new Error(error.message || "Network error");
@@ -103,5 +93,5 @@ export async function interviewRequest<T>(
     ...options,
   });
 
-  return response.data;
+  return response.data as T;
 }

@@ -230,7 +230,7 @@ export default function InterviewInvitesPage() {
     });
 
     try {
-      await interviewService.sendInvite(candidate.applicationId);
+      await interviewService.sendInvitation(candidate.interviewId);
       setCandidates((prev) =>
         prev.map((item) =>
           item.applicationId === candidate.applicationId

@@ -1,17 +1,22 @@
 import type {
-  CandidateReinviteStatus,
   EligibleCandidate,
-  InvitePublicInfo,
-  InvitePublicStatus,
-  InviteStatus,
+  ExtensionRequest,
+  ExtensionRequestStatus,
+  InterviewPreview,
+  InvitationExpiredPreview,
   MockFailureMode,
-  ReinviteRequest,
-  ReinviteStatus,
+  Pagination,
+  RequestOtpResult,
   SecurityEvent,
+  SendInvitationResult,
   SessionState,
+  StartInterviewResult,
+  VerifyOtpResult,
 } from "@/types/interview.types";
 
-const MOCK_PIN = "123456";
+const MOCK_OTP = "123456";
+
+/* ─────────────────────────  Recruiter mock data  ───────────────────────── */
 
 const mockQuestions = [
   {
@@ -59,6 +64,7 @@ const mockQuestions = [
 const eligibleCandidates: EligibleCandidate[] = [
   {
     applicationId: "app_101",
+    interviewId: "int_101",
     name: "Aisha Rahman",
     email: "aisha.rahman@example.com",
     jobTitle: "Frontend Engineer",
@@ -67,6 +73,7 @@ const eligibleCandidates: EligibleCandidate[] = [
   },
   {
     applicationId: "app_102",
+    interviewId: "int_102",
     name: "Daniel Brooks",
     email: "daniel.brooks@example.com",
     jobTitle: "Product Designer",
@@ -74,6 +81,7 @@ const eligibleCandidates: EligibleCandidate[] = [
   },
   {
     applicationId: "app_103",
+    interviewId: "int_103",
     name: "Priya Nair",
     email: "priya.nair@example.com",
     jobTitle: "Growth Manager",
@@ -82,6 +90,7 @@ const eligibleCandidates: EligibleCandidate[] = [
   },
   {
     applicationId: "app_104",
+    interviewId: "int_104",
     name: "Mateo Silva",
     email: "mateo.silva@example.com",
     jobTitle: "Data Analyst",
@@ -90,38 +99,28 @@ const eligibleCandidates: EligibleCandidate[] = [
   },
 ];
 
-const reinviteRequests: ReinviteRequest[] = [
+const extensionRequests: ExtensionRequest[] = [
   {
-    id: "reinvite_1",
-    candidate: "Mateo Silva",
-    jobApplicationId: "app_104",
+    id: "ext_1",
+    interviewId: "int_104",
+    candidateName: "Mateo Silva",
+    candidateEmail: "mateo.silva@example.com",
     jobTitle: "Data Analyst",
-    reason: "Candidate missed the original slot due to timezone conflict.",
-    requestedAt: "2026-10-28T08:15:00.000Z",
+    reason:
+      "Candidate missed the original slot due to timezone conflict.",
     status: "PENDING",
-    reviewerNote: null,
-    token: null,
+    requestedAt: "2026-10-28T08:15:00.000Z",
+    reviewedAt: null,
+    reviewer: null,
+    decisionNote: null,
   },
 ];
 
-const publicInviteInfos: Record<string, InvitePublicInfo> = {
-  demo_token: {
-    candidateFirstName: "Aisha",
-    jobTitle: "Frontend Engineer",
-    companyName: "Evalexa Labs",
-    expiresAt: "2099-12-31T23:59:59.000Z",
-    instructions: [
-      "Use your recruiter-provided PIN at the start of the interview.",
-      "Keep your camera and microphone enabled for the full session.",
-      "Answer each question in detail and submit once completed.",
-    ],
-    status: "VALID",
-  },
-};
+/* ─────────────────────────  Candidate mock data  ───────────────────────── */
 
 type MockSession = {
   sessionId: string;
-  token: string;
+  interviewId: string;
   status: SessionState["status"];
   currentIndex: number;
   answeredQuestionIds: string[];
@@ -132,6 +131,8 @@ type MockSession = {
 };
 
 const mockSessions = new Map<string, MockSession>();
+
+/* ─────────────────────────  Helpers  ───────────────────────── */
 
 function readFailureMode(): MockFailureMode | null {
   if (typeof window === "undefined") {
@@ -145,6 +146,19 @@ function readFailureMode(): MockFailureMode | null {
     param === "uploadfail" ||
     param === "terminate"
   ) {
+    return param;
+  }
+
+  return null;
+}
+
+function readPreviewMode(): "verified" | "resume" | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const param = new URLSearchParams(window.location.search).get("preview");
+  if (param === "verified" || param === "resume") {
     return param;
   }
 
@@ -187,333 +201,272 @@ function buildSessionState(session: MockSession): SessionState {
   };
 }
 
-export async function listEligibleCandidates(): Promise<EligibleCandidate[]> {
-  return wait(eligibleCandidates);
+/* ─────────────────────────  Recruiter service  ───────────────────────── */
+
+async function listEligibleCandidates(): Promise<EligibleCandidate[]> {
+  return wait([...eligibleCandidates]);
 }
 
-export async function getReinviteRequests(): Promise<ReinviteRequest[]> {
-  return wait(reinviteRequests);
+async function listExtensionRequests(options?: {
+  status?: ExtensionRequestStatus;
+  page?: number;
+  limit?: number;
+}): Promise<{ items: ExtensionRequest[]; pagination: Pagination }> {
+  let items = [...extensionRequests];
+
+  if (options?.status) {
+    items = items.filter((item) => item.status === options.status);
+  }
+
+  const page = options?.page ?? 1;
+  const limit = options?.limit ?? 20;
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const start = (page - 1) * limit;
+  const paged = items.slice(start, start + limit);
+
+  return wait({
+    items: paged,
+    pagination: { page, limit, total, totalPages },
+  });
 }
 
-export async function requestReinvite(
-  applicationId: string,
-  reason: string,
-): Promise<ReinviteRequest> {
-  const existingCandidate = eligibleCandidates.find(
-    (candidate) => candidate.applicationId === applicationId,
+async function sendInvitation(interviewId: string): Promise<SendInvitationResult> {
+  const candidate = eligibleCandidates.find(
+    (item) => item.interviewId === interviewId,
   );
 
-  if (!existingCandidate) {
-    throw new Error("Candidate not found.");
+  if (!candidate) {
+    throw new Error("Candidate not found for this interview.");
   }
 
-  const nextRequest: ReinviteRequest = {
-    id: `reinvite_${Date.now()}`,
-    candidate: existingCandidate.name,
-    jobApplicationId: applicationId,
-    jobTitle: existingCandidate.jobTitle,
-    reason,
-    requestedAt: new Date().toISOString(),
-    status: "PENDING",
-    reviewerNote: null,
-    token: null,
+  if (candidate.inviteStatus === "SENT") {
+    throw new Error("An invitation has already been sent and is still valid.");
+  }
+
+  const now = new Date().toISOString();
+  candidate.inviteStatus = "SENT";
+  candidate.invitedAt = now;
+
+  return wait({
+    id: `invitation_${interviewId}_${Date.now()}`,
+    deliveryStatus: "SENT",
+    expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    sentAt: now,
+  });
+}
+
+async function approveExtensionRequest(
+  interviewId: string,
+  requestId: string,
+  decisionNote?: string,
+): Promise<ExtensionRequest> {
+  const request = extensionRequests.find(
+    (item) => item.id === requestId && item.interviewId === interviewId,
+  );
+
+  if (!request) {
+    throw new Error("Extension request not found.");
+  }
+
+  if (request.status !== "PENDING") {
+    throw new Error("This request has already been reviewed.");
+  }
+
+  const candidate = eligibleCandidates.find(
+    (item) => item.interviewId === interviewId,
+  );
+
+  request.status = "APPROVED";
+  request.reviewedAt = new Date().toISOString();
+  request.reviewer = {
+    id: "recruiter_mock",
+    fullName: "Mock Recruiter",
+    email: "recruiter@evalexa.example",
+  };
+  request.decisionNote = decisionNote?.trim() || null;
+  request.invitation = {
+    id: `invitation_${interviewId}_${Date.now()}`,
+    deliveryStatus: "SENT",
+    expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    sentAt: new Date().toISOString(),
+    isResend: true,
   };
 
-  reinviteRequests.unshift(nextRequest);
-  return wait(nextRequest);
+  if (candidate) {
+    candidate.inviteStatus = "SENT";
+    candidate.invitedAt = new Date().toISOString();
+  }
+
+  return wait({ ...request });
 }
 
-export async function approveReinvite(
+async function rejectExtensionRequest(
+  interviewId: string,
   requestId: string,
-): Promise<ReinviteRequest> {
-  const request = reinviteRequests.find((item) => item.id === requestId);
+  decisionNote?: string,
+): Promise<ExtensionRequest> {
+  const request = extensionRequests.find(
+    (item) => item.id === requestId && item.interviewId === interviewId,
+  );
+
   if (!request) {
-    throw new Error("Invite request not found.");
+    throw new Error("Extension request not found.");
   }
 
-  request.status = "APPROVED" as ReinviteStatus;
-  request.reviewerNote = null;
-
-  if (request.token) {
-    const existing = tokenReinviteRequests.get(request.token);
-    if (existing) {
-      const newToken = `renewed_${Date.now()}`;
-      tokenReinviteRequests.set(request.token, {
-        ...existing,
-        status: "APPROVED",
-        resolvedAt: new Date().toISOString(),
-        newToken,
-        reviewerNote: null,
-      });
-    }
+  if (request.status !== "PENDING") {
+    throw new Error("This request has already been reviewed.");
   }
 
-  return wait(request);
+  request.status = "REJECTED";
+  request.reviewedAt = new Date().toISOString();
+  request.reviewer = {
+    id: "recruiter_mock",
+    fullName: "Mock Recruiter",
+    email: "recruiter@evalexa.example",
+  };
+  request.decisionNote = decisionNote?.trim() || null;
+
+  return wait({ ...request });
 }
 
-export async function rejectReinvite(
-  requestId: string,
-  reviewerNote?: string,
-): Promise<ReinviteRequest> {
-  const request = reinviteRequests.find((item) => item.id === requestId);
-  if (!request) {
-    throw new Error("Invite request not found.");
+/* ─────────────────────────  Candidate session service  ───────────────────────── */
+
+async function getPreview(
+  interviewId: string,
+  token: string,
+): Promise<InterviewPreview | InvitationExpiredPreview> {
+  const mode = readFailureMode();
+  const previewMode = readPreviewMode();
+
+  if (mode === "expired" || token === "expired") {
+    return wait({
+      interviewId,
+      expired: true,
+      canRequestNew: true,
+      jobTitle: "Data Analyst",
+      companyName: "Evalexa Labs",
+    });
   }
 
-  request.status = "REJECTED" as ReinviteStatus;
-  request.reviewerNote = reviewerNote ?? null;
+  const alreadyVerified = previewMode === "verified";
+  const canResume = previewMode === "resume";
 
-  if (request.token) {
-    const existing = tokenReinviteRequests.get(request.token);
-    if (existing) {
-      tokenReinviteRequests.set(request.token, {
-        ...existing,
-        status: "REJECTED",
-        resolvedAt: new Date().toISOString(),
-        newToken: null,
-        reviewerNote: reviewerNote ?? null,
-      });
-    }
-  }
-
-  return wait(request);
+  return wait({
+    interviewId,
+    invitationId: `inv_${interviewId}`,
+    jobTitle: "Frontend Engineer",
+    companyName: "Evalexa Labs",
+    language: "en",
+    status: canResume ? "IN_PROGRESS" : "PENDING",
+    expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    candidateName: "Aisha Rahman",
+    requiresOtp: !alreadyVerified,
+    alreadyVerified,
+    canResume,
+  });
 }
 
-// ── Candidate-facing (token-based) re-invite requests ────────────────────
-const tokenReinviteRequests = new Map<
-  string,
-  {
-    token: string;
-    reason: string;
-    status: ReinviteStatus;
-    requestedAt: string;
-    resolvedAt: string | null;
-    newToken: string | null;
-    reviewerNote: string | null;
+async function requestOtp(
+  interviewId: string,
+  token: string,
+): Promise<RequestOtpResult> {
+  if (token === "expired") {
+    throw new Error("This interview invite has expired.");
   }
->();
 
-export async function requestReinviteByToken(
+  const candidate = eligibleCandidates.find(
+    (item) => item.interviewId === interviewId,
+  );
+  const email = candidate?.email ?? "aisha.rahman@example.com";
+  const [localPart, domain] = email.split("@");
+  const hint = `${localPart[0]}***@${domain}`;
+
+  return wait({
+    emailHint: hint,
+    expiresInSeconds: 600,
+  });
+}
+
+async function verifyOtp(
+  interviewId: string,
+  token: string,
+  otp: string,
+): Promise<VerifyOtpResult> {
+  if (token === "expired") {
+    throw new Error("This interview invite has expired.");
+  }
+
+  if (otp !== MOCK_OTP) {
+    throw new Error("Incorrect OTP code.");
+  }
+
+  return wait({
+    expiresIn: 3600,
+    interview: {
+      id: interviewId,
+      status: "PENDING",
+      startedAt: null,
+      language: "en",
+      jobTitle: "Frontend Engineer",
+      companyName: "Evalexa Labs",
+    },
+  });
+}
+
+async function startInterview(
+  interviewId: string,
+): Promise<StartInterviewResult> {
+  return wait({
+    interview: {
+      id: interviewId,
+      status: "IN_PROGRESS",
+      startedAt: new Date().toISOString(),
+      language: "en",
+      jobTitle: "Frontend Engineer",
+      companyName: "Evalexa Labs",
+    },
+  });
+}
+
+async function requestExtension(
+  interviewId: string,
   token: string,
   reason: string,
-): Promise<CandidateReinviteStatus> {
+): Promise<{ id: string; status: string; reason: string }> {
+  if (token === "expired" || !token) {
+    throw new Error("Invalid or expired invitation token.");
+  }
+
   const trimmed = reason.trim();
   if (!trimmed) {
     throw new Error("Please provide a reason for your request.");
   }
 
-  const existing = tokenReinviteRequests.get(token);
-  // Already approved → surface the fresh link again.
-  if (existing?.status === "APPROVED") {
-    return wait({
-      status: "APPROVED",
-      reason: existing.reason,
-      requestedAt: existing.requestedAt,
-      resolvedAt: existing.resolvedAt,
-      newToken: existing.newToken,
-      reviewerNote: null,
-    });
-  }
-  // Pending → return the existing request rather than creating a duplicate.
-  if (existing?.status === "PENDING") {
-    return wait({
-      status: "PENDING",
-      reason: existing.reason,
-      requestedAt: existing.requestedAt,
-      resolvedAt: null,
-      newToken: null,
-      reviewerNote: null,
-    });
+  if (trimmed.length > 2000) {
+    throw new Error("Reason must be 2,000 characters or fewer.");
   }
 
-  const record = {
-    token,
-    reason: trimmed,
-    status: "PENDING" as ReinviteStatus,
-    requestedAt: new Date().toISOString(),
-    resolvedAt: null,
-    newToken: null,
-    reviewerNote: null,
-  };
-  tokenReinviteRequests.set(token, record);
-
-  const existingRequestIndex = reinviteRequests.findIndex(
-    (item) => item.token === token,
-  );
-  const inviteInfo = publicInviteInfos[token];
-  const normalizedRequest: ReinviteRequest = {
-    id:
-      existingRequestIndex >= 0
-        ? reinviteRequests[existingRequestIndex].id
-        : `reinvite_token_${Date.now()}`,
-    candidate: inviteInfo?.candidateFirstName ?? "Candidate",
-    jobApplicationId: token,
-    jobTitle: inviteInfo?.jobTitle ?? "Interview role",
-    reason: trimmed,
-    requestedAt: record.requestedAt,
+  return wait({
+    id: `extension_${Date.now()}`,
     status: "PENDING",
-    reviewerNote: null,
-    token,
-  };
-
-  if (existingRequestIndex >= 0) {
-    reinviteRequests[existingRequestIndex] = normalizedRequest;
-  } else {
-    reinviteRequests.unshift(normalizedRequest);
-  }
-
-  return wait({
-    status: record.status,
-    reason: record.reason,
-    requestedAt: record.requestedAt,
-    resolvedAt: null,
-    newToken: null,
-    reviewerNote: null,
+    reason: trimmed,
   });
 }
 
-export async function getReinviteStatusByToken(
-  token: string,
-): Promise<CandidateReinviteStatus | null> {
-  const existing = tokenReinviteRequests.get(token);
-  if (!existing) {
-    return wait(null);
-  }
-  return wait({
-    status: existing.status,
-    reason: existing.reason,
-    requestedAt: existing.requestedAt,
-    resolvedAt: existing.resolvedAt,
-    newToken: existing.newToken,
-    reviewerNote: existing.reviewerNote,
-  });
-}
-
-export async function sendInvite(applicationId: string): Promise<{
-  message: string;
-  applicationId: string;
-  inviteStatus: InviteStatus;
-  invitedAt: string;
-}> {
-  const candidate = eligibleCandidates.find(
-    (item) => item.applicationId === applicationId,
-  );
-
-  if (!candidate) {
-    throw new Error("Candidate not found.");
-  }
-
-  const invitedAt = new Date().toISOString();
-  candidate.inviteStatus = "SENT";
-  candidate.invitedAt = invitedAt;
-
-  return wait({
-    message: `Interview invite sent to ${candidate.name}.`,
-    applicationId,
-    inviteStatus: "SENT",
-    invitedAt,
-  });
-}
-
-export async function cancelInterview(
-  applicationId: string,
-  reason: string,
-): Promise<{ message: string; applicationId: string; reason: string }> {
-  const candidate = eligibleCandidates.find(
-    (item) => item.applicationId === applicationId,
-  );
-
-  if (!candidate) {
-    throw new Error("Candidate not found.");
-  }
-
-  candidate.inviteStatus = "TERMINATED";
-
-  return wait({
-    message: `Interview cancelled for ${candidate.name}.`,
-    applicationId,
-    reason,
-  });
-}
-
-export async function getPublicInviteInfo(
-  token: string,
-): Promise<InvitePublicInfo> {
-  const mode = readFailureMode();
-  if (mode === "expired") {
-    // Return an expired status so the candidate UI can branch to the
-    // re-invitation request screen rather than showing a generic error.
-    return wait({
-      candidateFirstName: "Alex",
-      jobTitle: "Senior Product Manager",
-      companyName: "Evalexa Labs",
-      expiresAt: new Date(Date.now() - 86_400_000).toISOString(),
-      instructions: [],
-      status: "EXPIRED" as InvitePublicStatus,
-    });
-  }
-
-  const info = publicInviteInfos[token] ?? {
-    candidateFirstName: "Alex",
-    jobTitle: "Senior Product Manager",
-    companyName: "Evalexa Labs",
-    expiresAt: "2099-12-31T23:59:59.000Z",
-    instructions: [
-      "Please review the brief before starting.",
-      "Use the designated PIN and answer thoughtfully.",
-    ],
-    status: "VALID" as InvitePublicStatus,
-  };
-
-  return wait(info);
-}
-
-export async function validateInviteToken(
-  token: string,
-  pin: string,
-): Promise<InvitePublicInfo> {
+async function startSession(interviewId: string): Promise<SessionState> {
   const mode = readFailureMode();
   if (mode === "expired") {
     throw new Error("This interview invite has expired.");
   }
 
-  if (pin !== MOCK_PIN) {
-    throw new Error("Incorrect interview PIN.");
-  }
-
-  return wait(
-    publicInviteInfos[token] ?? {
-      candidateFirstName: "Alex",
-      jobTitle: "Senior Product Manager",
-      companyName: "Evalexa Labs",
-      expiresAt: "2099-12-31T23:59:59.000Z",
-      instructions: [
-        "Review the instructions above.",
-        "Answer each prompt in full.",
-      ],
-      status: "VALID" as InvitePublicStatus,
-    },
-  );
-}
-
-export async function startSession(
-  token: string,
-  pin: string,
-): Promise<SessionState> {
-  const mode = readFailureMode();
-  if (mode === "expired") {
-    throw new Error("This interview invite has expired.");
-  }
-
-  if (mode === "badpin" || pin !== MOCK_PIN) {
-    throw new Error("Incorrect interview PIN.");
-  }
-
-  const interviewDeadline = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+  const interviewDeadline = new Date(
+    Date.now() + 45 * 60 * 1000,
+  ).toISOString();
   const sessionId = `mock_session_${Date.now()}`;
   const session: MockSession = {
     sessionId,
-    token,
+    interviewId,
     status: "IN_PROGRESS",
     currentIndex: 0,
     answeredQuestionIds: [],
@@ -524,7 +477,7 @@ export async function startSession(
       {
         type: "session_started",
         occurredAt: new Date().toISOString(),
-        meta: { token },
+        meta: { interviewId },
       },
     ],
   };
@@ -533,9 +486,7 @@ export async function startSession(
   return wait(buildSessionState(session));
 }
 
-export async function getSessionState(
-  sessionId: string,
-): Promise<SessionState> {
+async function getSessionState(sessionId: string): Promise<SessionState> {
   const session = mockSessions.get(sessionId);
   if (!session) {
     throw new Error("Interview session not found.");
@@ -544,7 +495,7 @@ export async function getSessionState(
   return wait(buildSessionState(session));
 }
 
-export async function answerQuestion(
+async function answerQuestion(
   sessionId: string,
   questionId: string,
   answer: string,
@@ -582,7 +533,7 @@ export async function answerQuestion(
   return wait(buildSessionState(session));
 }
 
-export async function submitSession(sessionId: string): Promise<SessionState> {
+async function submitSession(sessionId: string): Promise<SessionState> {
   const session = mockSessions.get(sessionId);
   if (!session) {
     throw new Error("Interview session not found.");
@@ -599,9 +550,7 @@ export async function submitSession(sessionId: string): Promise<SessionState> {
   return wait(buildSessionState(session));
 }
 
-export async function terminateSession(
-  sessionId: string,
-): Promise<SessionState> {
+async function terminateSession(sessionId: string): Promise<SessionState> {
   const mode = readFailureMode();
   if (mode === "terminate") {
     throw new Error("Interview was terminated by the system.");
@@ -622,7 +571,7 @@ export async function terminateSession(
   return wait(buildSessionState(session));
 }
 
-export async function listSecurityEvents(
+async function listSecurityEvents(
   sessionId: string,
 ): Promise<SecurityEvent[]> {
   const session = mockSessions.get(sessionId);
@@ -633,7 +582,7 @@ export async function listSecurityEvents(
   return wait(session.securityEvents);
 }
 
-export async function recordSecurityEvent(
+async function recordSecurityEvent(
   sessionId: string,
   event: {
     type: string;
@@ -660,19 +609,22 @@ export async function recordSecurityEvent(
   return wait(nextEvent);
 }
 
+/* ─────────────────────────  Service exports  ───────────────────────── */
+
 export const mockInterviewService = {
   listEligibleCandidates,
-  getReinviteRequests,
-  requestReinvite,
-  approveReinvite,
-  rejectReinvite,
-  sendInvite,
-  cancelInterview,
+  listExtensionRequests,
+  sendInvitation,
+  approveExtensionRequest,
+  rejectExtensionRequest,
 };
 
 export const mockInterviewSessionService = {
-  getPublicInviteInfo,
-  validateInviteToken,
+  getPreview,
+  requestOtp,
+  verifyOtp,
+  startInterview,
+  requestExtension,
   startSession,
   getSessionState,
   answerQuestion,
@@ -680,8 +632,6 @@ export const mockInterviewSessionService = {
   terminateSession,
   listSecurityEvents,
   recordSecurityEvent,
-  requestReinviteByToken,
-  getReinviteStatusByToken,
 };
 
 export function shouldUseMockInterviews(): boolean {
