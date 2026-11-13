@@ -9,7 +9,12 @@ export type InviteStatus =
 export type ReinviteStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type ExtensionRequestStatus = ReinviteStatus;
 export type InvitePublicStatus = "VALID" | "EXPIRED" | "USED" | "INVALID";
-export type InvitationDeliveryStatus = "SENT" | "EXPIRED" | "NOT_SENT";
+export type InvitationDeliveryStatus =
+  | "PENDING"
+  | "SENT"
+  | "EXPIRED"
+  | "FAILED"
+  | "NOT_SENT";
 
 export type InterviewSessionStatus =
   | "NOT_STARTED"
@@ -55,6 +60,7 @@ export type ApiEnvelope<T> =
 export type InterviewApplication = {
   id: string;
   interviewId: string;
+  jobId: string;
   candidateName: string;
   candidateEmail: string;
   jobTitle: string;
@@ -71,6 +77,8 @@ export type SendInvitationResult = {
 export type ExtensionRequest = {
   id: string;
   interviewId: string;
+  applicationId?: string;
+  jobId?: string;
   candidateName: string;
   candidateEmail: string;
   jobTitle: string;
@@ -142,10 +150,12 @@ export type StartInterviewResult = {
 export type EligibleCandidate = {
   applicationId: string;
   interviewId: string;
+  jobId?: string;
   name: string;
   email: string;
   jobTitle: string;
   inviteStatus: InviteStatus;
+  deliveryStatus?: InvitationDeliveryStatus | null;
   invitedAt?: string;
 };
 

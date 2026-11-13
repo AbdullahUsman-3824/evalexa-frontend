@@ -41,18 +41,40 @@ const mapApplicationToEligibleCandidate = (
 ): EligibleCandidate => ({
   applicationId: application.id,
   interviewId: application.interviewId,
+  jobId: application.jobId,
   name: application.candidateName,
   email: application.candidateEmail,
   jobTitle: application.jobTitle,
   inviteStatus: toLegacyInviteStatus(application.invitationDeliveryStatus),
+  deliveryStatus: application.invitationDeliveryStatus,
   invitedAt: undefined,
 });
 
-const readDataList = <T>(payload: ApiEnvelope<T[]>) => {
-  const items = Array.isArray(payload.data) ? payload.data : [];
+const unwrapPayload = <T>(payload: T | ApiEnvelope<T>): T => {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "success" in payload &&
+    "data" in payload &&
+    !Array.isArray(payload)
+  ) {
+    return (payload as ApiEnvelope<T>).data as T;
+  }
+
+  return payload as T;
+};
+
+const readDataList = <T>(payload: T[] | ApiEnvelope<T[]>) => {
+  const maybeEnvelope = payload as Partial<ApiEnvelope<T[]>>;
+  const items = Array.isArray(payload)
+    ? payload
+    : Array.isArray(maybeEnvelope.data)
+      ? maybeEnvelope.data
+      : [];
+
   return {
     items,
-    pagination: payload.pagination ?? {
+    pagination: maybeEnvelope.pagination ?? {
       page: 1,
       limit: items.length,
       total: items.length,
@@ -66,7 +88,7 @@ export const interviewService = useMock
   : {
       async listEligibleCandidates(): Promise<EligibleCandidate[]> {
         const payload = await interviewRequest<
-          ApiEnvelope<InterviewApplication[]>
+          InterviewApplication[] | ApiEnvelope<InterviewApplication[]>
         >(API.interviews.applications, { method: "GET" });
 
         return readDataList(payload).items.map(
@@ -85,12 +107,11 @@ export const interviewService = useMock
         if (options?.limit) params.set("limit", String(options.limit));
 
         const url = `${API.interviews.listExtensionRequests}${params.size ? `?${params.toString()}` : ""}`;
-        const payload = await interviewRequest<ApiEnvelope<ExtensionRequest[]>>(
-          url,
-          {
-            method: "GET",
-          },
-        );
+        const payload = await interviewRequest<
+          ExtensionRequest[] | ApiEnvelope<ExtensionRequest[]>
+        >(url, {
+          method: "GET",
+        });
 
         return readDataList(payload) as {
           items: ExtensionRequest[];
@@ -100,10 +121,10 @@ export const interviewService = useMock
 
       async sendInvitation(interviewId: string): Promise<SendInvitationResult> {
         const payload = await interviewRequest<
-          ApiEnvelope<SendInvitationResult>
+          SendInvitationResult | ApiEnvelope<SendInvitationResult>
         >(API.interviews.sendInvitation(interviewId), { method: "POST" });
 
-        return payload.data as SendInvitationResult;
+        return unwrapPayload(payload) as SendInvitationResult;
       },
 
       async approveExtensionRequest(
@@ -111,17 +132,16 @@ export const interviewService = useMock
         requestId: string,
         decisionNote?: string,
       ): Promise<ExtensionRequest> {
-        const payload = await interviewRequest<ApiEnvelope<ExtensionRequest>>(
-          API.interviews.approveExtensionRequest(interviewId, requestId),
-          {
-            method: "POST",
-            data: decisionNote?.trim()
-              ? { decisionNote: decisionNote.trim() }
-              : {},
-          },
-        );
+        const payload = await interviewRequest<
+          ExtensionRequest | ApiEnvelope<ExtensionRequest>
+        >(API.interviews.approveExtensionRequest(interviewId, requestId), {
+          method: "POST",
+          data: decisionNote?.trim()
+            ? { decisionNote: decisionNote.trim() }
+            : {},
+        });
 
-        return payload.data as ExtensionRequest;
+        return unwrapPayload(payload) as ExtensionRequest;
       },
 
       async rejectExtensionRequest(
@@ -129,17 +149,16 @@ export const interviewService = useMock
         requestId: string,
         decisionNote?: string,
       ): Promise<ExtensionRequest> {
-        const payload = await interviewRequest<ApiEnvelope<ExtensionRequest>>(
-          API.interviews.rejectExtensionRequest(interviewId, requestId),
-          {
-            method: "POST",
-            data: decisionNote?.trim()
-              ? { decisionNote: decisionNote.trim() }
-              : {},
-          },
-        );
+        const payload = await interviewRequest<
+          ExtensionRequest | ApiEnvelope<ExtensionRequest>
+        >(API.interviews.rejectExtensionRequest(interviewId, requestId), {
+          method: "POST",
+          data: decisionNote?.trim()
+            ? { decisionNote: decisionNote.trim() }
+            : {},
+        });
 
-        return payload.data as ExtensionRequest;
+        return unwrapPayload(payload) as ExtensionRequest;
       },
     };
 
