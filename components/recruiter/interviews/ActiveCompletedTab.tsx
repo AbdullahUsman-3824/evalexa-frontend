@@ -1,19 +1,333 @@
 "use client";
 
-import { Hourglass } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
+import { listInterviewResults } from "@/services/interview.service";
+import type { InterviewResult } from "@/types/interview.types";
+import {
+  CandidateCell,
+  JobCell,
+  StatusFilter,
+  TableEmpty,
+  TableLoading,
+  tableWrapperClass,
+  tdClass,
+  thClass,
+} from "./shared/TablePieces";
 
-export default function ActiveCompletedTab() {
-  return (
-    <div className="flex flex-col items-center rounded-2xl border border-dashed border-slate/25 bg-white py-16 text-center">
-      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100">
-        <Hourglass className="h-5 w-5 text-slate-400" />
+type Stage = "in_progress" | "processing" | "completed" | "failed";
+type StageFilter = "ALL" | Stage;
+
+const FILTER_OPTIONS: { label: string; value: StageFilter }[] = [
+  { label: "All interviews", value: "ALL" },
+  { label: "In progress", value: "in_progress" },
+  { label: "Processing", value: "processing" },
+  { label: "Completed", value: "completed" },
+  { label: "Failed", value: "failed" },
+];
+
+/** While anything is still running, re-check the list every 15 seconds. */
+const POLL_INTERVAL_MS = 15_000;
+
+function getStage(row: InterviewResult): Stage {
+  switch (row.processingStatus) {
+    case "candidate_in_progress":
+      return "in_progress";
+    case "transcribing":
+    case "evaluating":
+      return "processing";
+    case "ready":
+    case "partial":
+      return "completed";
+    case "failed":
+      return "failed";
+    default:
+      return row.status === "COMPLETED" ? "processing" : "in_progress";
+  }
+}
+
+function scoreTone(percentage: number) {
+  if (percentage >= 75) {
+    return { text: "text-[#0F6E56]", bar: "bg-[#00B37E]", soft: "bg-[#E1F5EE]" };
+  }
+  if (percentage >= 50) {
+    return { text: "text-[#854F0B]", bar: "bg-[#FF9500]", soft: "bg-[#FFF3E0]" };
+  }
+  return { text: "text-[#B42332]", bar: "bg-[#E63946]", soft: "bg-[#FDECEE]" };
+}
+
+function formatDuration(seconds: number | null): string {
+  if (seconds == null || seconds < 0) return "—";
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+  if (minutes > 0) return `${minutes} min`;
+  return `${seconds}s`;
+}
+
+function formatDate(value: string | null): string {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString(undefined, {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function humanize(value: string): string {
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+/** The most relevant timestamp for the row, with a label. */
+function getDateInfo(row: InterviewResult): { label: string; value: string | null } {
+  if (row.completedAt) return { label: "Completed", value: row.completedAt };
+  if (row.submittedAt) return { label: "Submitted", value: row.submittedAt };
+  return { label: "Started", value: row.startedAt };
+}
+
+/* ───────────── Single "Result" cell: in progress → processing → score ───────────── */
+
+function ResultCell({ row }: { row: InterviewResult }) {
+  const stage = getStage(row);
+
+  if (stage === "completed") {
+    if (!row.scores) {
+      return (
+        <span className="inline-flex items-center rounded-full bg-[#E1F5EE] px-3 py-1 text-xs font-semibold text-[#0F6E56]">
+          {row.processingLabel || "Results ready"}
+        </span>
+      );
+    }
+
+    const { overallScore, overallMaxScore, overallPercentage } = row.scores;
+    const percentage = Math.max(0, Math.min(100, Math.round(overallPercentage)));
+    const tone = scoreTone(percentage);
+
+    return (
+      <div className="w-36">
+        <div className="flex items-baseline gap-2">
+          <span className={`font-syne text-xl font-bold ${tone.text}`}>
+            {percentage}%
+          </span>
+          <span className="text-xs text-slate-500">
+            {overallScore}/{overallMaxScore}
+          </span>
+          {row.processingStatus === "partial" && (
+            <span className="rounded-full bg-[#FFF3E0] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#854F0B]">
+              Partial
+            </span>
+          )}
+        </div>
+        <div className={`mt-1.5 h-1.5 w-full overflow-hidden rounded-full ${tone.soft}`}>
+          <div
+            className={`h-full rounded-full ${tone.bar}`}
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
       </div>
-      <p className="font-syne text-base font-semibold text-[#0D1B2A]">
-        Active &amp; Completed interviews
-      </p>
-      <p className="mt-1 max-w-xs text-sm text-slate-500">
-        Interviews in progress and finished ones will show up here soon.
-      </p>
+    );
+  }
+
+  if (stage === "failed") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FDECEE] px-3 py-1 text-xs font-semibold text-[#B42332]">
+        <AlertTriangle className="h-3.5 w-3.5" />
+        {row.processingLabel || "Processing failed"}
+      </span>
+    );
+  }
+
+  if (stage === "processing") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF3E0] px-3 py-1 text-xs font-semibold text-[#854F0B]">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        {row.processingLabel || "Processing"}
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-xs font-semibold text-[#1E6FFF]">
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1E6FFF] opacity-60" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-[#1E6FFF]" />
+      </span>
+      {row.processingLabel || "In progress"}
+    </span>
+  );
+}
+
+function RecommendationCell({ value }: { value: string | null }) {
+  if (!value) return <span className="text-slate-400">—</span>;
+
+  const upper = value.toUpperCase();
+  const tone = upper.includes("NOT")
+    ? "bg-[#FDECEE] text-[#B42332]"
+    : upper.includes("RECOMMEND")
+      ? "bg-[#E1F5EE] text-[#0F6E56]"
+      : "bg-slate-100 text-slate-600";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}
+    >
+      {humanize(value)}
+    </span>
+  );
+}
+
+interface ActiveCompletedTabProps {
+  onToast: (message: string, type: "success" | "error" | "info") => void;
+}
+
+export default function ActiveCompletedTab({ onToast }: ActiveCompletedTabProps) {
+  const [rows, setRows] = useState<InterviewResult[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [filter, setFilter] = useState<StageFilter>("ALL");
+
+  const load = useCallback(
+    async (mode: "initial" | "manual" | "poll") => {
+      if (mode === "manual") setIsRefreshing(true);
+
+      try {
+        const items = await listInterviewResults();
+        setRows(items);
+      } catch (error) {
+        // Silent polling should not spam the recruiter with toasts.
+        if (mode !== "poll") {
+          onToast(
+            error instanceof Error
+              ? error.message
+              : "Unable to load interview results.",
+            "error",
+          );
+        }
+      } finally {
+        if (mode === "initial") setIsLoading(false);
+        if (mode === "manual") setIsRefreshing(false);
+      }
+    },
+    [onToast],
+  );
+
+  useEffect(() => {
+    void load("initial");
+  }, [load]);
+
+  const hasRunning = useMemo(
+    () =>
+      rows.some((row) => {
+        const stage = getStage(row);
+        return stage === "in_progress" || stage === "processing";
+      }),
+    [rows],
+  );
+
+  useEffect(() => {
+    if (!hasRunning) return;
+    const timer = window.setInterval(() => void load("poll"), POLL_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [hasRunning, load]);
+
+  const visibleRows = useMemo(
+    () =>
+      filter === "ALL" ? rows : rows.filter((row) => getStage(row) === filter),
+    [rows, filter],
+  );
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <StatusFilter
+          value={filter}
+          options={FILTER_OPTIONS}
+          onChange={setFilter}
+        />
+
+        <button
+          type="button"
+          onClick={() => void load("manual")}
+          disabled={isRefreshing || isLoading}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate/20 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+          />
+          Refresh
+        </button>
+      </div>
+
+      {isLoading ? (
+        <TableLoading label="Loading interview results…" />
+      ) : visibleRows.length === 0 ? (
+        <TableEmpty
+          label={
+            rows.length === 0
+              ? "No interviews have been started yet."
+              : "No interviews match this filter."
+          }
+        />
+      ) : (
+        <div className={tableWrapperClass}>
+          <table className="w-full min-w-[860px] text-sm">
+            <thead className="border-b border-slate/15 bg-slate-50">
+              <tr>
+                <th className={thClass}>Candidate</th>
+                <th className={thClass}>Job</th>
+                <th className={thClass}>Time taken</th>
+                <th className={thClass}>Date</th>
+                <th className={thClass}>Result</th>
+                <th className={thClass}>Recommendation</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate/10">
+              {visibleRows.map((row) => {
+                const dateInfo = getDateInfo(row);
+
+                return (
+                  <tr key={row.interviewId} className="hover:bg-slate-50/60">
+                    <td className={tdClass}>
+                      <CandidateCell
+                        name={row.candidateName}
+                        email={row.candidateEmail}
+                        applicationId={row.applicationId}
+                      />
+                    </td>
+                    <td className={tdClass}>
+                      <JobCell title={row.jobTitle} jobId={row.jobId} />
+                    </td>
+                    <td className={`${tdClass} text-slate-600`}>
+                      {formatDuration(row.timeTakenSeconds)}
+                    </td>
+                    <td className={tdClass}>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        {dateInfo.label}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        {formatDate(dateInfo.value)}
+                      </p>
+                    </td>
+                    <td className={tdClass}>
+                      <ResultCell row={row} />
+                    </td>
+                    <td className={tdClass}>
+                      <RecommendationCell value={row.recommendation} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

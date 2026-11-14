@@ -276,3 +276,39 @@ export type SubmitAnswerResult = {
   submitted: boolean;
   isCompleted: boolean;
 };
+
+/* ───────────── Recruiter: interview results (GET /interviews/results) ───────────── */
+
+export type InterviewProcessingStatus =
+  | "candidate_in_progress"
+  | "transcribing"
+  | "evaluating"
+  | "ready"
+  | "partial"
+  | "failed";
+
+export type InterviewResult = {
+  interviewId: string;
+  applicationId: string;
+  jobId: string;
+  candidateName: string;
+  candidateEmail: string;
+  jobTitle: string;
+  status: "IN_PROGRESS" | "COMPLETED";
+  startedAt: string | null;
+  submittedAt: string | null;
+  completedAt: string | null;
+  timeTakenSeconds: number | null;
+  processingStatus: InterviewProcessingStatus;
+  processingLabel: string;
+  transcriptionStatus: string | null;
+  evaluationStatus: string | null;
+  scores: {
+    overallScore: number;
+    overallMaxScore: number;
+    overallPercentage: number;
+  } | null;
+  feedback: unknown;
+  recommendation: string | null;
+  evaluatedAt: string | null;
+};

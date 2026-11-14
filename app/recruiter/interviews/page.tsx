@@ -57,7 +57,7 @@ export default function InterviewsPage() {
         {activeTab === "requests" && (
           <ExtensionRequestsTab onToast={showToast} />
         )}
-        {activeTab === "active" && <ActiveCompletedTab />}
+                {activeTab === "active" && <ActiveCompletedTab onToast={showToast} />}
       </div>
 
       <Toast

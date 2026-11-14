@@ -10,6 +10,7 @@ import type {
   ExtensionRequest,
   ExtensionRequestStatus,
   InterviewApplication,
+  InterviewResult,
   InviteStatus,
   Pagination,
   SendInvitationResult,
@@ -161,6 +162,15 @@ export const interviewService = useMock
         return unwrapPayload(payload) as ExtensionRequest;
       },
     };
+
+/** Recruiter: interviews that are in progress / completed, shaped for the results table. */
+export async function listInterviewResults(): Promise<InterviewResult[]> {
+  const payload = await interviewRequest<
+    InterviewResult[] | ApiEnvelope<InterviewResult[]>
+  >(API.interviews.results, { method: "GET" });
+
+  return readDataList(payload).items;
+}
 
 export type InterviewService = typeof interviewService;
 

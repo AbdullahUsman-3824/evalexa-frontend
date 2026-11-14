@@ -74,6 +74,7 @@ export const API = {
   },
   interviews: {
     applications: "/interviews/applications",
+    results: "/interviews/results",
     sendInvitation: (interviewId: string) =>
       `/interviews/${interviewId}/invitations/send`,
     listExtensionRequests: "/interviews/invitation-extension-requests",
