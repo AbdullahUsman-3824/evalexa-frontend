@@ -1,17 +1,24 @@
 'use client'
 
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Loader2 } from 'lucide-react'
 
 interface ReadyStepProps {
-  totalQuestions: number
+  isResume?: boolean
+  isStarting?: boolean
+  error?: string
   onStart: () => void
 }
 
-export function ReadyStep({ totalQuestions, onStart }: ReadyStepProps) {
+export function ReadyStep({
+  isResume = false,
+  isStarting = false,
+  error = '',
+  onStart,
+}: ReadyStepProps) {
   const reminders = [
     { icon: '🔒', text: 'Stay in this tab during the interview' },
     { icon: '🎤', text: 'Speak clearly and face the camera' },
-    { icon: '📝', text: `${totalQuestions} questions to answer` },
+    { icon: '📝', text: 'Answer each question, then press Next' },
   ]
 
   return (
@@ -37,12 +44,26 @@ export function ReadyStep({ totalQuestions, onStart }: ReadyStepProps) {
         ))}
       </div>
 
+      {error && (
+        <p className="text-red-400 text-sm text-center mt-4">{error}</p>
+      )}
+
       <button
         type="button"
         onClick={onStart}
-        className="mt-6 w-full h-14 rounded-xl font-display font-bold text-white text-base bg-success shadow-[0_0_20px_rgba(22,163,74,0.4)] hover:shadow-[0_0_28px_rgba(22,163,74,0.6)] transition-all"
+        disabled={isStarting}
+        className="mt-6 w-full h-14 rounded-xl font-display font-bold text-white text-base bg-success shadow-[0_0_20px_rgba(22,163,74,0.4)] hover:shadow-[0_0_28px_rgba(22,163,74,0.6)] transition-all disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
       >
-        ⚡ Start Interview
+        {isStarting ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Starting...
+          </>
+        ) : isResume ? (
+          '⚡ Resume Interview'
+        ) : (
+          '⚡ Start Interview'
+        )}
       </button>
     </div>
   )

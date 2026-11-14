@@ -1,190 +1,156 @@
 import { API } from "@/constants/api";
 import { interviewRequest } from "@/lib/interview-client";
-import {
-  mockInterviewSessionService,
-  shouldUseMockInterviews,
-} from "@/services/mock/interview.mock";
 import type {
   InterviewPreview,
   InvitationExpiredPreview,
+  NextQuestionResult,
   RequestOtpResult,
-  SecurityEvent,
-  SessionState,
-  StartInterviewResult,
+  SessionInfo,
+  StartSessionResult,
+  SubmitAnswerPayload,
+  SubmitAnswerResult,
+  UploadUrlResult,
   VerifyOtpResult,
 } from "@/types/interview.types";
 
-const useMock = shouldUseMockInterviews();
+export const interviewSessionService = {
+  /* ───────── Public (unauthenticated) ───────── */
 
-export const interviewSessionService = useMock
-  ? mockInterviewSessionService
-  : {
-      async getPreview(
-        interviewId: string,
-        token: string,
-      ): Promise<InterviewPreview | InvitationExpiredPreview> {
-        try {
-          return await interviewRequest<InterviewPreview>(
-            API.interviews.publicPreview(interviewId, token),
-            { method: "GET" },
-          );
-        } catch (error) {
-          const typedError = error as Error & {
-            code?: string;
-            payload?: { data?: unknown };
-          };
+  async getPreview(
+    interviewId: string,
+    token: string,
+  ): Promise<InterviewPreview | InvitationExpiredPreview> {
+    try {
+      return await interviewRequest<InterviewPreview>(
+        API.interviews.publicPreview(interviewId, token),
+        { method: "GET" },
+      );
+    } catch (error) {
+      const typedError = error as Error & {
+        code?: string;
+        payload?: { data?: unknown };
+      };
 
-          if (typedError.code === "INVITATION_EXPIRED" && typedError.payload?.data) {
-            return typedError.payload.data as InvitationExpiredPreview;
-          }
+      if (typedError.code === "INVITATION_EXPIRED" && typedError.payload?.data) {
+        return typedError.payload.data as InvitationExpiredPreview;
+      }
 
-          throw error;
-        }
-      },
+      throw error;
+    }
+  },
 
-      async requestOtp(
-        interviewId: string,
-        token: string,
-      ): Promise<RequestOtpResult> {
-        return await interviewRequest<RequestOtpResult>(
-          API.interviews.publicRequestOtp(interviewId),
-          {
-            method: "POST",
-            data: { token },
-          },
-        );
-      },
+  async requestOtp(
+    interviewId: string,
+    token: string,
+  ): Promise<RequestOtpResult> {
+    return await interviewRequest<RequestOtpResult>(
+      API.interviews.publicRequestOtp(interviewId),
+      { method: "POST", data: { token } },
+    );
+  },
 
-      async verifyOtp(
-        interviewId: string,
-        token: string,
-        otp: string,
-      ): Promise<VerifyOtpResult> {
-        return await interviewRequest<VerifyOtpResult>(
-          API.interviews.publicVerifyOtp(interviewId),
-          {
-            method: "POST",
-            data: { token, otp },
-          },
-        );
-      },
+  async verifyOtp(
+    interviewId: string,
+    token: string,
+    otp: string,
+  ): Promise<VerifyOtpResult> {
+    return await interviewRequest<VerifyOtpResult>(
+      API.interviews.publicVerifyOtp(interviewId),
+      { method: "POST", data: { token, otp } },
+    );
+  },
 
-      async startInterview(interviewId: string): Promise<StartInterviewResult> {
-        return await interviewRequest<StartInterviewResult>(
-          API.interviews.startInterview(interviewId),
-          { method: "POST" },
-        );
-      },
+  async requestExtension(
+    interviewId: string,
+    token: string,
+    reason: string,
+  ): Promise<{ id: string; status: string; reason: string }> {
+    return await interviewRequest<{
+      id: string;
+      status: string;
+      reason: string;
+    }>(API.interviews.publicInvitationExtensionRequest(interviewId), {
+      method: "POST",
+      data: { token, reason },
+    });
+  },
 
-      async requestExtension(
-        interviewId: string,
-        token: string,
-        reason: string,
-      ): Promise<{ id: string; status: string; reason: string }> {
-        return await interviewRequest<{
-          id: string;
-          status: string;
-          reason: string;
-        }>(API.interviews.publicInvitationExtensionRequest(interviewId), {
-          method: "POST",
-          data: { token, reason },
-        });
-      },
+  /* ───────── Session (cookie: interview_session) ───────── */
 
-      /**
-       * Calls POST /interviews/:id/start (cookie session only) and builds a
-       * SessionState from the response. The OTP must have been verified in
-       * the PIN step before calling this.
-       */
-      async startSession(interviewId: string): Promise<SessionState> {
-        const result = await this.startInterview(interviewId);
+  /** Session API 1 – start or resume. Returns the first/current question. */
+  async startInterview(interviewId: string): Promise<StartSessionResult> {
+    return await interviewRequest<StartSessionResult>(
+      API.interviews.startInterview(interviewId),
+      { method: "POST" },
+    );
+  },
 
-        return {
-          sessionId: result.interview.id,
-          status:
-            result.interview.status === "IN_PROGRESS"
-              ? "IN_PROGRESS"
-              : "NOT_STARTED",
-          currentQuestion: {
-            id: "question-1",
-            order: 1,
-            total: 1,
-            category: "General",
-            text: "Please start your interview.",
-            maxDurationSeconds: 120,
-            deadlineAt: new Date(
-              Date.now() + 120 * 1000,
-            ).toISOString(),
-          },
-          answeredQuestionIds: [],
-          serverTime: new Date().toISOString(),
-          interviewDeadlineAt: new Date(
-            Date.now() + 60 * 60 * 1000,
-          ).toISOString(),
-          startedAt: result.interview.startedAt ?? new Date().toISOString(),
-        };
-      },
+  /** Session API 1b – recovery of job title / company / candidate name. */
+  async getSessionInfo(interviewId: string): Promise<SessionInfo> {
+    return await interviewRequest<SessionInfo>(
+      API.interviews.sessionInfo(interviewId),
+      { method: "GET" },
+    );
+  },
 
-      async getSessionState(sessionId: string): Promise<SessionState> {
-        return await interviewRequest<SessionState>(
-          API.interviews.sessionById(sessionId),
-          { method: "GET" },
-        );
-      },
+  /** Session API 2 – next question (question === null when none left). */
+  async getNextQuestion(interviewId: string): Promise<NextQuestionResult> {
+    return await interviewRequest<NextQuestionResult>(
+      API.interviews.nextQuestion(interviewId),
+      { method: "GET" },
+    );
+  },
 
-      async answerQuestion(
-        sessionId: string,
-        questionId: string,
-        answer: string,
-      ): Promise<SessionState> {
-        return await interviewRequest<SessionState>(
-          API.interviews.answerQuestion(sessionId, questionId),
-          {
-            method: "POST",
-            data: { answer },
-          },
-        );
-      },
+  /** Session API 3 – signed upload URL for one answer recording. */
+  async getUploadUrl(
+    interviewId: string,
+    questionId: string,
+  ): Promise<UploadUrlResult> {
+    return await interviewRequest<UploadUrlResult>(
+      API.interviews.recordingUploadUrl(interviewId, questionId),
+      { method: "POST" },
+    );
+  },
 
-      async submitSession(sessionId: string): Promise<SessionState> {
-        return await interviewRequest<SessionState>(
-          API.interviews.submitSession(sessionId),
-          { method: "POST" },
-        );
-      },
+  /** Uploads the audio blob straight to the Supabase signed URL. */
+  async uploadRecording(
+    upload: UploadUrlResult,
+    blob: Blob,
+    mimeType: string,
+  ): Promise<void> {
+    const url = new URL(upload.uploadUrl);
+    if (!url.searchParams.get("token") && upload.token) {
+      url.searchParams.set("token", upload.token);
+    }
 
-      async terminateSession(sessionId: string): Promise<SessionState> {
-        return await interviewRequest<SessionState>(
-          API.interviews.terminateSession(sessionId),
-          { method: "POST" },
-        );
-      },
+    // Same body shape supabase-js uses for uploadToSignedUrl.
+    const form = new FormData();
+    form.append("cacheControl", "3600");
+    form.append("", new Blob([blob], { type: mimeType }));
 
-      async listSecurityEvents(sessionId: string): Promise<SecurityEvent[]> {
-        return await interviewRequest<SecurityEvent[]>(
-          API.interviews.securityEvents(sessionId),
-          { method: "GET" },
-        );
-      },
+    const response = await fetch(url.toString(), {
+      method: "PUT",
+      headers: { "x-upsert": "false" },
+      body: form,
+    });
 
-      async recordSecurityEvent(
-        sessionId: string,
-        event: {
-          type: string;
-          questionId?: string;
-          occurredAt?: string;
-          meta?: Record<string, unknown>;
-        },
-      ): Promise<SecurityEvent> {
-        return await interviewRequest<SecurityEvent>(
-          API.interviews.securityEvents(sessionId),
-          {
-            method: "POST",
-            data: event,
-          },
-        );
-      },
-    };
+    if (!response.ok) {
+      throw new Error(`Recording upload failed (${response.status}).`);
+    }
+  },
+
+  /** Session API 4 – confirm the uploaded recording and record the answer. */
+  async submitAnswer(
+    interviewId: string,
+    questionId: string,
+    payload: SubmitAnswerPayload,
+  ): Promise<SubmitAnswerResult> {
+    return await interviewRequest<SubmitAnswerResult>(
+      API.interviews.submitAnswer(interviewId, questionId),
+      { method: "POST", data: payload },
+    );
+  },
+};
 
 export type InterviewSessionService = typeof interviewSessionService;
 

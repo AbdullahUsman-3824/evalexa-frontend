@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { interviewSessionService } from "@/services/interview-session.service";
 
 export type InterviewSecurityViolationReason =
   | "tab_hidden"
@@ -11,26 +10,42 @@ export type InterviewSecurityViolationReason =
   | "shortcut_blocked";
 
 interface UseInterviewSecurityOptions {
-  sessionId: string | null;
-  questionId?: string | null;
+  interviewId: string | null;
   enabled?: boolean;
   onWarning?: (reason: string, violationCount: number) => void;
   onTerminate?: (reason: string) => void;
 }
 
-const STORAGE_KEY = "evalexa_interview_security_queue";
+/** First violation = warning, second violation = terminate (client side). */
+const MAX_VIOLATIONS = 2;
+
+const countKey = (interviewId: string) =>
+  `evalexa:interview-violations:${interviewId}`;
+
+function readCount(interviewId: string): number {
+  try {
+    return Number(window.sessionStorage.getItem(countKey(interviewId)) ?? 0) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeCount(interviewId: string, value: number): void {
+  try {
+    window.sessionStorage.setItem(countKey(interviewId), String(value));
+  } catch {
+    // ignore
+  }
+}
 
 export function useInterviewSecurity({
-  sessionId,
-  questionId,
+  interviewId,
   enabled = true,
   onWarning,
   onTerminate,
 }: UseInterviewSecurityOptions) {
   const [warningOpen, setWarningOpen] = useState(false);
-  const [terminationReason, setTerminationReason] = useState<string | null>(
-    null,
-  );
+  const [terminationReason, setTerminationReason] = useState<string | null>(null);
   const [isHidden, setIsHidden] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [securityViolationCount, setSecurityViolationCount] = useState(0);
@@ -38,106 +53,39 @@ export function useInterviewSecurity({
   const ignoreBlurUntilRef = useRef(0);
   const lastViolationAtRef = useRef(0);
   const lastFullscreenChangeRef = useRef(0);
-  const requestFullscreenRef = useRef(false);
+  const countRef = useRef(0);
+  const terminatedRef = useRef(false);
 
-  const queueOfflineEvent = useCallback((event: Record<string, unknown>) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    const queue = raw ? (JSON.parse(raw) as Record<string, unknown>[]) : [];
-    queue.push(event);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
-  }, []);
-
-  const syncEventCount = useCallback(async () => {
-    if (!sessionId) {
-      return 0;
-    }
-
-    try {
-      const events =
-        await interviewSessionService.listSecurityEvents(sessionId);
-      const count = events.filter((event) =>
-        event.type.startsWith("security_"),
-      ).length;
-      setSecurityViolationCount(count);
-      return count;
-    } catch {
-      return 0;
-    }
-  }, [sessionId]);
+  useEffect(() => {
+    if (!interviewId) return;
+    countRef.current = readCount(interviewId);
+    setSecurityViolationCount(countRef.current);
+  }, [interviewId]);
 
   const recordViolation = useCallback(
-    async (reason: string, eventType: string) => {
-      if (!sessionId) {
-        return;
-      }
+    (reason: string) => {
+      if (!interviewId || terminatedRef.current) return;
 
-      const payload = {
-        type: eventType,
-        questionId: questionId ?? undefined,
-        occurredAt: new Date().toISOString(),
-        meta: { reason },
-      };
+      countRef.current += 1;
+      writeCount(interviewId, countRef.current);
+      setSecurityViolationCount(countRef.current);
 
-      const sendBeacon = () => {
-        if (
-          typeof navigator !== "undefined" &&
-          typeof navigator.sendBeacon === "function"
-        ) {
-          const blob = new Blob([JSON.stringify(payload)], {
-            type: "application/json",
-          });
-          return navigator.sendBeacon(
-            `/interviews/sessions/${sessionId}/events`,
-            blob,
-          );
-        }
-
-        return false;
-      };
-
-      try {
-        const beaconSent = sendBeacon();
-        if (!beaconSent) {
-          await interviewSessionService.recordSecurityEvent(sessionId, payload);
-        }
-      } catch {
-        queueOfflineEvent(payload);
-      }
-
-      const syncedCount = await syncEventCount();
-      const nextCount =
-        syncedCount > 0 ? syncedCount : Math.max(1, securityViolationCount + 1);
-      setSecurityViolationCount(nextCount);
-
-      if (nextCount >= 2) {
+      if (countRef.current >= MAX_VIOLATIONS) {
+        terminatedRef.current = true;
         setWarningOpen(false);
-        setTerminationReason(
-          `This interview was terminated because the security policy detected ${reason}.`,
-        );
+        setTerminationReason(reason);
         onTerminate?.(reason);
         return;
       }
 
       setWarningOpen(true);
-      onWarning?.(reason, nextCount);
+      onWarning?.(reason, countRef.current);
     },
-    [
-      onTerminate,
-      onWarning,
-      queueOfflineEvent,
-      questionId,
-      securityViolationCount,
-      sessionId,
-      syncEventCount,
-    ],
+    [interviewId, onTerminate, onWarning],
   );
 
   const handleViolation = useCallback(
-    async (reason: InterviewSecurityViolationReason) => {
+    (reason: InterviewSecurityViolationReason) => {
       const now = Date.now();
 
       if (reason === "window_blur" && now - ignoreBlurUntilRef.current < 1000) {
@@ -156,40 +104,26 @@ export function useInterviewSecurity({
       }
 
       lastViolationAtRef.current = now;
-      await recordViolation(reason, "security_violation");
+      recordViolation(reason);
     },
     [recordViolation],
   );
 
   useEffect(() => {
-    if (!enabled || !sessionId) {
+    if (!enabled || !interviewId) {
       return;
     }
-
-    const refreshCount = async () => {
-      await syncEventCount();
-    };
-
-    void refreshCount();
 
     const handleVisibility = () => {
       const hidden = document.visibilityState === "hidden";
       setIsHidden(hidden);
-      if (hidden) {
-        void handleViolation("tab_hidden");
-      }
+      if (hidden) handleViolation("tab_hidden");
     };
 
     const handleBlur = () => {
-      if (document.visibilityState === "hidden") {
-        return;
-      }
-
-      if (Date.now() - (ignoreBlurUntilRef.current || 0) < 1000) {
-        return;
-      }
-
-      void handleViolation("window_blur");
+      if (document.visibilityState === "hidden") return;
+      if (Date.now() - (ignoreBlurUntilRef.current || 0) < 1000) return;
+      handleViolation("window_blur");
     };
 
     const handleFullscreen = () => {
@@ -198,18 +132,18 @@ export function useInterviewSecurity({
 
       if (!enteredFullscreen) {
         lastFullscreenChangeRef.current = Date.now();
-        void handleViolation("fullscreen_exit");
+        handleViolation("fullscreen_exit");
       }
     };
 
     const handleContextMenu = (event: MouseEvent) => {
       event.preventDefault();
-      void handleViolation("selection_blocked");
+      handleViolation("selection_blocked");
     };
 
     const handlePreventable = (event: Event) => {
       event.preventDefault();
-      void handleViolation("selection_blocked");
+      handleViolation("selection_blocked");
     };
 
     const handleKeyboard = (event: KeyboardEvent) => {
@@ -223,7 +157,7 @@ export function useInterviewSecurity({
 
       if (blockedCombos) {
         event.preventDefault();
-        void handleViolation("shortcut_blocked");
+        handleViolation("shortcut_blocked");
       }
     };
 
@@ -238,7 +172,6 @@ export function useInterviewSecurity({
     document.addEventListener("keydown", handleKeyboard);
 
     if (document.fullscreenEnabled && !document.fullscreenElement) {
-      requestFullscreenRef.current = true;
       void document.documentElement.requestFullscreen().catch(() => undefined);
     }
 
@@ -253,31 +186,21 @@ export function useInterviewSecurity({
       document.removeEventListener("selectstart", handlePreventable);
       document.removeEventListener("keydown", handleKeyboard);
     };
-  }, [enabled, handleViolation, sessionId, syncEventCount]);
-
-  const dismissWarning = useCallback(() => {
-    setWarningOpen(false);
-    if (document.fullscreenElement) {
-      return;
-    }
-
-    if (document.fullscreenEnabled) {
-      ignoreBlurUntilRef.current = Date.now();
-      void document.documentElement.requestFullscreen().catch(() => undefined);
-    }
-  }, []);
+  }, [enabled, handleViolation, interviewId]);
 
   const requestReturnToFullscreen = useCallback(async () => {
     if (!document.fullscreenEnabled) {
+      setWarningOpen(false);
       return;
     }
 
     try {
+      ignoreBlurUntilRef.current = Date.now();
       await document.documentElement.requestFullscreen();
       setWarningOpen(false);
       setIsFullscreen(true);
     } catch {
-      // Ignore if the browser blocks the request; the warning remains visible.
+      // Browser blocked the request; the warning stays visible.
     }
   }, []);
 
@@ -288,8 +211,6 @@ export function useInterviewSecurity({
     isFullscreen,
     securityViolationCount,
     requestReturnToFullscreen,
-    dismissWarning,
-    syncEventCount,
   };
 }
 

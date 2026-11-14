@@ -90,14 +90,12 @@ export const API = {
     publicInvitationExtensionRequest: (interviewId: string) =>
       `/public/interviews/${interviewId}/invitation-extension-requests`,
     startInterview: (interviewId: string) => `/interviews/${interviewId}/start`,
-    sessionById: (sessionId: string) => `/interviews/sessions/${sessionId}`,
-    answerQuestion: (sessionId: string, questionId: string) =>
-      `/interviews/sessions/${sessionId}/questions/${questionId}/answer`,
-    submitSession: (sessionId: string) =>
-      `/interviews/sessions/${sessionId}/submit`,
-    terminateSession: (sessionId: string) =>
-      `/interviews/sessions/${sessionId}/terminate`,
-    securityEvents: (sessionId: string) =>
-      `/interviews/sessions/${sessionId}/events`,
+    sessionInfo: (interviewId: string) => `/interviews/${interviewId}/session`,
+    nextQuestion: (interviewId: string) =>
+      `/interviews/${interviewId}/questions/next`,
+    recordingUploadUrl: (interviewId: string, questionId: string) =>
+      `/interviews/${interviewId}/questions/${questionId}/recording/upload-url`,
+    submitAnswer: (interviewId: string, questionId: string) =>
+      `/interviews/${interviewId}/questions/${questionId}/answer`,
   },
 };

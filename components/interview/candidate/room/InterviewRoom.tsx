@@ -12,305 +12,283 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import SessionStatePanel from "@/components/interview/candidate/session/SessionStatePanel";
-import { clearStoredInterviewSession } from "@/hooks/useInterviewSession";
+import CompletionHoldingScreen from "@/components/interview/candidate/take/CompletionHoldingScreen";
 import { useInterviewSecurity } from "@/hooks/useInterviewSecurity";
-import { InterviewRecorder } from "@/lib/interview/recorder";
+import { InterviewApiError } from "@/lib/interview-client";
 import {
-  InterviewUploadQueue,
-  type UploadQueueEvent,
-} from "@/lib/interview/uploadQueue";
+  AnswerSubmissionQueue,
+  EMPTY_QUEUE_SNAPSHOT,
+  type AnswerQueueSnapshot,
+} from "@/lib/interview/answerQueue";
+import {
+  clearInterviewInfo,
+  readInterviewInfo,
+  resolveInterviewInfo,
+  type StoredInterviewInfo,
+} from "@/lib/interview/infoStore";
+import { InterviewRecorder } from "@/lib/interview/recorder";
 import { interviewSessionService } from "@/services/interview-session.service";
-import type { SessionState } from "@/types/interview.types";
+import type { ApiQuestion } from "@/types/interview.types";
 
 type RoomMode =
-  | "loading"
   | "question"
-  | "transitioning"
-  | "finishing"
+  | "waiting-next"
+  | "holding"
+  | "finished"
   | "terminated"
   | "error";
 
-type AdvanceReason = "next" | "skip" | "timeout";
+/** The API does not send a per-question limit, so this is a client default. */
+const QUESTION_TIME_LIMIT_SECONDS = 120;
+/** Prevents submitting an empty recording by double-clicking Next. */
+const MIN_ANSWER_SECONDS = 2;
 
 interface InterviewRoomProps {
   interviewId: string;
-  sessionId: string;
   stream: MediaStream | null;
-  candidateName?: string;
-  jobTitle?: string;
+  initialQuestion: ApiQuestion;
 }
 
-function formatTime(milliseconds: number): string {
-  if (!Number.isFinite(milliseconds)) {
-    return "00:00";
-  }
-
-  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
-  const minutes = Math.floor(totalSeconds / 60)
+function formatTime(totalSeconds: number): string {
+  const safe = Math.max(0, Math.ceil(totalSeconds));
+  const minutes = Math.floor(safe / 60)
     .toString()
     .padStart(2, "0");
-  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+  const seconds = (safe % 60).toString().padStart(2, "0");
   return `${minutes}:${seconds}`;
 }
 
-function getRemainingMs(session: SessionState | null): number | null {
-  if (!session) {
-    return null;
-  }
-
-  const serverNow = new Date(session.serverTime).getTime();
-  const clientNow = Date.now();
-  const offset = serverNow - clientNow;
-  const deadline =
-    new Date(session.currentQuestion.deadlineAt).getTime() + offset;
-
-  return deadline - Date.now();
-}
-
-function getElapsedMs(
-  session: SessionState | null,
-  fallbackStartAtMs: number,
-): number | null {
-  if (!session) {
-    return null;
-  }
-
-  if (session.startedAt) {
-    const serverNow = new Date(session.serverTime).getTime();
-    const clientNow = Date.now();
-    const offset = serverNow - clientNow;
-    const startedAtClientClock = new Date(session.startedAt).getTime() - offset;
-    return Math.max(0, Date.now() - startedAtClientClock);
-  }
-
-  return Math.max(0, Date.now() - fallbackStartAtMs);
-}
-
 export default function InterviewRoom({
-  sessionId,
+  interviewId,
   stream,
-  candidateName = "Candidate",
-  jobTitle = "AI Interview",
+  initialQuestion,
 }: InterviewRoomProps) {
-  const [session, setSession] = useState<SessionState | null>(null);
-  const [mode, setMode] = useState<RoomMode>("loading");
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [remainingMs, setRemainingMs] = useState<number | null>(null);
-  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
+  const [current, setCurrent] = useState<ApiQuestion>(initialQuestion);
+  const [mode, setMode] = useState<RoomMode>("question");
   const [error, setError] = useState<string | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<string>("Ready");
-  const [isActionLocked, setIsActionLocked] = useState(false);
-  const [transitionHint, setTransitionHint] = useState<string | null>(null);
-  const [shouldRenderPreview, setShouldRenderPreview] = useState(false);
-  const [isOnline, setIsOnline] = useState(
-    typeof navigator === "undefined" ? true : navigator.onLine,
-  );
   const [terminationMessage, setTerminationMessage] = useState<string | null>(
     null,
   );
-  const [pendingUploadCount, setPendingUploadCount] = useState(0);
-  const [failedUploadCount, setFailedUploadCount] = useState(0);
+  const [info, setInfo] = useState<StoredInterviewInfo | null>(() =>
+    readInterviewInfo(interviewId),
+  );
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [questionSeconds, setQuestionSeconds] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
+  const [queueState, setQueueState] = useState<AnswerQueueSnapshot>(
+    EMPTY_QUEUE_SNAPSHOT,
+  );
+  const [nextQuestion, setNextQuestion] = useState<ApiQuestion | null>(null);
+  const [noMoreQuestions, setNoMoreQuestions] = useState(false);
+  const [nextFetchError, setNextFetchError] = useState<string | null>(null);
+
+  const recorderRef = useRef<InterviewRecorder | null>(null);
+  const queueRef = useRef<AnswerSubmissionQueue | null>(null);
+  const nextRef = useRef<ApiQuestion | null>(null);
+  const noMoreRef = useRef(false);
+  const fetchingRef = useRef(false);
+  const fetchFailuresRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prefetchRef = useRef<(() => Promise<void>) | null>(null);
+  const lockRef = useRef(false);
+  const disposedRef = useRef(false);
+  const questionStartedAtRef = useRef(Date.now());
+  const roomStartedAtRef = useRef(Date.now());
+
+  /* ───────── security (client-side policy: warn, then terminate) ───────── */
 
   const { warningOpen, requestReturnToFullscreen, isHidden } =
     useInterviewSecurity({
-      sessionId,
-      questionId: session?.currentQuestion?.id ?? null,
-      enabled: mode === "question",
-      onTerminate: async (reason) => {
-        try {
-          recorderRef.current?.dispose();
-          await queueRef.current?.flush();
-        } catch {
-          // Ignore cleanup failures; the session is already being terminated.
-        }
-
-        try {
-          await interviewSessionService.terminateSession(sessionId);
-        } catch {
-          // Ignore termination failures here; this is still a security-driven stop.
-        }
-
+      interviewId,
+      enabled: mode === "question" || mode === "waiting-next",
+      onTerminate: (reason) => {
+        recorderRef.current?.dispose();
+        recorderRef.current = null;
         setTerminationMessage(
-          `This interview was terminated because the security policy detected ${reason}.`,
+          `This interview was terminated because the security policy detected ${reason.replace(/_/g, " ")}.`,
         );
-        setError(reason);
         setMode("terminated");
       },
     });
 
-  const recorderRef = useRef<InterviewRecorder | null>(null);
-  const queueRef = useRef<InterviewUploadQueue | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const lastQuestionIdRef = useRef<string | null>(null);
-  const lastAdvanceTimeRef = useRef<number>(0);
-  const fallbackStartAtMsRef = useRef<number>(Date.now());
-
-  const syncUploadQueueState = useCallback(() => {
-    const queue = queueRef.current;
-    if (!queue) {
-      setPendingUploadCount(0);
-      setFailedUploadCount(0);
-      return;
-    }
-
-    const items = queue.getItems();
-    setPendingUploadCount(
-      items.filter(
-        (item) => item.status === "queued" || item.status === "uploading",
-      ).length,
-    );
-    setFailedUploadCount(
-      items.filter((item) => item.status === "failed").length,
-    );
-  }, []);
-
-  const queueReady = useCallback(() => {
-    if (queueRef.current) {
-      return queueRef.current;
-    }
-
-    const queue = new InterviewUploadQueue({
-      sessionId,
-      concurrency: 1,
-      maxRetries: 4,
-      baseDelayMs: 1500,
-      maxDelayMs: 12000,
-      uploadRequest: async (item) => {
-        await new Promise((resolve) => {
-          setTimeout(resolve, 700 + Math.random() * 600);
-        });
-
-        if (Math.random() < 0.15) {
-          throw new Error(`Upload failed for ${item.questionId}.`);
-        }
-      },
-    });
-
-    queueRef.current = queue;
-    syncUploadQueueState();
-    return queue;
-  }, [sessionId, syncUploadQueueState]);
+  /* ───────── background answer queue ───────── */
 
   useEffect(() => {
+    disposedRef.current = false;
+    const queue = new AnswerSubmissionQueue({ interviewId });
+    queueRef.current = queue;
+    const unsubscribe = queue.subscribe(setQueueState);
+
+    return () => {
+      disposedRef.current = true;
+      unsubscribe();
+      queue.dispose();
+      if (queueRef.current === queue) queueRef.current = null;
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    };
+  }, [interviewId]);
+
+  /* ───────── interview info (stored, with Session API 1b fallback) ───────── */
+
+  useEffect(() => {
+    if (info) return;
     let active = true;
 
-    async function loadSession() {
-      try {
-        const nextSession =
-          await interviewSessionService.getSessionState(sessionId);
-        if (!active) {
-          return;
-        }
-
-        setSession(nextSession);
-        setRemainingMs(getRemainingMs(nextSession));
-        setElapsedMs(getElapsedMs(nextSession, fallbackStartAtMsRef.current));
-
-        if (nextSession.status === "TERMINATED") {
-          setMode("terminated");
-          return;
-        }
-
-        if (nextSession.status === "COMPLETED") {
-          setMode("finishing");
-          return;
-        }
-
-        setMode("question");
-      } catch (loadError) {
-        if (!active) {
-          return;
-        }
-
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Unable to load the active interview.",
-        );
-        setMode("error");
-      }
-    }
-
-    void loadSession();
+    resolveInterviewInfo(interviewId)
+      .then((resolved) => {
+        if (active) setInfo(resolved);
+      })
+      .catch(() => undefined);
 
     return () => {
       active = false;
     };
-  }, [sessionId]);
+  }, [info, interviewId]);
 
-  useEffect(() => {
-    if (!stream) {
+  /* ───────── prefetch the next question in the background ───────── */
+
+  const scheduleRetry = useCallback((delayMs: number) => {
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = setTimeout(() => {
+      retryTimerRef.current = null;
+      void prefetchRef.current?.();
+    }, delayMs);
+  }, []);
+
+  const prefetchNext = useCallback(async () => {
+    if (
+      disposedRef.current ||
+      fetchingRef.current ||
+      nextRef.current ||
+      noMoreRef.current
+    ) {
       return;
     }
 
-    const recorder = new InterviewRecorder({
-      stream,
-      videoBitsPerSecond: 700000,
-      audioBitsPerSecond: 96000,
-    });
+    fetchingRef.current = true;
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
 
-    recorderRef.current = recorder;
+    try {
+      const result = await interviewSessionService.getNextQuestion(interviewId);
+      if (disposedRef.current) return;
 
+      fetchFailuresRef.current = 0;
+      setNextFetchError(null);
+
+      if (result.question) {
+        nextRef.current = result.question;
+        setNextQuestion(result.question);
+      } else {
+        noMoreRef.current = true;
+        setNoMoreQuestions(true);
+      }
+    } catch (fetchError) {
+      if (disposedRef.current) return;
+
+      const status =
+        fetchError instanceof InterviewApiError ? fetchError.status : undefined;
+      const message = fetchError instanceof Error ? fetchError.message : "";
+
+      if (status === 401) {
+        setError(
+          "Your interview session has expired. Please open your invitation link again to resume.",
+        );
+        setMode("error");
+        return;
+      }
+
+      if (status === 409) {
+        // "Wait for the previous question to be submitted…" – retried when the
+        // next answer finishes submitting (see effect below).
+        if (/previous question/i.test(message)) return;
+
+        // "Please retry in N seconds" (5 second send cooldown)
+        const match = message.match(/(\d+)\s*second/i);
+        scheduleRetry(((match ? Number(match[1]) : 5) + 0.5) * 1000);
+        return;
+      }
+
+      fetchFailuresRef.current += 1;
+      if (fetchFailuresRef.current <= 5) {
+        scheduleRetry(Math.min(2000 * fetchFailuresRef.current, 10000));
+      } else {
+        setNextFetchError(message || "Could not load the next question.");
+      }
+    } finally {
+      fetchingRef.current = false;
+    }
+  }, [interviewId, scheduleRetry]);
+
+  useEffect(() => {
+    prefetchRef.current = prefetchNext;
+  }, [prefetchNext]);
+
+  // First question is already visible → fetch the second one right away.
+  // Repeats for every new current question and after every submitted answer.
+  useEffect(() => {
+    void prefetchNext();
+  }, [current.id, queueState.submittedCount, prefetchNext]);
+
+  /* ───────── recording: one audio recording per question ───────── */
+
+  useEffect(() => {
+    if (mode !== "question" || !stream) return;
+
+    try {
+      if (!recorderRef.current) {
+        recorderRef.current = new InterviewRecorder(stream);
+      }
+
+      if (!recorderRef.current.isRecordingQuestion(current.id)) {
+        recorderRef.current.startQuestion(current.id);
+      }
+    } catch (recordError) {
+      setError(
+        recordError instanceof Error
+          ? recordError.message
+          : "Unable to start recording for this question.",
+      );
+      setMode("error");
+    }
+  }, [mode, current.id, stream]);
+
+  useEffect(() => {
     return () => {
-      recorder.dispose();
+      recorderRef.current?.dispose();
       recorderRef.current = null;
     };
-  }, [stream]);
+  }, []);
+
+  /* ───────── timers ───────── */
 
   useEffect(() => {
-    if (!stream || !videoRef.current) {
-      return;
-    }
+    if (mode !== "question") return;
 
-    videoRef.current.srcObject = stream;
-    videoRef.current.muted = true;
-    videoRef.current.playsInline = true;
-    videoRef.current.play().catch(() => undefined);
-    setShouldRenderPreview(true);
-  }, [stream]);
-
-  useEffect(() => {
-    if (!queueRef.current) {
-      queueReady();
-    }
-
-    const queue = queueReady();
-    const unsubscribe = queue.subscribe((event: UploadQueueEvent) => {
-      if (event.type === "uploading") {
-        setUploadStatus("Uploading previous answer…");
-      }
-      if (event.type === "retrying") {
-        setUploadStatus(`Retrying previous answer… (attempt ${event.attempt})`);
-      }
-      if (event.type === "failed") {
-        setUploadStatus(`Upload failed: ${event.error}`);
-      }
-      if (event.type === "uploaded") {
-        setUploadStatus("Answer uploaded");
-      }
-
-      syncUploadQueueState();
-    });
-
-    syncUploadQueueState();
-
-    return () => {
-      unsubscribe();
-    };
-  }, [queueReady, syncUploadQueueState]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const handleConnectivity = () => {
-      setIsOnline(navigator.onLine);
+    const tick = () => {
+      setQuestionSeconds(
+        Math.floor((Date.now() - questionStartedAtRef.current) / 1000),
+      );
+      setElapsedSeconds(
+        Math.floor((Date.now() - roomStartedAtRef.current) / 1000),
+      );
     };
 
+    tick();
+    const timer = window.setInterval(tick, 500);
+    return () => window.clearInterval(timer);
+  }, [mode, current.id]);
+
+  useEffect(() => {
+    const handleConnectivity = () => setIsOnline(navigator.onLine);
     window.addEventListener("online", handleConnectivity);
     window.addEventListener("offline", handleConnectivity);
-
     return () => {
       window.removeEventListener("online", handleConnectivity);
       window.removeEventListener("offline", handleConnectivity);
@@ -318,178 +296,8 @@ export default function InterviewRoom({
   }, []);
 
   useEffect(() => {
-    if (!session || !stream || !recorderRef.current) {
-      return;
-    }
-
-    const questionId = session.currentQuestion.id;
-    if (lastQuestionIdRef.current === questionId) {
-      return;
-    }
-
-    lastQuestionIdRef.current = questionId;
-
-    recorderRef.current.startQuestion(questionId).catch((startError) => {
-      setError(
-        startError instanceof Error
-          ? startError.message
-          : "Unable to start camera recording for this question.",
-      );
-      setMode("error");
-    });
-  }, [session, stream]);
-
-  useEffect(() => {
-    if (!session) {
-      return;
-    }
-
-    const updateTime = () => {
-      setRemainingMs(getRemainingMs(session));
-      setElapsedMs(getElapsedMs(session, fallbackStartAtMsRef.current));
-    };
-
-    updateTime();
-    const timer = window.setInterval(updateTime, 250);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, [session]);
-
-  const criticalSeconds =
-    remainingMs == null ? 0 : Math.max(0, remainingMs / 1000);
-  const isCritical = criticalSeconds <= 10;
-  const blinkDuration =
-    criticalSeconds <= 1 ? 0.25 : criticalSeconds <= 3 ? 0.5 : 0.75;
-  const displayTime = remainingMs == null ? "00:00" : formatTime(remainingMs);
-  const elapsedDisplayTime =
-    elapsedMs == null ? "00:00" : formatTime(elapsedMs);
-
-  const currentQuestion = session?.currentQuestion ?? null;
-  const questionNumber = currentQuestion?.order ?? 1;
-
-  const handleAdvance = useCallback(
-    async (reason: AdvanceReason) => {
-      if (!session || isActionLocked || mode !== "question") {
-        return;
-      }
-
-      const currentQuestionId = session.currentQuestion.id;
-      const now = Date.now();
-      if (now - lastAdvanceTimeRef.current < 700) {
-        return;
-      }
-
-      lastAdvanceTimeRef.current = now;
-      setIsActionLocked(true);
-      setMode("transitioning");
-      setTransitionHint(
-        reason === "skip"
-          ? "Skipping question and uploading the recording…"
-          : reason === "timeout"
-            ? "Time expired — uploading the final recording…"
-            : "Submitting your answer and preparing the next question…",
-      );
-      setError(null);
-
-      try {
-        if (recorderRef.current) {
-          const result = await recorderRef.current.finishQuestion(reason);
-          const queue = queueReady();
-          await queue.enqueue(currentQuestionId, result.blob, result.mimeType, {
-            strategy: "multipart",
-          });
-        }
-
-        const updatedSession = await interviewSessionService.answerQuestion(
-          sessionId,
-          currentQuestionId,
-          "",
-        );
-
-        const sessionState =
-          updatedSession.currentQuestion.order >=
-          updatedSession.currentQuestion.total
-            ? await interviewSessionService.submitSession(sessionId)
-            : updatedSession;
-
-        if (sessionState.status === "COMPLETED") {
-          setSession(sessionState);
-          setMode("finishing");
-          return;
-        }
-
-        setSession(sessionState);
-        setMode("question");
-      } catch (advanceError) {
-        setError(
-          advanceError instanceof Error
-            ? advanceError.message
-            : "Unable to move to the next question.",
-        );
-        setMode("error");
-      } finally {
-        setTransitionHint(null);
-        setIsActionLocked(false);
-      }
-    },
-    [isActionLocked, mode, queueReady, session, sessionId],
-  );
-
-  useEffect(() => {
-    if (!session || mode !== "question") {
-      return;
-    }
-
-    if (remainingMs === null) {
-      return;
-    }
-
-    if (remainingMs <= 0) {
-      void handleAdvance("timeout");
-    }
-  }, [handleAdvance, mode, remainingMs, session]);
-
-  useEffect(() => {
-    if (mode === "finishing") {
-      return;
-    }
-
-    if (session && session.status === "TERMINATED") {
-      setMode("terminated");
-    }
-  }, [mode, session]);
-
-  const retryFailedUploads = useCallback(async () => {
-    const queue = queueRef.current;
-    if (!queue) {
-      return;
-    }
-
-    const failedItems = queue
-      .getItems()
-      .filter((item) => item.status === "failed");
-
-    for (const item of failedItems) {
-      await queue.retryQuestion(item.questionId);
-    }
-
-    syncUploadQueueState();
-  }, [syncUploadQueueState]);
-
-  const handleExitInterview = useCallback(() => {
-    clearStoredInterviewSession();
-    window.location.href = "/";
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (pendingUploadCount > 0 || mode === "transitioning") {
+      if (queueRef.current?.hasPending() || lockRef.current) {
         event.preventDefault();
         event.returnValue = "";
       }
@@ -497,75 +305,157 @@ export default function InterviewRoom({
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [mode, pendingUploadCount]);
+  }, []);
+
+  /* ───────── moving between questions ───────── */
+
+  const showQuestion = useCallback((question: ApiQuestion) => {
+    nextRef.current = null;
+    setNextQuestion(null);
+    questionStartedAtRef.current = Date.now();
+    setQuestionSeconds(0);
+    setCurrent(question);
+    setMode("question");
+  }, []);
+
+  // Candidate pressed Next before the prefetch finished.
+  useEffect(() => {
+    if (mode !== "waiting-next") return;
+
+    if (nextQuestion) {
+      showQuestion(nextQuestion);
+    } else if (noMoreQuestions) {
+      setMode("holding");
+    }
+  }, [mode, nextQuestion, noMoreQuestions, showQuestion]);
+
+  const handleAdvance = useCallback(async () => {
+    if (lockRef.current || mode !== "question") return;
+    lockRef.current = true;
+
+    try {
+      const recorder = recorderRef.current;
+      const queue = queueRef.current;
+
+      if (!recorder || !queue || !recorder.isRecordingQuestion(current.id)) {
+        throw new Error("Recording is not active for this question.");
+      }
+
+      const recorded = await recorder.finishQuestion();
+      if (recorded.blob.size === 0) {
+        throw new Error(
+          "No audio was captured. Please check your microphone and try again.",
+        );
+      }
+
+      // Answer is saved silently in the background (upload → submit).
+      queue.enqueue({
+        questionId: current.id,
+        blob: recorded.blob,
+        mimeType: recorded.mimeType,
+        durationSeconds: recorded.durationMs / 1000,
+      });
+
+      if (nextRef.current) {
+        showQuestion(nextRef.current);
+      } else if (noMoreRef.current) {
+        setMode("holding");
+      } else {
+        setMode("waiting-next");
+      }
+    } catch (advanceError) {
+      setError(
+        advanceError instanceof Error
+          ? advanceError.message
+          : "Unable to move to the next question.",
+      );
+      setMode("error");
+    } finally {
+      lockRef.current = false;
+    }
+  }, [current.id, mode, showQuestion]);
+
+  useEffect(() => {
+    if (mode === "question" && questionSeconds >= QUESTION_TIME_LIMIT_SECONDS) {
+      void handleAdvance();
+    }
+  }, [handleAdvance, mode, questionSeconds]);
+
+  /* ───────── finishing ───────── */
+
+  const handleFinish = useCallback(() => {
+    // No API call – purely a frontend step.
+    stream?.getTracks().forEach((track) => track.stop());
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => undefined);
+    }
+    clearInterviewInfo(interviewId);
+    setMode("finished");
+  }, [interviewId, stream]);
+
+  const retryNextFetch = useCallback(() => {
+    fetchFailuresRef.current = 0;
+    setNextFetchError(null);
+    void prefetchNext();
+  }, [prefetchNext]);
 
   const infoDetails = useMemo(
     () => [
-      { label: "Position", value: jobTitle },
-      { label: "Candidate", value: candidateName },
+      { label: "Position", value: info?.jobTitle ?? "Loading…" },
+      { label: "Company", value: info?.companyName ?? "Loading…" },
+      { label: "Candidate", value: info?.candidateName ?? "Loading…" },
       { label: "Interview", value: "AI-assisted video interview" },
-      { label: "Session", value: sessionId.slice(0, 10) },
     ],
-    [candidateName, jobTitle, sessionId],
+    [info],
   );
 
-  if (mode === "loading") {
+  const remainingSeconds = Math.max(
+    0,
+    QUESTION_TIME_LIMIT_SECONDS - questionSeconds,
+  );
+  const isCritical = remainingSeconds <= 10;
+  const canAdvance = questionSeconds >= MIN_ANSWER_SECONDS;
+  const isReadyToFinish =
+    queueState.allSubmitted && queueState.lastSubmitCompleted;
+
+  /* ───────── screens ───────── */
+
+  if (mode === "finished") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#090b10] px-6 text-white">
-        <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200 backdrop-blur-sm">
-          <LoaderCircle className="h-4 w-4 animate-spin text-cyan-300" />
-          Loading interview…
-        </div>
-      </main>
+      <SessionStatePanel
+        title="Thank you!"
+        description="Your interview has been submitted. The recruiter will review your responses and get back to you."
+        variant="success"
+      />
     );
   }
 
-  if (mode === "terminated" || mode === "finishing") {
-    const isStillUploading = pendingUploadCount > 0;
-    const uploadTitle = isStillUploading
-      ? `Still uploading ${pendingUploadCount} answer${pendingUploadCount === 1 ? "" : "s"}`
-      : "All answers uploaded - interview submitted";
+  if (mode === "holding") {
+    return (
+      <CompletionHoldingScreen
+        isReady={isReadyToFinish}
+        hasFailed={queueState.failedCount > 0}
+        isFatal={queueState.fatal}
+        onFinish={handleFinish}
+        onRetry={() => queueRef.current?.retryFailed()}
+      />
+    );
+  }
 
-    const descriptionText = isStillUploading
-      ? "Keep this tab open until the upload finishes. Leaving now may interrupt the final submission."
-      : "Your final responses have been recorded and submitted.";
-
+  if (mode === "terminated") {
     return (
       <SessionStatePanel
-        title={mode === "terminated" ? "Session ended" : uploadTitle}
+        title="Session ended"
         description={
-          mode === "terminated"
-            ? (terminationMessage ??
-              "This interview has been terminated by the system.")
-            : descriptionText
+          terminationMessage ??
+          "This interview has been terminated by the system."
         }
-        variant={
-          mode === "terminated"
-            ? "danger"
-            : isStillUploading
-              ? "warning"
-              : "success"
-        }
-        actionLabel={
-          !isStillUploading && failedUploadCount > 0
-            ? "Retry upload"
-            : mode === "terminated"
-              ? "Review next step"
-              : undefined
-        }
-        onAction={
-          !isStillUploading && failedUploadCount > 0
-            ? () => {
-                void retryFailedUploads();
-              }
-            : mode === "terminated"
-              ? () => {
-                  window.location.href = "/";
-                }
-              : undefined
-        }
-        secondaryActionLabel="Exit interview"
-        onSecondaryAction={handleExitInterview}
+        variant="danger"
+        actionLabel="Exit"
+        onAction={() => {
+          clearInterviewInfo(interviewId);
+          window.location.href = "/";
+        }}
       />
     );
   }
@@ -593,9 +483,34 @@ export default function InterviewRoom({
             Return to the interview
           </h2>
           <p className="mt-3 text-sm text-amber-100">
-            The interview is paused while the page is not visible. Please return
-            to fullscreen to continue.
+            Please return to this tab and fullscreen to continue.
           </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (mode === "waiting-next") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#090b10] px-6 text-white">
+        <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-white/5 px-8 py-8 text-center backdrop-blur-sm">
+          {nextFetchError ? (
+            <>
+              <p className="text-sm text-amber-200">{nextFetchError}</p>
+              <button
+                type="button"
+                onClick={retryNextFetch}
+                className="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+              >
+                Try again
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-3 text-sm text-slate-200">
+              <LoaderCircle className="h-4 w-4 animate-spin text-cyan-300" />
+              Preparing your next question…
+            </div>
+          )}
         </div>
       </main>
     );
@@ -605,22 +520,40 @@ export default function InterviewRoom({
     <main className="relative min-h-screen overflow-hidden bg-[#05070b] text-white">
       {!isOnline && (
         <div className="relative z-20 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm font-medium text-amber-100">
-          Connection lost - your completed answers are safe
+          Connection lost - your completed answers will be saved when you are
+          back online
+        </div>
+      )}
+
+      {queueState.failedCount > 0 && (
+        <div className="relative z-20 flex flex-wrap items-center justify-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm font-medium text-amber-100">
+          {queueState.fatal
+            ? "Your session has expired. Please open your invitation link again."
+            : "An earlier answer could not be saved yet."}
+          {!queueState.fatal && (
+            <button
+              type="button"
+              onClick={() => queueRef.current?.retryFailed()}
+              className="rounded-lg border border-amber-300/40 px-3 py-1 text-xs font-semibold text-amber-50 hover:bg-amber-500/20"
+            >
+              Retry
+            </button>
+          )}
         </div>
       )}
 
       <Dialog
         open={warningOpen}
-        onOpenChange={(open) => !open && requestReturnToFullscreen()}
+        onOpenChange={(open) => !open && void requestReturnToFullscreen()}
       >
         <DialogContent className="max-w-md rounded-2xl border border-amber-500/30 bg-slate-950 text-white shadow-2xl">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-left text-lg text-white">
-              Return to fullscreen
+              Warning: return to fullscreen
             </DialogTitle>
             <DialogDescription className="text-left text-sm text-slate-300">
-              This interview requires focus. Returning to fullscreen is required
-              to continue.
+              Leaving the interview screen is not allowed. One more violation
+              will end your interview.
             </DialogDescription>
           </DialogHeader>
 
@@ -636,10 +569,7 @@ export default function InterviewRoom({
         </DialogContent>
       </Dialog>
 
-      <div
-        className={`absolute inset-0 ${mode === "question" ? "opacity-100 blur-[2px]" : "opacity-80 blur-[1px]"}`}
-        aria-hidden="true"
-      >
+      <div className="absolute inset-0 opacity-100 blur-[2px]" aria-hidden="true">
         <div
           className="absolute inset-0"
           style={{
@@ -647,14 +577,6 @@ export default function InterviewRoom({
               "radial-gradient(circle at top left, rgba(34, 211, 238, 0.18), transparent 32%), radial-gradient(circle at bottom right, rgba(29, 78, 216, 0.16), transparent 28%), linear-gradient(135deg, #090b10, #0b1017 28%, #0f172a 100%)",
           }}
         />
-        <div className="absolute left-1/2 top-1/2 h-105 w-105 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/20 bg-cyan-500/5 shadow-[0_0_80px_rgba(34,211,238,0.12)]" />
-        <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-[28%] border border-white/10 bg-slate-950/60 shadow-2xl shadow-black/40" />
-        <div className="absolute left-1/2 top-[50%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-[30%] border border-cyan-400/20 bg-slate-900/70">
-          <div className="absolute left-1/2 top-[22%] h-4 w-4 -translate-x-1/2 rounded-full bg-cyan-300/80" />
-          <div className="absolute left-[30%] top-[52%] h-10 w-4 rounded-full bg-slate-700" />
-          <div className="absolute right-[30%] top-[52%] h-10 w-4 rounded-full bg-slate-700" />
-          <div className="absolute left-1/2 top-[58%] h-7 w-14 -translate-x-1/2 rounded-full bg-slate-700" />
-        </div>
       </div>
 
       <div className="relative z-10 min-h-screen px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
@@ -668,7 +590,7 @@ export default function InterviewRoom({
             </div>
             <div className="rounded-full border border-white/10 bg-slate-950/50 px-3 py-2 backdrop-blur-sm">
               <span className="text-[10px] font-medium tracking-[0.14em] text-slate-200 uppercase">
-                Elapsed {elapsedDisplayTime}
+                Elapsed {formatTime(elapsedSeconds)}
               </span>
             </div>
           </div>
@@ -689,7 +611,7 @@ export default function InterviewRoom({
                   Interview details
                 </DialogTitle>
                 <DialogDescription className="text-left text-sm text-slate-300">
-                  Candidate, role, and session context for this AI interview.
+                  Candidate, role, and company for this interview.
                 </DialogDescription>
               </DialogHeader>
 
@@ -715,13 +637,14 @@ export default function InterviewRoom({
         <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center px-4 pb-16 pt-6">
           <div className="relative w-full max-w-4xl">
             <motion.div
+              key={current.id}
               initial={{ opacity: 0, y: 18, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="relative overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/70 p-4 shadow-[0_28px_80px_rgba(2,6,23,0.8)] backdrop-blur-xl sm:p-5"
             >
               <div className="absolute left-1/2 -top-3 z-20 -translate-x-1/2 rounded-full border border-cyan-400/40 bg-cyan-500/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-100 shadow-lg shadow-cyan-500/10">
-                Q{questionNumber}
+                Q{current.order}
               </div>
 
               <div className="rounded-[22px] border border-white/10 bg-slate-950/60 p-4 sm:p-6">
@@ -733,69 +656,48 @@ export default function InterviewRoom({
                     <span
                       className={isCritical ? "text-red-200" : "text-slate-200"}
                     >
-                      {currentQuestion?.category ?? "Question"}
+                      {current.category ?? "Question"}
                     </span>
                   </div>
                   <div
                     className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
                       isCritical
-                        ? "critical-timer border-red-500/40 bg-red-500/10 text-red-100"
+                        ? "border-red-500/40 bg-red-500/10 text-red-100"
                         : "border-cyan-500/30 bg-cyan-500/10 text-cyan-100"
                     }`}
-                    style={
-                      isCritical
-                        ? {
-                            animationDuration: `${Math.max(0.25, blinkDuration)}s`,
-                          }
-                        : undefined
-                    }
                   >
-                    {displayTime}
+                    {formatTime(remainingSeconds)}
                   </div>
                 </div>
 
                 <div className="max-h-[44vh] overflow-y-auto pr-1">
                   <p className="font-syne text-xl font-bold leading-relaxed text-white sm:text-2xl">
-                    {currentQuestion?.text ?? "Loading question…"}
+                    {current.questionText}
                   </p>
                 </div>
 
                 <div className="mt-5 flex items-center justify-end gap-3">
                   <button
                     type="button"
-                    disabled={isActionLocked || mode !== "question"}
-                    onClick={() => void handleAdvance("skip")}
-                    className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Skip
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isActionLocked || mode !== "question"}
-                    onClick={() => void handleAdvance("next")}
+                    disabled={!canAdvance}
+                    onClick={() => void handleAdvance()}
                     className="rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Next
                   </button>
                 </div>
-
-                <div className="mt-4 min-h-5.5 text-right text-[11px] tracking-[0.12em] text-slate-300 uppercase">
-                  {mode === "transitioning" && transitionHint ? (
-                    <span className="inline-flex items-center gap-2">
-                      <LoaderCircle className="h-3.5 w-3.5 animate-spin text-cyan-300" />
-                      {transitionHint}
-                    </span>
-                  ) : (
-                    <span>{uploadStatus}</span>
-                  )}
-                </div>
               </div>
             </motion.div>
 
             <div className="absolute -bottom-3 right-3 flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border border-cyan-400/30 bg-slate-950/80 shadow-[0_14px_40px_rgba(34,211,238,0.12)] backdrop-blur-sm sm:h-32 sm:w-32">
-              {shouldRenderPreview && stream ? (
+              {stream ? (
                 <video
-                  ref={videoRef}
+                  ref={(element) => {
+                    if (element && element.srcObject !== stream) {
+                      element.srcObject = stream;
+                      void element.play().catch(() => undefined);
+                    }
+                  }}
                   autoPlay
                   muted
                   playsInline

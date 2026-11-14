@@ -8,6 +8,23 @@ type ApiErrorShape = {
   statusCode?: number;
 };
 
+export class InterviewApiError extends Error {
+  status?: number;
+  code?: string;
+  payload?: unknown;
+
+  constructor(
+    message: string,
+    extra: { status?: number; code?: string; payload?: unknown } = {},
+  ) {
+    super(message);
+    this.name = "InterviewApiError";
+    this.status = extra.status;
+    this.code = extra.code;
+    this.payload = extra.payload;
+  }
+}
+
 export const interviewClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -40,12 +57,14 @@ interviewClient.interceptors.response.use(
       };
 
       if (envelope.success === false) {
-        const error = new Error(
+        throw new InterviewApiError(
           envelope.message || envelope.code || "Request failed",
-        ) as Error & { code?: string; payload?: typeof envelope };
-        error.code = envelope.code;
-        error.payload = envelope;
-        throw error;
+          {
+            status: response.status,
+            code: envelope.code,
+            payload: envelope,
+          },
+        );
       }
 
       response.data = (envelope.data ?? null) as typeof response.data;
@@ -58,7 +77,9 @@ interviewClient.interceptors.response.use(
       const { status, data } = error.response;
 
       if (typeof data === "string") {
-        throw new Error(data || `Request failed (${status})`);
+        throw new InterviewApiError(data || `Request failed (${status})`, {
+          status,
+        });
       }
 
       const parsedMessage = Array.isArray(data?.message)
@@ -72,15 +93,20 @@ interviewClient.interceptors.response.use(
         `Request failed (${status})`;
 
       if (status === 429) {
-        throw new Error(
+        throw new InterviewApiError(
           "Too many requests. Please wait a moment and try again.",
+          { status },
         );
       }
 
-      throw new Error(errorMessage);
+      throw new InterviewApiError(errorMessage, {
+        status,
+        code: data?.code,
+        payload: data,
+      });
     }
 
-    throw new Error(error.message || "Network error");
+    throw new InterviewApiError(error.message || "Network error");
   },
 );
 

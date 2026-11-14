@@ -222,3 +222,57 @@ export type StartInterviewSessionResponse = {
 };
 
 export type MockFailureMode = "expired" | "badpin" | "uploadfail" | "terminate";
+
+/* ───────────── Candidate session API (cookie based) ───────────── */
+
+export type ApiQuestion = {
+  id: string;
+  order: number;
+  category?: string;
+  questionText: string;
+};
+
+export type StartSessionResult = {
+  interviewId: string;
+  question: ApiQuestion | null;
+  isCompleted: boolean;
+};
+
+export type NextQuestionResult = {
+  interviewId: string;
+  question: ApiQuestion | null;
+  isCompleted: boolean;
+};
+
+export type SessionInfo = {
+  interviewId: string;
+  jobTitle: string;
+  companyName: string;
+  candidateName: string;
+  language: string;
+  status: string;
+  startedAt: string | null;
+  canResume: boolean;
+  isCompleted: boolean;
+};
+
+export type UploadUrlResult = {
+  uploadUrl: string;
+  storagePath: string;
+  token: string;
+};
+
+export type SubmitAnswerPayload = {
+  durationSeconds: number;
+  storageKey: string;
+  mimeType: string;
+  sizeBytes: number;
+};
+
+export type SubmitAnswerResult = {
+  interviewId: string;
+  questionId: string;
+  answerId: string;
+  submitted: boolean;
+  isCompleted: boolean;
+};

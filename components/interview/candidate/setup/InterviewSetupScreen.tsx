@@ -4,9 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import InterviewRoom from "@/components/interview/candidate/room/InterviewRoom";
-import { useInterviewSession } from "@/hooks/useInterviewSession";
+import { InterviewApiError } from "@/lib/interview-client";
+import { saveInterviewInfo } from "@/lib/interview/infoStore";
 import { interviewSessionService } from "@/services/interview-session.service";
 import type {
+  ApiQuestion,
   InterviewPreview,
   InvitationExpiredPreview,
 } from "@/types/interview.types";
@@ -51,6 +53,9 @@ export function InterviewSetupScreen({
   const [emailHint, setEmailHint] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [isStartingSession, setIsStartingSession] = useState(false);
+  const [startError, setStartError] = useState("");
+  const [isResume, setIsResume] = useState(false);
+  const [firstQuestion, setFirstQuestion] = useState<ApiQuestion | null>(null);
   const [deviceStream, setDeviceStream] = useState<MediaStream | null>(null);
   const [deviceReady, setDeviceReady] = useState(false);
   const [deviceStatus, setDeviceStatus] =
@@ -69,7 +74,6 @@ export function InterviewSetupScreen({
   const [extensionError, setExtensionError] = useState<string | null>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
-  const { sessionId, startInterview } = useInterviewSession({ interviewId });
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -93,6 +97,13 @@ export function InterviewSetupScreen({
 
     async function loadPreview() {
       setInviteLoading(true);
+
+      if (!token) {
+        setLoadError("This interview link is invalid. Please use the link from your email.");
+        setInviteLoading(false);
+        return;
+      }
+
       try {
         const result = await interviewSessionService.getPreview(
           interviewId,
@@ -107,12 +118,25 @@ export function InterviewSetupScreen({
         } else {
           setPreview(result);
 
-          // If already verified, skip OTP and go to device setup
-          if (result.alreadyVerified) {
+          // Keep these separately so the interview screen can show them even
+          // if the preview response is lost (Session API 1b is the fallback).
+          saveInterviewInfo({
+            interviewId,
+            jobTitle: result.jobTitle,
+            companyName: result.companyName,
+            candidateName: result.candidateName,
+          });
+
+          if (result.canResume) {
+            // Resume flow: skip welcome + OTP, only the device check is needed
+            // (camera/mic stream) before calling start again.
+            setIsResume(true);
+            setCodeSent(true);
+            setStep("device");
+          } else if (result.alreadyVerified) {
             setCodeSent(true);
             setStep("device");
           }
-          // If canResume, we'll show a resume path in the welcome step
         }
       } catch (error) {
         if (!active) return;
@@ -171,7 +195,21 @@ export function InterviewSetupScreen({
     setPinError("");
 
     try {
-      await interviewSessionService.verifyOtp(interviewId, token, pin.trim());
+      const verified = await interviewSessionService.verifyOtp(
+        interviewId,
+        token,
+        pin.trim(),
+      );
+
+      if (preview) {
+        saveInterviewInfo({
+          interviewId,
+          jobTitle: verified.interview.jobTitle || preview.jobTitle,
+          companyName: verified.interview.companyName || preview.companyName,
+          candidateName: preview.candidateName,
+        });
+      }
+
       setStep("device");
     } catch (error) {
       const attempts = pinAttempts + 1;
@@ -187,47 +225,49 @@ export function InterviewSetupScreen({
     } finally {
       setIsVerifying(false);
     }
-  }, [interviewId, token, pin, isVerifying, pinAttempts]);
+  }, [interviewId, token, pin, isVerifying, pinAttempts, preview]);
 
-  // ── Start interview ─────────────────────────────────────────────
+  // ── Start / resume interview (Session API 1) ─────────────────────
   const handleStartInterview = useCallback(async () => {
     if (isStartingSession) return;
 
     setIsStartingSession(true);
-    setPinError("");
+    setStartError("");
 
     try {
-      await startInterview();
+      const result = await interviewSessionService.startInterview(interviewId);
+
+      if (!result.question) {
+        setStartError(
+          result.isCompleted
+            ? "This interview has already been completed."
+            : "This interview has no questions to answer.",
+        );
+        return;
+      }
+
+      setFirstQuestion(result.question);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to start the interview session.";
-      setPinError(message);
+      if (error instanceof InterviewApiError && error.status === 401) {
+        // Session cookie missing/expired → verify the OTP again.
+        setIsResume(false);
+        setCodeSent(false);
+        setPin("");
+        setPinError(
+          "Your verification has expired. Please verify again to continue.",
+        );
+        setStep("pin");
+      } else {
+        setStartError(
+          error instanceof Error
+            ? error.message
+            : "Unable to start the interview session.",
+        );
+      }
     } finally {
       setIsStartingSession(false);
     }
-  }, [isStartingSession, startInterview]);
-
-  // ── Resume interview (when canResume) ──────────────────────────
-  const handleResumeInterview = useCallback(async () => {
-    if (isStartingSession) return;
-
-    setIsStartingSession(true);
-    setPinError("");
-
-    try {
-      await startInterview();
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to resume the interview session.";
-      setPinError(message);
-    } finally {
-      setIsStartingSession(false);
-    }
-  }, [isStartingSession, startInterview]);
+  }, [interviewId, isStartingSession]);
 
   // ── Request extension (expired invitation) ─────────────────────
   const handleRequestExtension = useCallback(
@@ -310,14 +350,12 @@ export function InterviewSetupScreen({
   }, []);
 
   // ── Render interview room when session is active ────────────────
-  if (sessionId) {
+  if (firstQuestion && deviceStream) {
     return (
       <InterviewRoom
         interviewId={interviewId}
-        sessionId={sessionId}
         stream={deviceStream}
-        candidateName={preview?.candidateName ?? "Candidate"}
-        jobTitle={preview?.jobTitle ?? "AI Interview"}
+        initialQuestion={firstQuestion}
       />
     );
   }
@@ -388,7 +426,6 @@ export function InterviewSetupScreen({
   }
 
   const currentIdx = STEPS.findIndex((stepItem) => stepItem.key === step);
-  const canResume = preview?.canResume ?? false;
 
   return (
     <div className="min-h-screen bg-[#0F172A] flex flex-col items-center py-12 px-4 font-sans">
@@ -440,27 +477,8 @@ export function InterviewSetupScreen({
                 candidateName={preview?.candidateName ?? "Candidate"}
                 jobTitle={preview?.jobTitle ?? "AI Interview"}
                 company={preview?.companyName ?? "Your company"}
-                totalQuestions={1}
-                onContinue={() => {
-                  if (canResume) {
-                    handleResumeInterview();
-                  } else {
-                    setStep("pin");
-                  }
-                }}
+                onContinue={() => setStep("pin")}
               />
-            )}
-
-            {step === "welcome" && canResume && (
-              <div className="mt-4 rounded-xl border border-cyan/30 bg-cyan/10 p-4">
-                <p className="text-cyan text-sm font-semibold">
-                  You have an interview in progress.
-                </p>
-                <p className="text-white/60 text-xs mt-1">
-                  Click &ldquo;I Understand &mdash; Continue&rdquo; to resume
-                  where you left off.
-                </p>
-              </div>
             )}
 
             {step === "pin" && (
@@ -493,7 +511,9 @@ export function InterviewSetupScreen({
 
             {step === "start" && (
               <ReadyStep
-                totalQuestions={1}
+                isResume={isResume}
+                isStarting={isStartingSession}
+                error={startError}
                 onStart={handleStartInterview}
               />
             )}

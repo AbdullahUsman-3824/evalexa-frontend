@@ -1,205 +1,134 @@
-export type InterviewRecorderReason = "next" | "skip" | "timeout";
+/**
+ * Records the candidate's microphone for one question at a time.
+ *
+ * The camera stays on for the candidate (live preview) but only the AUDIO
+ * track is recorded, because the backend currently accepts audio only.
+ */
 
-export type InterviewRecordMetadata = {
-  questionId: string;
-  durationMs: number;
-  mimeType: string;
-  startedAt: string;
-  endedAt: string;
-  skipped: boolean;
-  reason: InterviewRecorderReason;
-};
-
-export type RecordedQuestionAnswer = InterviewRecordMetadata & {
+export type RecordedAnswer = {
   blob: Blob;
+  /** Bare MIME type without codec parameters, e.g. "audio/webm". */
+  mimeType: string;
+  durationMs: number;
 };
 
-export type InterviewRecorderConfig = {
-  stream: MediaStream;
-  videoBitsPerSecond?: number;
-  audioBitsPerSecond?: number;
-  mimeType?: string;
-};
-
-const DEFAULT_VIDEO_BITS_PER_SECOND = 700 * 1000;
-const DEFAULT_AUDIO_BITS_PER_SECOND = 96 * 1000;
-const MIME_TYPE_CANDIDATES = [
-  "video/webm;codecs=vp9,opus",
-  "video/webm;codecs=vp8,opus",
-  "video/webm",
-  "video/mp4",
+const AUDIO_MIME_CANDIDATES = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/mp4",
+  "audio/ogg;codecs=opus",
 ];
 
-export class InterviewRecorder {
-  private readonly stream: MediaStream;
-  private readonly videoBitsPerSecond: number;
-  private readonly audioBitsPerSecond: number;
-  private readonly preferredMimeType?: string;
+export function normalizeMimeType(mimeType: string): string {
+  return mimeType.split(";")[0].trim().toLowerCase();
+}
 
-  private currentQuestionId: string | null = null;
-  private startedAt: number | null = null;
+function pickAudioMimeType(): string | undefined {
+  if (typeof MediaRecorder === "undefined") return undefined;
+  return AUDIO_MIME_CANDIDATES.find((type) => MediaRecorder.isTypeSupported(type));
+}
+
+export class InterviewRecorder {
+  private readonly audioStream: MediaStream;
   private recorder: MediaRecorder | null = null;
+  private questionId: string | null = null;
+  private startedAt = 0;
   private chunks: BlobPart[] = [];
 
-  constructor(config: InterviewRecorderConfig) {
+  constructor(stream: MediaStream) {
     if (typeof MediaRecorder === "undefined") {
-      throw new Error("MediaRecorder is not supported in this browser.");
+      throw new Error("Recording is not supported in this browser.");
     }
 
-    this.stream = config.stream;
-    this.videoBitsPerSecond =
-      config.videoBitsPerSecond ?? DEFAULT_VIDEO_BITS_PER_SECOND;
-    this.audioBitsPerSecond =
-      config.audioBitsPerSecond ?? DEFAULT_AUDIO_BITS_PER_SECOND;
-    this.preferredMimeType = config.mimeType ?? getSupportedMimeType();
-  }
-
-  static getSupportedMimeType(): string | undefined {
-    return getSupportedMimeType();
-  }
-
-  getCurrentQuestionId(): string | null {
-    return this.currentQuestionId;
-  }
-
-  async startQuestion(questionId: string): Promise<void> {
-    if (!questionId.trim()) {
-      throw new Error("A questionId is required to start recording.");
+    const audioTracks = stream.getAudioTracks();
+    if (audioTracks.length === 0) {
+      throw new Error("No microphone found. Please check your microphone.");
     }
 
+    this.audioStream = new MediaStream(audioTracks);
+  }
+
+  isRecordingQuestion(questionId: string): boolean {
+    return (
+      this.questionId === questionId &&
+      this.recorder !== null &&
+      this.recorder.state !== "inactive"
+    );
+  }
+
+  startQuestion(questionId: string): void {
     if (this.recorder && this.recorder.state !== "inactive") {
       throw new Error("A question is already being recorded.");
     }
 
-    const mimeType = this.preferredMimeType ?? getSupportedMimeType();
-    const options: MediaRecorderOptions = {};
+    const mimeType = pickAudioMimeType();
+    const recorder = new MediaRecorder(
+      this.audioStream,
+      mimeType ? { mimeType } : undefined,
+    );
 
-    if (mimeType) {
-      options.mimeType = mimeType;
-    }
-
-    if (this.stream.getVideoTracks().length > 0) {
-      options.videoBitsPerSecond = this.videoBitsPerSecond;
-    }
-
-    if (this.stream.getAudioTracks().length > 0) {
-      options.audioBitsPerSecond = this.audioBitsPerSecond;
-    }
-
-    this.currentQuestionId = questionId;
-    this.startedAt = Date.now();
     this.chunks = [];
+    recorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) this.chunks.push(event.data);
+    };
 
-    try {
-      this.recorder = new MediaRecorder(this.stream, options);
-      this.recorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          this.chunks.push(event.data);
-        }
-      };
-      this.recorder.onerror = (event) => {
-        const message =
-          event.error instanceof Error
-            ? event.error.message
-            : "Recording failed.";
-        throw new Error(message);
-      };
-      this.recorder.start();
-    } catch (error) {
-      this.currentQuestionId = null;
-      this.startedAt = null;
-      this.recorder = null;
-      throw error instanceof Error
-        ? error
-        : new Error("Unable to start recording.");
-    }
+    this.recorder = recorder;
+    this.questionId = questionId;
+    this.startedAt = Date.now();
+    recorder.start(1000);
   }
 
-  async finishQuestion(
-    reason: InterviewRecorderReason,
-  ): Promise<RecordedQuestionAnswer> {
-    if (!this.recorder || !this.currentQuestionId || this.startedAt === null) {
-      throw new Error("No active question to finish.");
+  finishQuestion(): Promise<RecordedAnswer> {
+    const recorder = this.recorder;
+    if (!recorder || !this.questionId) {
+      return Promise.reject(new Error("No active recording to finish."));
     }
 
-    const questionId = this.currentQuestionId;
-    const startedAt = new Date(this.startedAt).toISOString();
-
-    const finishedRecorder = this.recorder;
+    const startedAt = this.startedAt;
     this.recorder = null;
-    this.currentQuestionId = null;
-    this.startedAt = null;
+    this.questionId = null;
 
-    return new Promise<RecordedQuestionAnswer>((resolve, reject) => {
+    return new Promise<RecordedAnswer>((resolve, reject) => {
       const finalize = () => {
-        const endedAtValue = new Date();
-        const mimeType =
-          finishedRecorder.mimeType ||
-          this.preferredMimeType ||
-          getSupportedMimeType() ||
-          "video/webm";
-        const blob = new Blob(this.chunks, { type: mimeType });
-
+        const rawType = recorder.mimeType || pickAudioMimeType() || "audio/webm";
+        const mimeType = normalizeMimeType(rawType);
         resolve({
-          questionId,
-          blob,
-          durationMs: Math.max(
-            0,
-            endedAtValue.getTime() - new Date(startedAt).getTime(),
-          ),
+          blob: new Blob(this.chunks, { type: mimeType }),
           mimeType,
-          startedAt,
-          endedAt: endedAtValue.toISOString(),
-          skipped: reason !== "next",
-          reason,
+          durationMs: Math.max(0, Date.now() - startedAt),
         });
+        this.chunks = [];
       };
 
-      finishedRecorder.onstop = finalize;
+      recorder.onstop = finalize;
+      recorder.onerror = () => reject(new Error("Recording failed."));
 
       try {
-        if (finishedRecorder.state !== "inactive") {
-          finishedRecorder.stop();
+        if (recorder.state !== "inactive") {
+          recorder.stop();
         } else {
           finalize();
         }
       } catch (error) {
         reject(
-          error instanceof Error
-            ? error
-            : new Error("Unable to stop the recorder."),
+          error instanceof Error ? error : new Error("Unable to stop recording."),
         );
       }
     });
   }
 
+  /** Stops recording. Does NOT stop the camera/mic tracks (shared stream). */
   dispose(): void {
     if (this.recorder && this.recorder.state !== "inactive") {
       try {
+        this.recorder.ondataavailable = null;
         this.recorder.stop();
       } catch {
-        // ignore stop errors during cleanup
+        // ignore
       }
     }
-
-    this.stream.getTracks().forEach((track) => track.stop());
     this.recorder = null;
-    this.currentQuestionId = null;
-    this.startedAt = null;
+    this.questionId = null;
     this.chunks = [];
   }
-}
-
-function getSupportedMimeType(): string | undefined {
-  if (typeof MediaRecorder === "undefined") {
-    return undefined;
-  }
-
-  for (const mimeType of MIME_TYPE_CANDIDATES) {
-    if (MediaRecorder.isTypeSupported(mimeType)) {
-      return mimeType;
-    }
-  }
-
-  return undefined;
 }

@@ -6,7 +6,6 @@ interface WelcomeStepProps {
   candidateName: string
   jobTitle: string
   company: string
-  totalQuestions: number
   onContinue: () => void
 }
 
@@ -16,18 +15,16 @@ const RULES = [
   'Do not switch tabs or windows',
   'Complete device setup before starting',
   'Each question has a time limit',
-  'Skip goes to next; you cannot return',
+  'You cannot go back to a previous question'
 ]
 
 export function WelcomeStep({
   candidateName,
   jobTitle,
   company,
-  totalQuestions,
   onContinue,
 }: WelcomeStepProps) {
   const stats = [
-    { value: String(totalQuestions), label: 'Questions' },
     { value: '~15 min', label: 'Est. Time' },
     { value: '3 days', label: 'Deadline' },
   ]
@@ -47,7 +44,7 @@ export function WelcomeStep({
         {jobTitle} at {company}
       </p>
 
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      <div className="mt-6 grid grid-cols-2 gap-3">
         {stats.map(s => (
           <div key={s.label} className="bg-white/5 rounded-xl p-3 text-center">
             <p className="text-white font-semibold">{s.value}</p>
