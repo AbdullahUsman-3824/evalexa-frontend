@@ -7,6 +7,9 @@ import {
   CheckCircle,
   ChevronDown,
   Loader2,
+  Sparkles,
+  Users,
+  XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useShortlist } from "@/hooks/useShortlist";
@@ -16,8 +19,6 @@ import RejectedPanel from "@/components/recruiter/shortlisted/RejectedPanel";
 import FinalizeBar from "@/components/recruiter/shortlisted/FinalizeBar";
 import FinalizeModal from "@/components/recruiter/shortlisted/FinalizeModal";
 import RemoveConfirmModal from "@/components/recruiter/shortlisted/RemoveConfirmModal";
-import SummaryBanner from "@/components/recruiter/shortlisted/SummaryBanner";
-import JobContextBar from "@/components/recruiter/shortlisted/JobContextBar";
 
 export default function ShortlistedPage() {
   const router = useRouter();
@@ -65,8 +66,18 @@ export default function ShortlistedPage() {
     jobs.find((candidateJob) => candidateJob.id === selectedJobId)?.title ??
     job.title;
 
+  const handleBack = () => {
+    if (selectedJobId) {
+      router.push(`/recruiter/jobs/${selectedJobId}`);
+    } else {
+      router.back();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F4F7FF] pb-28">
+    // The recruiter layout already renders a 4rem top bar, so this fills the
+    // remaining viewport height exactly (no extra scrolling / dead space).
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-[#F4F7FF]">
       {/* ── Toast ──────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {toast && (
@@ -76,7 +87,7 @@ export default function ShortlistedPage() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 100, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className={`fixed top-5 right-5 z-60 flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-white text-[13px] font-medium max-w-xs ${
+            className={`fixed top-20 right-5 z-60 flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-white text-[13px] font-medium max-w-xs ${
               toast.type === "error"
                 ? "bg-[#E63946]"
                 : toast.type === "info"
@@ -91,15 +102,19 @@ export default function ShortlistedPage() {
       </AnimatePresence>
 
       {/* ── Page header ────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-[#E2E8F0] px-6 py-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <button className="flex items-center gap-1 text-[#6B7A99] text-[12px] hover:text-[#0D1B2A] mb-2 transition-colors w-fit">
+      <header className="border-b border-[#E2E8F0] bg-white px-4 py-4 sm:px-6">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="mb-1.5 inline-flex items-center gap-1 text-[12px] text-[#6B7A99] transition-colors hover:text-[#0D1B2A]"
+            >
               <ChevronLeft size={14} />
               Back to {activeJobLabel}
             </button>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="font-syne text-[20px] font-bold text-[#0D1B2A]">
+              <h1 className="font-syne text-[20px] font-bold leading-tight text-[#0D1B2A]">
                 Shortlisted Candidates
               </h1>
               {jobsError && (
@@ -108,12 +123,13 @@ export default function ShortlistedPage() {
                 </span>
               )}
             </div>
-            <span className="text-[#6B7A99] text-[13px]">
-              {job.company} · {job.department}
-            </span>
+            <p className="mt-0.5 text-[13px] text-[#6B7A99]">
+              {job.company} · {job.department} · {job.applicantsCount}{" "}
+              applicants
+            </p>
           </div>
 
-          <label className="flex min-w-65 flex-col gap-1">
+          <label className="flex w-full flex-col gap-1 sm:w-72">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-[#6B7A99]">
               Select job
             </span>
@@ -125,7 +141,7 @@ export default function ShortlistedPage() {
                     : ""
                 }
                 onChange={(event) => setSelectedJobId(event.target.value)}
-                className="h-11 w-full appearance-none rounded-xl border border-[#E2E8F0] bg-white px-4 pr-10 text-sm font-medium text-[#0D1B2A] outline-none transition-colors hover:border-[#1E6FFF] focus:border-[#1E6FFF]"
+                className="h-10 w-full appearance-none rounded-xl border border-[#E2E8F0] bg-white px-4 pr-10 text-sm font-medium text-[#0D1B2A] outline-none transition-colors hover:border-[#1E6FFF] focus:border-[#1E6FFF]"
                 disabled={isJobsLoading && jobs.length === 0}
               >
                 {jobs.length === 0 && (
@@ -147,125 +163,142 @@ export default function ShortlistedPage() {
             </div>
           </label>
         </div>
-      </div>
+      </header>
 
       {/* ── Content ────────────────────────────────────────────────────────── */}
-      <div className="px-6 pt-4 pb-2 space-y-3">
-        {/* Job context + finalize status */}
-        <JobContextBar
-          job={job}
-          stats={stats}
-          rejectedCount={stats.totalRejected}
-          showRejectedPanel={showRejectedPanel}
-          onViewRejected={() => setShowRejectedPanel(!showRejectedPanel)}
-        />
-
-        {/* Status banner — only shows when finalized */}
-        {isFinalized && (
-          <SummaryBanner stats={stats} isFinalized={isFinalized} />
-        )}
-
-        {/* Main columns */}
-        <div className="flex gap-4 items-start">
-          {/* ── Candidate list ──────────────────────────────────────────────── */}
-          <div className="flex-1 min-w-0">
-            {/* Sort + count row */}
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[#0D1B2A] text-[13px] font-medium">
-                {shortlisted.length} candidate
-                {shortlisted.length !== 1 ? "s" : ""}
+      <main className="flex flex-1 flex-col px-4 py-5 sm:px-6">
+        <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4">
+          {/* Toolbar: stats · sort · candidate pool toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#E1F5EE] px-3 py-1 text-[12px] font-medium text-[#0F6E56]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#00B37E]" />
+                {stats.totalShortlisted} shortlisted
               </span>
-              <div className="flex items-center gap-2">
-                <span className="text-[#6B7A99] text-[12px]">Sort:</span>
-                {SORT_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setSortBy(opt.value)}
-                    className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150 ${
-                      sortBy === opt.value
-                        ? "bg-[#1E6FFF] text-white"
-                        : "bg-white border border-[#E2E8F0] text-[#6B7A99] hover:border-[#1E6FFF] hover:text-[#1E6FFF]"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#E2E8F0] bg-white px-3 py-1 text-[12px] font-medium text-[#6B7A99]">
+                <Sparkles size={11} className="text-[#00C2D1]" />
+                {stats.aiSelected} by AI · {stats.manuallyAdded} manual
+              </span>
             </div>
 
-            {/* Cards */}
-            {isLoadingShortlisted ? (
-              <div className="bg-white rounded-xl border border-[#E2E8F0] py-16 flex flex-col items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-[#1E6FFF]" />
-                <p className="text-[#6B7A99] text-[13px] mt-3">
-                  Loading shortlisted candidates…
-                </p>
-              </div>
-            ) : shortlistedError ? (
-              <div className="bg-white rounded-xl border border-[#E63946]/30 py-12 px-6 text-center">
-                <p className="font-syne text-[15px] font-semibold text-[#E63946]">
-                  Failed to load shortlisted candidates
-                </p>
-                <p className="text-[#6B7A99] text-[13px] mt-1.5">
-                  {shortlistedError}
-                </p>
-              </div>
-            ) : shortlisted.length === 0 ? (
-              <div className="bg-white rounded-xl border border-[#E2E8F0] py-16 text-center">
-                <div className="w-12 h-12 bg-[#F4F7FF] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Star size={22} className="text-[#CBD5E1]" />
+            <div className="flex flex-wrap items-center gap-2">
+              {shortlisted.length > 1 && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[12px] text-[#6B7A99]">Sort:</span>
+                  {SORT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setSortBy(opt.value)}
+                      className={`rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-150 ${
+                        sortBy === opt.value
+                          ? "bg-[#1E6FFF] text-white"
+                          : "border border-[#E2E8F0] bg-white text-[#6B7A99] hover:border-[#1E6FFF] hover:text-[#1E6FFF]"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
-                <p className="font-syne text-[15px] font-semibold text-[#0D1B2A]">
-                  No candidates shortlisted yet
-                </p>
-                <p className="text-[#6B7A99] text-[13px] mt-1.5 max-w-xs mx-auto">
-                  Open the candidate pool to manually add candidates the AI
-                  missed
-                </p>
-                <button
-                  onClick={() => setShowRejectedPanel(true)}
-                  className="mt-5 inline-flex items-center gap-1.5 bg-[#1E6FFF] text-white text-[13px] font-medium px-5 py-2.5 rounded-xl hover:bg-[#1660E0] transition-colors"
-                >
-                  View Candidate Pool
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {shortlisted.map((candidate, i) => (
-                  <ShortlistedCard
-                    key={candidate.id}
-                    candidate={candidate}
-                    onRemove={setRemoveConfirmId}
-                    isFinalized={isFinalized}
-                    index={i}
-                  />
-                ))}
-              </div>
-            )}
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowRejectedPanel(!showRejectedPanel)}
+                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl border px-4 py-1.5 text-[13px] font-medium transition-all duration-200 ${
+                  showRejectedPanel
+                    ? "border-[#1E6FFF] bg-[#EEF4FF] text-[#1E6FFF]"
+                    : "border-[#E2E8F0] bg-white text-[#6B7A99] hover:border-[#1E6FFF] hover:text-[#1E6FFF]"
+                }`}
+              >
+                {showRejectedPanel ? (
+                  <XCircle size={14} />
+                ) : (
+                  <Users size={14} />
+                )}
+                {showRejectedPanel
+                  ? "Close Panel"
+                  : `Rejected (${stats.totalRejected})`}
+              </button>
+            </div>
           </div>
 
-          {/* ── Rejected panel ──────────────────────────────────────────────── */}
-          <AnimatePresence>
-            {showRejectedPanel && (
-              <RejectedPanel
-                rejected={rejected}
-                selectedIds={selectedRejected}
-                topNValue={topNValue}
-                search={rejectedSearch}
-                isLoading={isLoadingRejected}
-                onClose={() => setShowRejectedPanel(false)}
-                onTopNChange={setTopNValue}
-                onApplyTopN={handleTopNShortlist}
-                onToggleSelect={toggleSelectRejected}
-                onBulkShortlist={handleBulkShortlist}
-                onClearSelection={clearSelectedRejected}
-                onManualShortlist={handleManualShortlist}
-                onSearchChange={setRejectedSearch}
-              />
-            )}
-          </AnimatePresence>
+          {/* Main columns */}
+          <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-start">
+            {/* ── Candidate list ──────────────────────────────────────────── */}
+            <section className="flex min-w-0 flex-1 flex-col self-stretch">
+              {isLoadingShortlisted ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-[#E2E8F0] bg-white p-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-[#1E6FFF]" />
+                  <p className="mt-3 text-[13px] text-[#6B7A99]">
+                    Loading shortlisted candidates…
+                  </p>
+                </div>
+              ) : shortlistedError ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-[#E63946]/30 bg-white p-8 text-center">
+                  <p className="font-syne text-[15px] font-semibold text-[#E63946]">
+                    Failed to load shortlisted candidates
+                  </p>
+                  <p className="mt-1.5 text-[13px] text-[#6B7A99]">
+                    {shortlistedError}
+                  </p>
+                </div>
+              ) : shortlisted.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-[#E2E8F0] bg-white p-8 text-center">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#F4F7FF]">
+                    <Star size={22} className="text-[#CBD5E1]" />
+                  </div>
+                  <p className="font-syne text-[15px] font-semibold text-[#0D1B2A]">
+                    No candidates shortlisted yet
+                  </p>
+                  <p className="mx-auto mt-1.5 max-w-xs text-[13px] text-[#6B7A99]">
+                    Open the candidate pool to manually add candidates the AI
+                    missed
+                  </p>
+                  <button
+                    onClick={() => setShowRejectedPanel(true)}
+                    className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-[#1E6FFF] px-5 py-2.5 text-[13px] font-medium text-white transition-colors hover:bg-[#1660E0]"
+                  >
+                    View Candidate Pool
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {shortlisted.map((candidate, i) => (
+                    <ShortlistedCard
+                      key={candidate.id}
+                      candidate={candidate}
+                      onRemove={setRemoveConfirmId}
+                      isFinalized={isFinalized}
+                      index={i}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* ── Candidate pool / rejected panel ─────────────────────────── */}
+            <AnimatePresence>
+              {showRejectedPanel && (
+                <RejectedPanel
+                  rejected={rejected}
+                  selectedIds={selectedRejected}
+                  topNValue={topNValue}
+                  search={rejectedSearch}
+                  isLoading={isLoadingRejected}
+                  onClose={() => setShowRejectedPanel(false)}
+                  onTopNChange={setTopNValue}
+                  onApplyTopN={handleTopNShortlist}
+                  onToggleSelect={toggleSelectRejected}
+                  onBulkShortlist={handleBulkShortlist}
+                  onClearSelection={clearSelectedRejected}
+                  onManualShortlist={handleManualShortlist}
+                  onSearchChange={setRejectedSearch}
+                />
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
+      </main>
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}
       <RemoveConfirmModal
@@ -283,7 +316,7 @@ export default function ShortlistedPage() {
         onCancel={() => setShowFinalizeModal(false)}
       />
 
-      {/* ── Finalize bar ───────────────────────────────────────────────────── */}
+      {/* ── Finalize bar (sticks to the bottom of the viewport) ────────────── */}
       <FinalizeBar
         stats={stats}
         isFinalized={isFinalized}
