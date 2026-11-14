@@ -634,20 +634,20 @@ export default function InterviewRoom({
           </Dialog>
         </header>
 
-        <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center px-4 pb-16 pt-6">
+        <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center px-4 pb-44 pt-6 sm:pb-16">
           <div className="relative w-full max-w-4xl">
             <motion.div
               key={current.id}
               initial={{ opacity: 0, y: 18, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="relative overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/70 p-4 shadow-[0_28px_80px_rgba(2,6,23,0.8)] backdrop-blur-xl sm:p-5"
+                className="relative rounded-[30px] border border-white/10 bg-slate-900/70 p-4 shadow-[0_28px_80px_rgba(2,6,23,0.8)] backdrop-blur-xl sm:p-5"
             >
               <div className="absolute left-1/2 -top-3 z-20 -translate-x-1/2 rounded-full border border-cyan-400/40 bg-cyan-500/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-100 shadow-lg shadow-cyan-500/10">
                 Q{current.order}
               </div>
 
-              <div className="rounded-[22px] border border-white/10 bg-slate-950/60 p-4 sm:p-6">
+              <div className="min-h-[260px] rounded-[22px] border border-white/10 bg-slate-950/60 p-4 sm:min-h-[300px] sm:p-6">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
                     <Clock3
@@ -689,7 +689,7 @@ export default function InterviewRoom({
               </div>
             </motion.div>
 
-            <div className="absolute -bottom-3 right-3 flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border border-cyan-400/30 bg-slate-950/80 shadow-[0_14px_40px_rgba(34,211,238,0.12)] backdrop-blur-sm sm:h-32 sm:w-32">
+            <div className="fixed bottom-6 right-6 z-30 flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border border-cyan-400/30 bg-slate-950/80 shadow-[0_14px_40px_rgba(34,211,238,0.12)] backdrop-blur-sm sm:h-32 sm:w-32">
               {stream ? (
                 <video
                   ref={(element) => {
