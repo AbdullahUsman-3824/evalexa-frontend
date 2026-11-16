@@ -15,6 +15,7 @@ import type {
   Pagination,
   SendInvitationResult,
 } from "@/types/interview.types";
+import { mockListInterviewResults } from "@/services/mock/hiring.mock";
 
 const useMock = shouldUseMockInterviews();
 
@@ -165,6 +166,7 @@ export const interviewService = useMock
 
 /** Recruiter: interviews that are in progress / completed, shaped for the results table. */
 export async function listInterviewResults(): Promise<InterviewResult[]> {
+  if (useMock) return mockListInterviewResults();
   const payload = await interviewRequest<
     InterviewResult[] | ApiEnvelope<InterviewResult[]>
   >(API.interviews.results, { method: "GET" });

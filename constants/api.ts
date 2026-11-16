@@ -71,6 +71,8 @@ export const API = {
       `/application/jobs/${jobId}/bulk-shortlist`,
     finalizeShortlist: (jobId: string) =>
       `/application/jobs/${jobId}/finalize-shortlist`,
+    hireOne: (applicationId: string) => `/application/${applicationId}/hire`,
+    hiredList: "/application/hired",
   },
   interviews: {
     applications: "/interviews/applications",

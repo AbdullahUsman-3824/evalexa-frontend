@@ -7,8 +7,9 @@ import {
   BarChart2,
   PlusCircle,
   Briefcase,
-  Users,
   Star,
+  Users,
+  UserCheck,
   CalendarCheck,
   MessageSquare,
   PieChart,
@@ -58,6 +59,7 @@ const navSections: NavSection[] = [
     label: "CANDIDATES",
     items: [
       { label: "Shortlisted", href: "/recruiter/shortlisted", icon: Star },
+      { label: "Hired Candidates", href: "/recruiter/hired", icon: UserCheck },
     ],
   },
   {

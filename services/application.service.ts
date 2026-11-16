@@ -12,6 +12,18 @@ import type {
   SortOption,
 } from "@/lib/types/shortlist.types";
 
+import { shouldUseMockInterviews } from "@/services/mock/interview.mock";
+import {
+  mockGetHiredCandidates,
+  mockHireCandidate,
+} from "@/services/mock/hiring.mock";
+
+import type {
+  HireCandidateResponse,
+  HiredCandidatesQuery,
+  HiredCandidatesResponse,
+} from "@/types/hiring.types";
+
 function buildShortlistQuery(query?: ShortlistListQuery) {
   if (!query) return "";
 
@@ -128,4 +140,62 @@ export function shortlistSortParams(
 ): { sortBy: SortOption; order: SortOrder } {
   const order: SortOrder = sortBy === "match_score" ? "desc" : "asc";
   return { sortBy, order };
+}
+
+/**
+ * POST /application/:id/hire
+ * Marks an application (INTERVIEW or OFFER status) as HIRED.
+ * `sendEmail` is optional on the backend and defaults to false.
+ */
+export async function hireCandidate(
+  applicationId: string,
+  sendEmail: boolean,
+): Promise<HireCandidateResponse> {
+  if (shouldUseMockInterviews()) return mockHireCandidate(applicationId, sendEmail);
+  return apiRequest<HireCandidateResponse>(API.application.hireOne(applicationId), {
+    method: "POST",
+    data: { sendEmail },
+  });
+}
+
+/**
+ * GET /application/hired?jobId=<optional>&page=1&limit=20
+ * Hired candidates (contact details, job, match score, dates) + pagination.
+ */
+export async function getHiredCandidates(
+  query?: HiredCandidatesQuery,
+): Promise<HiredCandidatesResponse> {
+   if (shouldUseMockInterviews()) return mockGetHiredCandidates(query);
+  const params = new URLSearchParams();
+  if (query?.jobId) params.set("jobId", query.jobId);
+  if (query?.page !== undefined) params.set("page", String(query.page));
+  if (query?.limit !== undefined) params.set("limit", String(query.limit));
+
+  const qs = params.toString();
+  return apiRequest<HiredCandidatesResponse>(
+    `${API.application.hiredList}${qs ? `?${qs}` : ""}`,
+    { method: "GET" },
+  );
+}
+
+/**
+ * Collects the applicationId of every hired candidate (all pages) so other
+ * screens can hide candidates who are already hired.
+ */
+export async function getAllHiredApplicationIds(): Promise<Set<string>> {
+  const ids = new Set<string>();
+  const limit = 50;
+  const maxPages = 20;
+  let page = 1;
+  let totalPages = 1;
+
+  do {
+    const response = await getHiredCandidates({ page, limit });
+    const items = Array.isArray(response?.data) ? response.data : [];
+    items.forEach((item) => ids.add(item.applicationId));
+    totalPages = response?.pagination?.totalPages ?? 1;
+    page += 1;
+  } while (page <= totalPages && page <= maxPages);
+
+  return ids;
 }

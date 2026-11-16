@@ -1,9 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
+  Star,
+} from "lucide-react";
 import { listInterviewResults } from "@/services/interview.service";
+import {
+  getAllHiredApplicationIds,
+  hireCandidate,
+} from "@/services/application.service";
 import type { InterviewResult } from "@/types/interview.types";
+import HireConfirmModal from "./HireConfirmModal";
 import {
   CandidateCell,
   JobCell,
@@ -80,7 +91,8 @@ function formatDate(value: string | null): string {
 function humanize(value: string): string {
   return value
     .toLowerCase()
-    .split("_")
+    .split(/[_\s]+/)
+    .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
@@ -164,20 +176,32 @@ function ResultCell({ row }: { row: InterviewResult }) {
   );
 }
 
-function RecommendationCell({ value }: { value: string | null }) {
+function RecommendationBadge({ value }: { value: string | null }) {
   if (!value) return <span className="text-slate-400">—</span>;
 
   const upper = value.toUpperCase();
-  const tone = upper.includes("NOT")
-    ? "bg-[#FDECEE] text-[#B42332]"
-    : upper.includes("RECOMMEND")
-      ? "bg-[#E1F5EE] text-[#0F6E56]"
-      : "bg-slate-100 text-slate-600";
+  let tone = "bg-slate-100 text-slate-600";
+  let icon: React.ReactNode = null;
+
+  if (upper.includes("NOT")) {
+    tone = "bg-[#FDECEE] text-[#B42332]";
+    icon = <span className="h-2 w-2 rounded-full bg-[#E63946]" />;
+  } else if (upper.includes("STRONG")) {
+    tone = "bg-[#E1F5EE] text-[#0F6E56]";
+    icon = <Star className="h-3 w-3 fill-current" />;
+  } else if (upper.includes("RECOMMEND")) {
+    tone = "bg-[#E1F5EE] text-[#0F6E56]";
+    icon = <CheckCircle2 className="h-3.5 w-3.5" />;
+  } else if (upper.includes("NEUTRAL")) {
+    tone = "bg-[#FFF3E0] text-[#854F0B]";
+    icon = <span className="h-2 w-2 rounded-full bg-[#FF9500]" />;
+  }
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}
     >
+      {icon}
       {humanize(value)}
     </span>
   );
@@ -192,14 +216,32 @@ export default function ActiveCompletedTab({ onToast }: ActiveCompletedTabProps)
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filter, setFilter] = useState<StageFilter>("ALL");
+  const [hiredIds, setHiredIds] = useState<Set<string>>(() => new Set());
+  const [hireTarget, setHireTarget] = useState<InterviewResult | null>(null);
+  const [isHiring, setIsHiring] = useState(false);
 
   const load = useCallback(
     async (mode: "initial" | "manual" | "poll") => {
       if (mode === "manual") setIsRefreshing(true);
 
       try {
-        const items = await listInterviewResults();
+        // Polling only refreshes the results; the hired list is re-checked on
+        // initial load / manual refresh. A failure there must never block the table.
+        const [items, hired] = await Promise.all([
+          listInterviewResults(),
+          mode === "poll"
+            ? Promise.resolve<Set<string> | null>(null)
+            : getAllHiredApplicationIds().catch(() => null),
+        ]);
+
         setRows(items);
+        if (hired) {
+          setHiredIds((prev) => {
+            const next = new Set(prev);
+            hired.forEach((id) => next.add(id));
+            return next;
+          });
+        }
       } catch (error) {
         // Silent polling should not spam the recruiter with toasts.
         if (mode !== "poll") {
@@ -237,10 +279,46 @@ export default function ActiveCompletedTab({ onToast }: ActiveCompletedTabProps)
     return () => window.clearInterval(timer);
   }, [hasRunning, load]);
 
-  const visibleRows = useMemo(
-    () =>
-      filter === "ALL" ? rows : rows.filter((row) => getStage(row) === filter),
-    [rows, filter],
+  // Hired candidates live on the "Hired Candidates" page, not in this list.
+  const visibleRows = useMemo(() => {
+    const notHired = rows.filter((row) => !hiredIds.has(row.applicationId));
+    return filter === "ALL"
+      ? notHired
+      : notHired.filter((row) => getStage(row) === filter);
+  }, [rows, hiredIds, filter]);
+
+  const handleCancelHire = useCallback(() => {
+    setHireTarget(null);
+  }, []);
+
+  const handleConfirmHire = useCallback(
+    async (sendEmail: boolean) => {
+      if (!hireTarget || isHiring) return;
+
+      setIsHiring(true);
+      try {
+        await hireCandidate(hireTarget.applicationId, sendEmail);
+
+        const hiredApplicationId = hireTarget.applicationId;
+        setHiredIds((prev) => {
+          const next = new Set(prev);
+          next.add(hiredApplicationId);
+          return next;
+        });
+        onToast(`${hireTarget.candidateName} has been marked as hired.`, "success");
+        setHireTarget(null);
+      } catch (error) {
+        onToast(
+          error instanceof Error
+            ? error.message
+            : "Unable to hire this candidate.",
+          "error",
+        );
+      } finally {
+        setIsHiring(false);
+      }
+    },
+    [hireTarget, isHiring, onToast],
   );
 
   return (
@@ -272,12 +350,14 @@ export default function ActiveCompletedTab({ onToast }: ActiveCompletedTabProps)
           label={
             rows.length === 0
               ? "No interviews have been started yet."
-              : "No interviews match this filter."
+              : filter === "ALL"
+                ? "No interviews to show. Hired candidates are listed under Hired Candidates."
+                : "No interviews match this filter."
           }
         />
       ) : (
         <div className={tableWrapperClass}>
-          <table className="w-full min-w-[860px] text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="border-b border-slate/15 bg-slate-50">
               <tr>
                 <th className={thClass}>Candidate</th>
@@ -285,7 +365,7 @@ export default function ActiveCompletedTab({ onToast }: ActiveCompletedTabProps)
                 <th className={thClass}>Time taken</th>
                 <th className={thClass}>Date</th>
                 <th className={thClass}>Result</th>
-                <th className={thClass}>Recommendation</th>
+                <th className={thClass}>Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate/10">
@@ -319,7 +399,20 @@ export default function ActiveCompletedTab({ onToast }: ActiveCompletedTabProps)
                       <ResultCell row={row} />
                     </td>
                     <td className={tdClass}>
-                      <RecommendationCell value={row.recommendation} />
+                      {getStage(row) === "completed" ? (
+                        <div className="flex w-40 flex-col items-start gap-2">
+                          <RecommendationBadge value={row.recommendation} />
+                          <button
+                            type="button"
+                            onClick={() => setHireTarget(row)}
+                            className="w-full rounded-lg bg-[#0F8F5F] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#0B7A50]"
+                          >
+                            Hire
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </td>
                   </tr>
                 );
@@ -327,6 +420,17 @@ export default function ActiveCompletedTab({ onToast }: ActiveCompletedTabProps)
             </tbody>
           </table>
         </div>
+      )}
+
+      {hireTarget && (
+        <HireConfirmModal
+          key={hireTarget.applicationId}
+          candidateName={hireTarget.candidateName}
+          jobTitle={hireTarget.jobTitle}
+          isSubmitting={isHiring}
+          onCancel={handleCancelHire}
+          onConfirm={(sendEmail) => void handleConfirmHire(sendEmail)}
+        />
       )}
     </div>
   );

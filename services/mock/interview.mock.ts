@@ -635,5 +635,5 @@ export const mockInterviewSessionService = {
 };
 
 export function shouldUseMockInterviews(): boolean {
-  return process.env.NEXT_PUBLIC_USE_MOCK_INTERVIEWS === "true";
+  return process.env.NEXT_PUBLIC_USE_MOCK_INTERVIEWS?.trim().toLowerCase() === "true";
 }
