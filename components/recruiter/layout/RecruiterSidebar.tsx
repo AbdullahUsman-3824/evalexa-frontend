@@ -11,8 +11,8 @@ import {
   Users,
   UserCheck,
   CalendarCheck,
-  MessageSquare,
-  PieChart,
+  // MessageSquare,
+  // PieChart,
   LogOut,
 } from "lucide-react";
 import { logout } from "@/repositories/auth.repository";
@@ -70,17 +70,17 @@ const navSections: NavSection[] = [
         href: "/recruiter/interviews",
         icon: CalendarCheck,
       },
-      {
-        label: "Messages",
-        href: "/recruiter/messages",
-        icon: MessageSquare,
-        badge: "3",
-      },
-      {
-        label: "Hire Analytics",
-        href: "/recruiter/hire-analytics",
-        icon: PieChart,
-      },
+      // {
+      //   label: "Messages",
+      //   href: "/recruiter/messages",
+      //   icon: MessageSquare,
+      //   badge: "3",
+      // },
+      // {
+      //   label: "Hire Analytics",
+      //   href: "/recruiter/hire-analytics",
+      //   icon: PieChart,
+      // },
     ],
   },
 ];
@@ -149,13 +149,14 @@ export default function RecruiterSidebar({
         {/* Navigation - Scrollable */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
           {navSections.map((section, sectionIdx) => (
-            <div key={sectionIdx} className="mb-6">
-              {/* Section Label */}
+            <div key={sectionIdx} className="mb-1">
+              {/* Section labels hidden (flat list)
               <div className="px-3 mb-2">
                 <span className="text-[#6B7A99] text-[11px] font-semibold tracking-wider">
                   {section.label}
                 </span>
               </div>
+              */}
 
               {/* Section Items */}
               <div className="space-y-1">

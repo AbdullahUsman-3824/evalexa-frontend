@@ -3,8 +3,8 @@ import WelcomeBanner from "@/components/recruiter/dashboard/WelcomeBanner";
 import StatsRow from "@/components/recruiter/dashboard/StatsRow";
 import ActiveJobsOverview from "@/components/recruiter/dashboard/ActiveJobsOverview";
 import RecentApplications from "@/components/recruiter/dashboard/RecentApplications";
-import HiringFunnel from "@/components/recruiter/dashboard/HiringFunnel";
-import BottomRow from "@/components/recruiter/dashboard/BottomRow";
+// import HiringFunnel from "@/components/recruiter/dashboard/HiringFunnel";
+// import BottomRow from "@/components/recruiter/dashboard/BottomRow";
 
 export default function RecruiterDashboard() {
   return (
@@ -23,11 +23,10 @@ export default function RecruiterDashboard() {
             <RecentApplications />
           </div>
 
-          {/* Hiring Funnel */}
+          {/* Hidden: Hiring Funnel, Top Performing Jobs, Today's Interviews
           <HiringFunnel />
-
-          {/* Bottom Row - Top Jobs & Interviews */}
           <BottomRow />
+          */}
         </div>
       </div>
     </CompanyGuard>
